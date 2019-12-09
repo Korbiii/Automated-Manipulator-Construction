@@ -65,11 +65,11 @@ arm = [arm repelem({SG_elements(3)},floor(M_paras(3,2)/15))];
 % end
 arm = [{SG_bottom} arm {SGcolor(SG_top)}];
 %% Generating single arm with SGTchain()
-phis = [0 repmat(-0.1,1,8) zeros(1,15)];
+phis = [0 repmat(-0.1,1,6) zeros(1,15)];
 arm = SGTchain(arm,phis);
 arm = SGcat(arm);
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs{1};NaN NaN;CPL_in],3,positions(end,:));
+base = SGmanipulatorbase([CPLs{1};NaN NaN;CPL_in],CPL_out,3,positions(end,:),0);
 SG = [{base} {arm} {arm}];
 %% Generating full manipulator with framechain
 framechain = SGTframeChain(1:2,[1 'F1' 3 'B']);

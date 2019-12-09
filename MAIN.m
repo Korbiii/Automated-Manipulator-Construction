@@ -1,9 +1,8 @@
 clear; clf;
 addpath('Essentials');
-%lul
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
-% % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
-% SGwriteSTL(SGmanipulator(CPL,3.25,[90 105 4.2;0 90 0;90 240 0],0),"SGmanipulator",'','y');
+CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
+SGwriteSTL(SGmanipulator(CPL,3.25,[90 75 4.2;0 90 0;90 240 0],0),"SGmanipulator",'','y');
 
 CPL_servo = PLtrans0([PLsquare(20.3,40.3);NaN NaN;PLtrans(PLcircle(2.25),[5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[5.1 -24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 -24.5])]);
 %CPL_SM40 = []
@@ -27,5 +26,5 @@ SG_connector_SM85 = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0
 % SGwriteSTL(SGmotormountSM40CL(25),"MotormountSM40",'','y'); 
 % Motormount_SM40CL(25); 
 % % SGwriteSTL(SGmanipulator(V_be,V_me,V_te),"SGmanipulator",'','y');
-SGplot(SGtoolmanipulator(CPL_servo,SG_starhorn_conn));
+% SGplot(SGtoolmanipulator(CPL_servo,SG_starhorn_conn));
 
