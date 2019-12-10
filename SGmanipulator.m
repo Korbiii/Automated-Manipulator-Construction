@@ -69,7 +69,7 @@ phis = [0 repmat(-0.1,1,6) zeros(1,15)];
 arm = SGTchain(arm,phis);
 arm = SGcat(arm);
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs{1};NaN NaN;CPL_in],CPL_out,3,positions(end,:),0);
+base = SGmanipulatorbase([CPLs{1};NaN NaN;CPL_in],CPL_out,3,positions(end,:),1);
 SG = [{base} {arm} {arm}];
 %% Generating full manipulator with framechain
 framechain = SGTframeChain(1:2,[1 'F1' 3 'B']);

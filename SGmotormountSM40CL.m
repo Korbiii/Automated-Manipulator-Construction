@@ -34,5 +34,9 @@ SG_brace = SGcat(SG_brace,SGmirror(SG_brace,'yz'));
 % SGplot(SGontop(SGofCPLcommand('c 60,h 3,c 19,h 5,move 0 -11,b 28.5 46.5,h 34,move 0 -23.25'),SG_base));
 
 SG = SGcat(SG_base,SG_screw_base,SG_tension_holder,SG_tensioning,SG_brace);
+SGs = SGanalyzeGroupParts(SG);
+SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',10);
+SGs.SG(3) = SGtransrelSG(SGs.SG(3),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',-10);
+SG = SGcat(SGs);
 SGwriteSTL(SG,'','y');
 end

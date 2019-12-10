@@ -47,12 +47,12 @@ SG_cam_rotor = SGstack('z',SG_servo_connector,SG_cam_rotor,SG_cam_rotor_stud);
 SG_cam_rotor = SGtransrelSG(SG_cam_rotor,SG_cam_servo_mount,'centery','centerx',10,'ontop',8);
 
 %% Cam Guide
-SG_cam_guide_front = SGofCPLy(PLsquare(10),25);
+SG_cam_guide_front = SGofCPLy(PLsquare(10),28);
 SG_cam_guide_front_hole = SGofCPLy([PLsquare(10);NaN NaN;PLcircle(2)],4);
 SG_cam_guide_front_gap = SGofCPLy(CPLbool('-',PLsquare(10),PLsquare(6,12)),4);
 SG_cam_guide_front = SGstack('y',SG_cam_guide_front_hole,SG_cam_guide_front_gap,SG_cam_guide_front_hole,SG_cam_guide_front);
 
-SG_cam_guide_front_insert = SGofCPLy(CPLbool('-',PLsquare(5.5,9.5),PLtrans(PLsquare(2,10),[0 -3.5])),3.5);
+SG_cam_guide_front_insert = SGofCPLy(CPLbool('-',PLsquare(5.5,9.5),PLtrans(PLsquare(2,10),[0 -3.5])),3.8);
 SG_temp_connection = SGtransrelSG(SGofCPLy(PLcircle(0.5),3),SG_cam_guide_front,'aligntop');
 SG_cam_guide_front = SGstack('y',SG_cam_guide_front_insert,SG_temp_connection,SG_cam_guide_front);
 
@@ -116,12 +116,12 @@ SG_base = SGbool3('-',SG_base,SG_screw_space);
 SG = SGcat(SG_sledge,SG_cam_rotor,SG_guide,SG_base,SG_base_gear,SG_gear_rotator);
 
 %% Writing STL Files
-SGwriteSTL(SG_sledge,"Sledge",'','y');
-SGwriteSTL(SG_base,"Base",'','y');
-SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
+% SGwriteSTL(SG_sledge,"Sledge",'','y');
+% SGwriteSTL(SG_base,"Base",'','y');
+% SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
 SGwriteSTL(SG_guide,"ExzenterLaeufer",'','y');
-SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');
-SGwriteSTL(SG_gear_rotator,"Tool Rotating Gear",'','y');
-SGwriteSTL(SG,"Assembly",'','y');
+% SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');
+% SGwriteSTL(SG_gear_rotator,"Tool Rotating Gear",'','y');
+% SGwriteSTL(SG,"Assembly",'','y');
 
 end
