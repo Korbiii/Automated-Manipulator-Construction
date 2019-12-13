@@ -25,13 +25,13 @@ SG_bottom = SGelements(CPLbool('-',CPL,CPLs{1}),M_paras(1,1),M_paras(1,3),1); up
 SG_top = SGcolor(SGconnector(CPLbool('-',CPL,CPLs{end}),CPL_out,positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1)); updateProgress;
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPL,CPLs{i});
-    if i==2
-        SG_temp = SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4);
-        SG_elements = [SG_elements SG_temp];  updateProgress;
-        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i)))]; updateProgress;
-    elseif i==1
+    if i==1
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4)];  updateProgress;
-        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1))]; updateProgress;
+        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,2))]; updateProgress;
+    elseif i==2
+        SG_temp = SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',1,1.4-(0.2*i),4);
+        SG_elements = [SG_elements SG_temp];  updateProgress;
+        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,1))]; updateProgress;
     else
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i))];  updateProgress;
     end
@@ -46,23 +46,11 @@ end
 % SGwriteSTL(SG_conns(2),"4");
 % SGwriteSTL(SG_conns(1),"5");
 arm = [arm repelem({SG_elements(1)},floor(M_paras(1,2)/15))];
-arm = [arm {SG_conns(1)}]; 
-% arm = [arm repmat({SG_elements(2);SG_elements(3)},floor(M_paras(2,2)/30),1)'];
-arm = [arm repelem({SG_elements(2)},floor(M_paras(2,2)/15))];
-arm = [arm {SG_conns(2)}]; 
-arm = [arm repelem({SG_elements(3)},floor(M_paras(3,2)/15))];
-% for i=1:size(SG_elements,2)-1
-%     if i == 1
-%         arm = [arm repelem({SG_elements(i)},floor(M_paras(i,2)/15))];
-%     elseif i==2        
-%         arm = [arm repelem({SG_elements(i) SG_elements(i+1)},floor(M_paras(i,2)/15))];
-%     elseif i==3
-%         arm = [arm repelem({SG_elements(i+1)},floor(M_paras(i+1,2)/15))];
-%     end    
-%     if i < size(M_paras,1)
-%         arm = [arm {SG_conns(i)}];       
-%     end
-% end
+arm = [arm {SG_conns(1)}];
+arm = [arm repmat({SG_elements(2);SG_elements(3)},floor(M_paras(2,2)/30),1)'];
+% arm = [arm repelem({SG_elements(2)},floor(M_paras(2,2)/15))];
+arm = [arm {SG_conns(2)}];
+arm = [arm repelem({SG_elements(4)},floor(M_paras(3,2)/15))];
 arm = [{SG_bottom} arm {SGcolor(SG_top)}];
 %% Generating single arm with SGTchain()
 phis = [0 repmat(-0.1,1,6) zeros(1,15)];
