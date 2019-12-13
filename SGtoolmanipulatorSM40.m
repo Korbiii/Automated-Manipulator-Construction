@@ -1,14 +1,11 @@
-%%   [SG] = SGtoolmanipulator()
+%%   [SG] = SGtoolmanipulatorSM40()
 %	=== INPUT PARAMETERS ===
 %	=== OUTPUT RESULTS ======
-function [SG] = SGtoolmanipulator(CPL_servo,SG_servo_connector)
+function [SG] = SGtoolmanipulatorSM40(SG_servo_connector)
 %% Initializing of values
-
+%Distance SM40 5.5 for rotor/gear
 
 distance = 5;   %% tool opening distance im mm
-maxY = max(CPL_servo(:,2));
-maxX = max(CPL_servo(:,1));
-SG_servo_mount = SGofCPLz([PLsquare(maxX*2.5,maxY*2.5);NaN NaN;CPL_servo],5);
 
 %% Sledge
 SG_toolholder_base = SGof2CPLsz([PLsquare(50,115);NaN NaN;PLsquare(20,40)],[PLsquare(40,115);NaN NaN;PLsquare(20,40)],10);

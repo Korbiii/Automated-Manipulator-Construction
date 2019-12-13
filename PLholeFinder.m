@@ -25,6 +25,12 @@ for i=1:size(h_axis,1)
     cross_points = PLcrossCPLLine2(curr_axis,CPL_in);
     cross_points = sortrows(cross_points);
     if ~isempty(cross_points)
+        if size(cross_points,1) ~=2
+            e_dir_perp = e_dir*rot(pi/2);
+           cross_points(:,3) = (e_dir_perp(2,1)-e_dir_perp(1,1))*(cross_points(:,2)-e_dir_perp(1,2))-(cross_points(:,1)-e_dir_perp(1,1))*(e_dir_perp(2,2)-e_dir_perp(1,2)); 
+           cross_points = sortrows(cross_points,3);
+           cross_points = cross_points([1,end],1:2);
+        end
         cross_points = cross_points + 2*e_dir;
         cross_points = [cross_points(1,:)+e_dir(1,:)*rot(pi/2);cross_points(1,:)+e_dir(2,:)*rot(pi/2);cross_points(2,:)+e_dir(2,:)*rot(pi/2);cross_points(2,:)+e_dir(1,:)*rot(pi/2)];
     else
@@ -37,7 +43,14 @@ for i=1:size(h_axis,1)
     end
     %% Generating CPL of points where holes currently can go
     CPL_o_in = CPLgrow(CPL_out,-0.7-hole_r);
-    CPL_i_out = CPLgrow(CPL_in,+0.5+hole_r);
+    [~,pos]=separateNaN(CPL_in);
+    if size(pos,1) > 2
+        CPL_1 = CPLgrow(CPL_in(1:pos(2)-1,:),-0.5-hole_r);        
+        CPL_2 = CPLgrow(CPL_in(pos(2)+1:end,:),+0.5+hole_r);
+        CPL_i_out = CPLbool('+',CPL_1,CPL_2);
+    else
+        CPL_i_out = CPLgrow(CPL_in,+0.5+hole_r);
+    end
     CPL_limit = CPLbool('-',CPL_o_in,CPL_i_out);
     CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_area);
     if ~isempty(CPL_holes)
