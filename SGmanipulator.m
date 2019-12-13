@@ -24,7 +24,6 @@ hole_r = 0.9;                          % Radius of rope/pushrodtubes
 %% Initializing arrays and variables
 arm = {};
 SG_elements = [];
-writeSTLs = {};
 SG_conns =[];
 progress = 0;
 total_progress = (2*size(M_paras,1))+2;
@@ -32,36 +31,28 @@ total_progress = (2*size(M_paras,1))+2;
 [CPLs,positions] = PLholeFinder(CPL_out,CPL_in,M_paras(:,[1,3]),hole_r,push_rod); updateProgress;
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPL,CPLs{1}),M_paras(1,1),M_paras(1,3),1); updateProgress;
-SG_top = SGcolor(SGconnector(CPLbool('-',CPL,CPLs{end}),CPL_out,positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1)); updateProgress;
+SG_top = SGconnector(CPLbool('-',CPL,CPLs{end}),CPL,CPL_out,positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1); updateProgress;
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPL,CPLs{i});
     if i==1
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4)];  updateProgress;
-        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,0))]; updateProgress;
+        SG_conns = [SG_conns SGconnector(CPL_curr,CPLbool('-',CPL,CPLs{i+1}),CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,0)]; updateProgress;
     elseif i==2
         SG_temp = SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4);
         SG_elements = [SG_elements SG_temp];  updateProgress;
-        SG_conns = [SG_conns SGcolor(SGconnector(CPL_curr,CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,0))]; updateProgress;
+        SG_conns = [SG_conns SGconnector(CPL_curr,CPLbool('-',CPL,CPLs{i+1}),CPL_out,flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,0)]; updateProgress;
     else
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i))];  updateProgress;
     end
 end
 %% Filling cell list with elements for a single arm
-% arm2 = [repmat({SG_elements(2);SG_elements(3)},floor(M_paras(2,2)/30),1)'];
-% arm2 = SGTchain(arm2);
-% SGwriteSTL(SGcat(arm2));
-% SGwriteSTL(SG_elements(1),"1");
-% SGwriteSTL(SG_elements(2),"2");
-% SGwriteSTL(SG_elements(3),"3");
-% SGwriteSTL(SG_conns(2),"4");
-% SGwriteSTL(SG_conns(1),"5");
 arm = [arm repelem({SG_elements(1)},floor(M_paras(1,2)/15))];
 arm = [arm {SG_conns(1)}];
 % arm = [arm repmat({SG_elements(2);SG_elements(3)},floor(M_paras(2,2)/30),1)'];
 arm = [arm repelem({SG_elements(2)},floor(M_paras(2,2)/15))];
 arm = [arm {SG_conns(2)}];
 arm = [arm repelem({SG_elements(3)},floor(M_paras(3,2)/15))];
-arm = [{SG_bottom} arm {SGcolor(SG_top)}];
+arm = [{SG_bottom} arm {SG_top}];
 %% Generating single arm with SGTchain()
 phis = [0 repmat(-0.1,1,6) zeros(1,15)];
 arm = SGTchain(arm,phis);
@@ -71,7 +62,7 @@ base = SGmanipulatorbase([CPLs{1};NaN NaN;CPL_in],CPL_out,3,positions(end,:),1,s
 SG = [{base} {arm} {arm}];
 %% Generating full manipulator with framechain
 framechain = SGTframeChain(1:2,[1 'F1' 3 'B']);
-SG = SGcolor(SGcat(SGcat(SGTchain(SG,[0 0 0],0,framechain))));
+SG = SGcat(SGcat(SGTchain(SG,[0 0 0],0,framechain)));
 SGplot(SG);
 % SGwriteMultipleSTL(writeSTLs);
     function updateProgress

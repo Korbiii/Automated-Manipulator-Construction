@@ -2,7 +2,7 @@ clear; clf;
 addpath('Essentials');
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
 CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
-SGwriteSTL(SGmanipulator(CPL,3.4,[90 75 4.2;0 90 0;90 240 0],0,1),"SGmanipulator",'','y');
+SGwriteSTL(SGmanipulator(CPL,3.4,[90 75 4.2;0 90 0;90 270 0],0,1),"SGmanipulator",'','y');
 
 CPL_servo = PLtrans0([PLsquare(20.3,40.3);NaN NaN;PLtrans(PLcircle(2.25),[5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[5.1 -24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 -24.5])]);
 %CPL_SM40 = []

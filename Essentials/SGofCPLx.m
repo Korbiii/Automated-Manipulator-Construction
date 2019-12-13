@@ -5,6 +5,6 @@
 %	=== OUTPUT RESULTS ======
 function [SG] = SGofCPLx(CPL,x)
 SG = SGofCPLz(CPL,x);
-SG = SGtransR(SG,rot(0,pi/2,0));
+SG = SGtransR(SG,rot(pi/2,pi/2,0));
 end
 
