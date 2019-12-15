@@ -28,39 +28,38 @@ end
 %% Top&Bottom Layer
 SG_bt_b = SGofCPLz(CPL,2);
 SG_bt_t = SGofCPLz(CPL_following,2);
-switch side_stabi
+maxY = max(CPL(:,2));
+maxX = max(CPL(:,1));
+cut_x = 2.5;
+cut_y = 4;
+PL_stabi_cut = PLsquare(cut_x,cut_y);
+PL_stabi_cut = PLtrans(PL_stabi_cut,[maxX-1.5 maxY-1]);
+PL_stabi_cut = CPLbool('+',PL_stabi_cut,VLswapY(VLswapX(PL_stabi_cut)));
+switch side_stabi    
     case 1  % Bottom
-        maxY = max(CPL(:,2));
-        maxX = max(CPL(:,1));
-        cut_x = 2.5;
-        cut_y = 4;
-        PL_stabi_cut = PLsquare(cut_x,cut_y);
-        PL_stabi_cut = PLtrans(PL_stabi_cut,[maxX-2 maxY-1]);
-        PL_stabi_cut = CPLbool('+',PL_stabi_cut,VLswapY(VLswapX(PL_stabi_cut)));
         CPL_2 = CPLbool('-',CPL,VLswapY(PL_stabi_cut));
         CPL_2 = CPLbool('-',CPL_2,PL_stabi_cut);
         SG_bt_b = SGofCPLz(CPL_2,2);
     case 2      % Top
-        maxY = max(CPL(:,2));
-        maxX = max(CPL(:,1));
-        cut_x = 2.5;
-        cut_y = 4;
-        PL_stabilisator = PLtrans(PLsquare(cut_x-0.4,cut_y-0.4),[0 0.2]);
-        PL_stabilisator = PLtrans(PL_stabilisator,[-maxX+2 maxY-1]);
-        PL_stabilisator =  CPLbool('+',PL_stabilisator,VLswapY(VLswapX(PL_stabilisator)));
-        PL_stabilisator = CPLbool('x',VLswapY(PL_stabilisator),CPL);
+        PL_stabilisator_or = PLtrans(PLsquare(cut_x-0.4,cut_y-0.4),[0 0.2]);
+        PL_stabilisator_or = PLtrans(PL_stabilisator_or,[-maxX+1.5 maxY-1]);
+        PL_stabilisator_or =  CPLbool('+',PL_stabilisator_or,VLswapY(VLswapX(PL_stabilisator_or)));
+        PL_stabilisator = CPLbool('x',VLswapY(PL_stabilisator_or),CPL);
+        PL_stabilisator_2 = CPLbool('x',PL_stabilisator_or,CPL);
         SG_bt_t = SGofCPLz(CPL_following,2);
         SG_stabilisator = SGofCPLz(PL_stabilisator,6);
+        SG_stabilisator_2 = SGofCPLz(PL_stabilisator_2,1.5);
+        SG_stabilisator = SGcat(SG_stabilisator,SG_stabilisator_2);
 end
-%% Mid Top&Bottom Layer  
+%% Mid Top&Bottom Layer
 e_dir1 = PLshortestDistanceOut(CPL_out,positions(1,:));
-    angle1 = atan2(abs(diff(e_dir1(:,1))),abs(diff(e_dir1(:,2))));
-    PL_cut_m_wire = [PLcircseg(h_r,10,0,pi);-h_r*3 -5;h_r*3 -5];
-    PL_cut_m_wire = PLtransR(PL_cut_m_wire,rot(angle1));
-    PL_cut_m_wire = PLtrans(PL_cut_m_wire,positions(1,:));
-    if ~push
-        PL_cut_m_wire = [PL_cut_m_wire;NaN NaN;PLtransC(PL_cut_m_wire,[0 0],pi)];
-    end
+angle1 = atan2(abs(diff(e_dir1(:,1))),abs(diff(e_dir1(:,2))));
+PL_cut_m_wire = [PLcircseg(h_r,10,0,pi);-h_r*3 -5;h_r*3 -5];
+PL_cut_m_wire = PLtransR(PL_cut_m_wire,rot(angle1));
+PL_cut_m_wire = PLtrans(PL_cut_m_wire,positions(1,:));
+if ~push
+    PL_cut_m_wire = [PL_cut_m_wire;NaN NaN;PLtransC(PL_cut_m_wire,[0 0],pi)];
+end
 if ~end_cap
     e_dir2 = PLshortestDistanceOut(CPL_out,positions(2,:));
     angle2 = atan2(abs(diff(e_dir2(:,1))),abs(diff(e_dir2(:,2))));
@@ -71,21 +70,14 @@ if ~end_cap
     CPL_m_bt = CPLbool('-',CPL,PL_cut_m_bt);
     CPL_m_bt = CPLbool('-',CPL_m_bt,PL_cut_m_wire);
     SG_m_bt = SGofCPLz(CPL_m_bt,2.5);
-    if side_stabi
+    if side_stabi == 1
         CPL_m_bt =  CPLbool('-',CPL_m_bt,PL_stabi_cut);
         SG_m_bt_b = SGofCPLz(CPL_m_bt,2.5);
     end
-    
-    %% Mid mid Layer
-    PL_cut_m = [-1.25 8;1.25 8;1.25 -8;-1.25 -8];
-    PL_cut_m = PLtransR(PL_cut_m,rot(angle2));
-    PL_cut_m = PLtrans(PL_cut_m,positions(2,:));
-    PL_cut_m = [PL_cut_m;NaN NaN;PLtransC(PL_cut_m,[0 0],pi)];
-    CPL_m = CPLbool('-',CPL,PL_cut_m);
-    CPL_m = CPLbool('-',CPL_m,PL_cut_m_wire);
-    SG_m = SGofCPLz(CPL_m,5.5);
-    if side_stabi
-        CPL_m = CPLbool('-',CPL_m,PL_stabi_cut);
+    CPL_m = CPLbool('-',CPL,PL_cut_m_wire);
+    SG_m = SGofCPLz(CPL_m_bt,5.5);
+    if side_stabi == 1
+        CPL_m = CPLbool('-',CPL_m_bt,PL_stabi_cut);
         SG_m_b = SGofCPLz(CPL_m,5.5);
     end
 else

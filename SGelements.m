@@ -1,4 +1,4 @@
-%%   [SG]=SGelements(CPL,h_dir,h_offset,h_r)
+%%   [SG]=SGelements(CPL,h_dir,h_offset,[bottom_ele,side_stabi,hinge_width,ele_height])
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of element with tool hole
 %	h_dir:          Angle of hinge
@@ -26,8 +26,8 @@ if side_stabi == 1
     PL_stabi_cut = PLsquare(cut_x,cut_y);
     PL_stabilisator = PLtrans(PLsquare(cut_x-0.4,cut_y-0.4),[0 0.2]);
         
-    PL_stabi_cut = PLtrans(PL_stabi_cut,[maxX-2 maxY-1]);  
-    PL_stabilisator = PLtrans(PL_stabilisator,[-maxX+2 maxY-1]);
+    PL_stabi_cut = PLtrans(PL_stabi_cut,[maxX-1.5 maxY-1]);  
+    PL_stabilisator = PLtrans(PL_stabilisator,[-maxX+1.5 maxY-1]);
     
     PL_stabi_cut = CPLbool('+',PL_stabi_cut,VLswapY(VLswapX(PL_stabi_cut)));    
     PL_stabilisator =  CPLbool('+',PL_stabilisator,VLswapY(VLswapX(PL_stabilisator)));

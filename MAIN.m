@@ -24,9 +24,11 @@ SG_connector_SM85 = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0
 % SGwriteSTL(SGservorotor(25,SG_connector_SM85,[10.5 4 1.5]),"Rotor_SM85CL",'','y');
 % SGplot(SGmotormountSCS(25,CPL_servo));
 % SGwriteSTL(SGmotormountSM40CL(25),"MotormountSM40",'','y'); 
-SGwriteSTL(SGmotormountSM85BL(25),"MotormountSM85BL",'','y');
+% SGwriteSTL(SGmotormountSM85BL(25),"MotormountSM85BL",'','y');
 % Motormount_SM40CL(25); 
 % % SGwriteSTL(SGmanipulator(V_be,V_me,V_te),"SGmanipulator56",'','y');
 % SGplot(SGtoolmanipulator(CPL_servo,SG_starhorn_conn));
 % SGplot(SGtoolmanipulatorSM40(SG_connector_SM40));
+SGplot(SGboxinlay);
+SGwriteSTL(SGboxinlay);
 
