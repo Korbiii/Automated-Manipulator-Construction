@@ -1,19 +1,26 @@
-clf;clear;
+clf;
 addpath('Essentials');
 
-SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
-SG_motor_mount = SGreadSTL("STLs\MotormountSM40.STL");
-SG_motormount_85BL = SGreadSTL("STLs\MotormountSM85BL.STL");
-SG = SGpatternXY(SG_motor_mount,2,1,90,0,0,-15);
-SG_tool_mover = SGtransrelSG(SG_tool_mover,SG,'alignback','ontop',20);
+% SG_tool_mover_o = SGreadSTL("STLs\Assembly.STL");
+% SM40_o = SGreadSTL("STLs\SM40.STL");
+% SM85_o = SGreadSTL("STLs\SM85.STL");
+SG_tool_mover = SG_tool_mover_o;
+SM40 = SM40_o;
+SM85 = SM85_o;
 
-servo_d = [34 62 47];
-SG_SM85BL = SGtrans(SGbox(servo_d),[0 -125 -4]);
-SG_motormount_85BL = SGtransrelSG(SG_motormount_85BL,SG_SM85BL,'rotz',pi/2,'ontop',-15,'centerx',-7.5,'alignfront',-15);
-SG_SM85BL = SGcat(SG_SM85BL,SG_motormount_85BL);
-SG = SGcat(SG,SG_tool_mover,SG_SM85BL);
+SG_inlay = SGboxinlay();
+SM40 = SGtrans0(SM40);
+SM40 = SGtransrelSG(SM40,SG_inlay,'transx',47,'alignbottom','transy',26);
+SM40 = SGcat(SM40,SGmirror(SM40,'yz'));
+SM85 = SGtrans0(SM85);
+SM85 = SGtransrelSG(SM85,SG_inlay,'alignbottom',-5,'rotz',pi/2,'transx',20,'transy',-65);
 
+
+
+
+
+
+SG = SGcat(SG_inlay,SM40,SM85);
 SG = SGcolor(SG);
 SGplot(SG);
 SGwriteSTL(SG,"Boxlayout");
-clear;

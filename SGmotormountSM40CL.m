@@ -35,8 +35,10 @@ SG_brace = SGcat(SG_brace,SGmirror(SG_brace,'yz'));
 
 SG = SGcat(SG_base,SG_screw_base,SG_tension_holder,SG_tensioning,SG_brace);
 SGs = SGanalyzeGroupParts(SG);
-SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',10);
-SGs.SG(3) = SGtransrelSG(SGs.SG(3),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',-10);
+% SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',10);
+% SGs.SG(3) = SGtransrelSG(SGs.SG(3),SGs.SG(1),'alignbottom',-6,'alignfront','centerx',-10);
+SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'aligntop','behind','centerx',25);
+SGs.SG(3) = SGtransrelSG(SGs.SG(3),SGs.SG(1),'aligntop','behind','centerx',-25);
 SG = SGcat(SGs);
 SGwriteSTL(SG,'','y');
 end

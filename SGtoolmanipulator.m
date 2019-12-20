@@ -52,11 +52,10 @@ SG_closer_screw = SGcat(SG_closer_screw,SGscrewDIN(-5,10,'',PLcircle(5)));
 SG_closer_screw = SGtransrelSG(SG_closer_screw,SG_front_sledge_plate,'right','aligntop','alignfront');
 
 SG_front_top = SGcat(SG_front_top,SG_closer_guide);
-[sizex,~,~,~,~,~] = sizeVL(SG_front_top.VL);
 SG_hinge_moving = SGcat(SG_hinge_moving,SG_front_top);
 SG_hinge_moving = SGtrans(SG_hinge_moving,TofR(roty(-10)));
 SG_hinge = SGcat(SG_hinge_moving,SG_hinge_fixed);
-SG_hinge = SGtransrelSG(SG_hinge,SG_front_sledge_plate,'centery','ontop',-10,'left',-sizex);
+SG_hinge = SGtransrelSG(SG_hinge,SG_front_sledge_plate,'centery','ontop',-10,'alignleft',13);
 
 PL_back_sledge_plate = [PLsquare(40,60);NaN NaN;PLtrans(PLsquare(10.2,10.2),[10 21])];
 PL_back_sledge_plate = CPLbool('-',PL_back_sledge_plate,PLtrans(PLsquare(20,8),[-10 -26]));

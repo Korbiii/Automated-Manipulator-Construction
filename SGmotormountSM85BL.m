@@ -24,8 +24,10 @@ SG_thread_brace = SGofCPLz(PL_thread_brace,10);
 SG_thread_brace = SGtransrelSG(SG_thread_brace,SG_brace,'rotx',pi/2,'rotz',pi/2,'ontop','alignleft');
 
 SG = SGcat(SG_screw_plate,SG_brace,SG_tensioning,SG_thread_brace);
-
+SGs = SGanalyzeGroupParts(SG);
+SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'aligntop','right');
+SG = SGcat(SGs);
 clf;
-SGplot(SG);
+% SGplot(SG);
 
 end
