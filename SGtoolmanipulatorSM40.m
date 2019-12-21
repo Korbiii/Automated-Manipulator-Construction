@@ -56,11 +56,13 @@ SG_hinge = SGtransrelSG(SG_hinge,SG_front_sledge_plate,'centery','ontop',-10,'al
 
 PL_back_sledge_plate = [PLsquare(40,60);NaN NaN;PLtrans(PLsquare(10.2,10.2),[10 21])];
 PL_back_sledge_plate = CPLbool('-',PL_back_sledge_plate,PLtrans(PLsquare(20,8),[-10 -26]));
+PL_back_sledge_plate = PLroundcorners(PL_back_sledge_plate,[3,5,6],4);
 SG_back_sledge_plate = SGofCPLy(PL_back_sledge_plate,10);
 SG_back_sledge_plate = SGtransrelSG(SG_back_sledge_plate,SG_toolholder_base,'alignfront','ontop');
 
 PL_cam_servo_mount = [PLsquare(46,28.5);NaN NaN;PLtrans(PLpatternXY(PLcircle(1.5),2,2,24,12),[4 0])];
 PL_cam_servo_mount = CPLbool('-',PL_cam_servo_mount,PLtrans(PLsquare(23.25,17),[-11.625,-8.5]));
+PL_cam_servo_mount = PLroundcorners(PL_cam_servo_mount,[2,3,4,5],5);
 SG_cam_servo_mount = SGofCPLx(PL_cam_servo_mount,5.6);
 SG_cam_servo_mount =  SGtransrelSG(SG_cam_servo_mount,SG_back_sledge_plate,'infront','alignleft','aligntop',-23.5);
 SG_cam_servo_mount = SGcat(SG_cam_servo_mount,SGmirror(SG_cam_servo_mount,'yz'));
@@ -86,6 +88,7 @@ PL_rotator_servo_mount_top_guide_fixer = [0 0;10.2 0;10.2 -5.2;5 -5.2;5 -height_
 PL_rotator_servo_mount_top_guide_fixer = [flip(PL_rotator_servo_mount_top_guide_fixer);VLswapX(PL_rotator_servo_mount_top_guide_fixer)];
 PL_rotator_servo_mount_top_guide_fixer = CPLbool('-',PLsquare(30,15),PL_rotator_servo_mount_top_guide_fixer);
 PL_rotator_servo_mount_top_guide_fixer = CPLbool('-',PL_rotator_servo_mount_top_guide_fixer,PLcircle(3.1));
+PL_rotator_servo_mount_top_guide_fixer = PLroundcorners(PL_rotator_servo_mount_top_guide_fixer,[1,2,3,4],3);
 SG_rotator_servo_mount_top_guide_fixer = SGofCPLy(PL_rotator_servo_mount_top_guide_fixer,10);
 SG_rotator_servo_mount_top_guide_fixer = SGtransrelSG(SG_rotator_servo_mount_top_guide_fixer,SG_rotator_servo_mount_top_guide,'infront',2,'ontop',-5,'centerx'); 
 %% Cam Rotor
@@ -156,7 +159,6 @@ SG_gear_rotator = SGtransrelSG(SG_gear_rotator,SG_rotator_servo_mount,'rotx',pi/
 
 %% Combining Elements Sledge
 SG_sledge = SGcat(SG_cam_servo_mount,SG_gear_rotating_socket,SG_front_sledge_plate,SG_toolholder_base,SG_back_sledge_plate,SG_sledge_gear_rack,SG_rotator_servo_mount,SG_hinge,SG_closer_screw,SG_rotator_servo_mount_bracket,SG_rotator_servo_mount_top_guide,SG_rotator_servo_mount_top_guide_fixer);
-
 %% Combining Elements of Sledge and adding space for screw
 SG_base = SGcat(SG_main_guide_base,SG_main_guide,SG_main_servo_mount,SG_main_servo_bracket);
 
@@ -166,11 +168,11 @@ SG = SGcat(SG_sledge,SG_cam_rotor,SG_guide,SG_base,SG_base_gear,SG_gear_rotator)
 
 %% Writing STL Files
 SGwriteSTL(SG_sledge,"Sledge",'','y');
-SGwriteSTL(SG_base,"Base",'','y');
-SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
-SGwriteSTL(SG_guide,"ExzenterLaeufer",'','y');
-SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');
-SGwriteSTL(SG_gear_rotator,"Tool Rotating Gear",'','y');
+% SGwriteSTL(SG_base,"Base",'','y');
+% SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
+% SGwriteSTL(SG_guide,"ExzenterLaeufer",'','y');
+% SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');
+% SGwriteSTL(SG_gear_rotator,"Tool Rotating Gear",'','y');
 % SGwriteSTL(SG,"Assembly",'','y');
 
 end

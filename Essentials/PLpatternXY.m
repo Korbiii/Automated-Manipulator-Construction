@@ -7,6 +7,9 @@
 %   y_dis:  Distance between copies in y-direction
 %	=== OUTPUT RESULTS ======
 %   CPL: 	CPL of copied elements
+%
+%  Same as CPLcopypattern....
+%
 function [CPL] = PLpatternXY(PL,x_num,y_num,x_dis,y_dis)
 CPL = PL;
 for i=1:x_num-1
