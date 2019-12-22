@@ -27,10 +27,13 @@ for i=1:size(corner_numbers,2)
         v2 = PL(corner_numbers(i)-1,:)-PL(corner_numbers(i),:);
         v2 = v2/norm(v2);
     end
-    following_point = PL(corner_numbers(i),:)+(v1*radius(i));
-    trailing_point = PL(corner_numbers(i),:)+(v2*radius(i));
+    following_point = PL(corner_numbers(i),:)+(v1*abs(radius(i)));
+    trailing_point = PL(corner_numbers(i),:)+(v2*abs(radius(i)));
 %     corners{end+1} = CPLradialEdges([trailing_point;PL(corner_numbers(i),:);following_point],radius);
     corners{end+1} = PLcircarc2([trailing_point;PL(corner_numbers(i),:);following_point]);
+    if radius(i)<0
+        corners{end} = PLmirror0(corners{end},'y',1);
+    end
 end
 for i=1:size(corner_numbers,2)
     if corner_numbers(i) == 1
