@@ -16,6 +16,7 @@ SG_toolholder_base = SGof2CPLsz([PLsquare(50,115);NaN NaN;PLsquare(20,40)],[PLsq
 PL_front_sledge_plate = PLtrans(PLsquare(25,50),[7.5 0]);
 PL_front_sledge_plate = CPLbool('-',PL_front_sledge_plate,PLtrans(PLcircle(6.3),[10 25]));
 PL_front_sledge_plate = CPLbool('-',PL_front_sledge_plate,PLtrans(PLsquare(25,9),[-10,-21.5]));
+PL_front_sledge_plate = PLroundcorners(PL_front_sledge_plate,26,10);
 SG_front_sledge_plate = SGofCPLy(PL_front_sledge_plate,10);
 SG_front_sledge_plate = SGtransrelSG(SG_front_sledge_plate,SG_toolholder_base,'ontop','alignback',-20);
 
@@ -62,7 +63,7 @@ SG_back_sledge_plate = SGtransrelSG(SG_back_sledge_plate,SG_toolholder_base,'ali
 
 PL_cam_servo_mount = [PLsquare(46,28.5);NaN NaN;PLtrans(PLpatternXY(PLcircle(1.5),2,2,24,12),[4 0])];
 PL_cam_servo_mount = CPLbool('-',PL_cam_servo_mount,PLtrans(PLsquare(23.25,17),[-11.625,-8.5]));
-PL_cam_servo_mount = PLroundcorners(PL_cam_servo_mount,[2,3,4,5],5);
+PL_cam_servo_mount = PLroundcorners(PL_cam_servo_mount,[2,3,4,5],[10,5,5,5]);
 SG_cam_servo_mount = SGofCPLx(PL_cam_servo_mount,5.6);
 SG_cam_servo_mount =  SGtransrelSG(SG_cam_servo_mount,SG_back_sledge_plate,'infront','alignleft','aligntop',-23.5);
 SG_cam_servo_mount = SGcat(SG_cam_servo_mount,SGmirror(SG_cam_servo_mount,'yz'));
@@ -127,6 +128,7 @@ SG_main_servo_mount = SGcat(SG_main_servo_mount,SGinfront(SG_main_servo_mount,SG
 SG_main_servo_mount = SGtransrelSG(SG_main_servo_mount,SG_main_guide,'ontop',10,'centery',-10,'left',-10);
 PL_main_servo_bracket = CPLbool('-',PLsquare(120,39),PLtrans(PLsquare(100,30),[0 -5]));
 PL_main_servo_bracket = CPLbool('-',PL_main_servo_bracket,PLtrans(PLsquare(46.7,10),[-10 14.5]));
+PL_main_servo_bracket = PLroundcorners(PL_main_servo_bracket,[1,2],5);
 SG_main_servo_bracket = SGofCPLx(PL_main_servo_bracket,28.5);
 SG_main_servo_bracket = SGtransrelSG(SG_main_servo_bracket,SG_main_guide_base,'alignbottom','left',-10,'centery');
 %% Base Gear
@@ -167,8 +169,8 @@ SG_base = SGcat(SG_main_guide_base,SG_main_guide,SG_main_servo_mount,SG_main_ser
 SG = SGcat(SG_sledge,SG_cam_rotor,SG_guide,SG_base,SG_base_gear,SG_gear_rotator);
 
 %% Writing STL Files
-SGwriteSTL(SG_sledge,"Sledge",'','y');
-% SGwriteSTL(SG_base,"Base",'','y');
+% SGwriteSTL(SG_sledge,"Sledge",'','y');
+SGwriteSTL(SG_base,"Base",'','y');
 % SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
 % SGwriteSTL(SG_guide,"ExzenterLaeufer",'','y');
 % SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');

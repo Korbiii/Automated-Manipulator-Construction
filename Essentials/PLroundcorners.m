@@ -3,7 +3,10 @@
 %	PL:     Contour of PL you to search throguh
 %	=== OUTPUT RESULTS ======
 function [PL] = PLroundcorners(PL,corner_numbers,varargin)
-radius = 1; if nargin>=3 && ~isempty(varargin{1}); radius=varargin{1}; end
+radius = ones(1,size(corner_numbers,2)); if nargin>=3 && ~isempty(varargin{1}); radius=varargin{1}; end
+if(size(radius,1)==1)
+    radius = repmat(radius,1,size(corner_numbers,2));
+end
 PL_save = CPLselectinout(PL,1);
 PL = CPLselectinout(PL,0);
 corners = {};
@@ -24,9 +27,10 @@ for i=1:size(corner_numbers,2)
         v2 = PL(corner_numbers(i)-1,:)-PL(corner_numbers(i),:);
         v2 = v2/norm(v2);
     end
-    following_point = PL(corner_numbers(i),:)+(v1*radius);
-    trailing_point = PL(corner_numbers(i),:)+(v2*radius);
-    corners{end+1} = CPLradialEdges([trailing_point;PL(corner_numbers(i),:);following_point],radius);
+    following_point = PL(corner_numbers(i),:)+(v1*radius(i));
+    trailing_point = PL(corner_numbers(i),:)+(v2*radius(i));
+%     corners{end+1} = CPLradialEdges([trailing_point;PL(corner_numbers(i),:);following_point],radius);
+    corners{end+1} = PLcircarc2([trailing_point;PL(corner_numbers(i),:);following_point]);
 end
 for i=1:size(corner_numbers,2)
     if corner_numbers(i) == 1

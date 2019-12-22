@@ -16,7 +16,7 @@ for i=1:size(PL,1)
     else        
         v2 = PL(i-1,:)-PL(i,:);
     end    
-    <
+    phi = acosd(dot(v1,v2)/(norm(v1)*norm(v2)));
     if phi ~= 180
         indices = [indices i];
     end
