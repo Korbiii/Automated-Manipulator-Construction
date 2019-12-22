@@ -96,7 +96,7 @@ SG_rotator_servo_mount_top_guide_fixer = SGtransrelSG(SG_rotator_servo_mount_top
 SG_cam_rotor = SGofCPLz([PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;PLcircularpattern(PLcircle(3),7,pi/2,4)],2);
 SG_cam_rotor_stud = SGofCPLz([PLtrans(PLcircle(9),[0 distance]);NaN NaN;PLcircle(1.5)],7.5);
 SG_cam_rotor = SGstack('z',SG_servo_connector,SG_cam_rotor,SG_cam_rotor_stud);
-SG_cam_rotor = SGtransrelSG(SG_cam_rotor,SG_cam_servo_mount,'centery',-12,'centerx','ontop',2);
+SG_cam_rotor = SGtransrelSG(SG_cam_rotor,SG_cam_servo_mount,'centery',-12,'centerx','ontop',-3);
 
 %% Cam Guide    
 SG_cam_guide_front = SGofCPLy(PLsquare(10),30);
@@ -107,13 +107,15 @@ SG_cam_guide_tip = SGtrans0(SGstack('z',SGofCPLz(PLsquare(10),5),SG_cam_guide_ti
 
 SG_cam_guide_front = SGstack('y',SG_cam_guide_tip,SG_cam_guide_front);
 
-SG_cam_guide_back = SGofCPLz([PLsquare(23.2+distance,18.2);NaN NaN;PLsquare(23.2+distance+10,18.2+10)],10);
+PL_cam_guide_back = [PLsquare(23.2+distance,18.2);NaN NaN;PLroundcorners(PLsquare(23.2+distance+10,18.2+10),[1,2,3,4],5)];
+SG_cam_guide_back = SGofCPLz(PL_cam_guide_back,10);
 SG_cam_guide_back = SGtransrelSG(SG_cam_guide_back,SG_cam_guide_front,'aligntop','centerx',-10);
 SG_guide = SGstack('y',SG_cam_guide_front,SG_cam_guide_back);
 SG_guide = SGtransrelSG(SG_guide,SG_back_sledge_plate,'alignfront',45,'aligntop',-4,'centerx');
 
 %% Base
-SG_main_guide = SGofCPLy([5 0;0 10;15 10;15 0],120.06);
+PL_main_guide = PLroundcorners([5 0;0 10;15 10;15 0],3,5);
+SG_main_guide = SGofCPLy(PL_main_guide,120.06);
 SG_main_guide = SGtransrelSG(SG_main_guide,SG_toolholder_base,'alignbottom',0.3,'alignfront',15,'right',-4.7);
 SG_main_guide = SGcat(SGmirror(SG_main_guide,'yz'),SG_main_guide);
 
@@ -127,8 +129,8 @@ SG_main_servo_mount = SGofCPLy(PL_main_servo_mount,5);
 SG_main_servo_mount = SGcat(SG_main_servo_mount,SGinfront(SG_main_servo_mount,SG_main_servo_mount,46.8));
 SG_main_servo_mount = SGtransrelSG(SG_main_servo_mount,SG_main_guide,'ontop',10,'centery',-10,'left',-10);
 PL_main_servo_bracket = CPLbool('-',PLsquare(120,39),PLtrans(PLsquare(100,30),[0 -5]));
+PL_main_servo_bracket = PLroundcorners(PL_main_servo_bracket,[2,3,6,7],[10 10 5 5]);
 PL_main_servo_bracket = CPLbool('-',PL_main_servo_bracket,PLtrans(PLsquare(46.7,10),[-10 14.5]));
-% PL_main_servo_bracket = PLroundcorners(PL_main_servo_bracket,[1,2],5);
 SG_main_servo_bracket = SGofCPLx(PL_main_servo_bracket,28.5);
 SG_main_servo_bracket = SGtransrelSG(SG_main_servo_bracket,SG_main_guide_base,'alignbottom','left',-10,'centery');
 %% Base Gear
@@ -169,12 +171,12 @@ SG_base = SGcat(SG_main_guide_base,SG_main_guide,SG_main_servo_mount,SG_main_ser
 SG = SGcat(SG_sledge,SG_cam_rotor,SG_guide,SG_base,SG_base_gear,SG_gear_rotator);
 
 %% Writing STL Files
-SGwriteSTL(SG_sledge,"Sledge",'','y');
+% SGwriteSTL(SG_sledge,"Sledge",'','y');
 % SGwriteSTL(SG_base,"Base",'','y');
 % SGwriteSTL(SG_cam_rotor,"ExzenterRotor",'','y');
 % SGwriteSTL(SG_guide,"ExzenterLaeufer",'','y');
 % SGwriteSTL(SG_base_gear,"ZahnradHauptbewegung",'','y');
 % SGwriteSTL(SG_gear_rotator,"Tool Rotating Gear",'','y');
-% SGwriteSTL(SG,"Assembly",'','y');
+SGwriteSTL(SG,"Assembly",'','y');
 
 end

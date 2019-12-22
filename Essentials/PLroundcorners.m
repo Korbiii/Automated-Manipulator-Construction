@@ -7,7 +7,11 @@ radius = ones(1,size(corner_numbers,2)); if nargin>=3 && ~isempty(varargin{1}); 
 if(size(radius,1)==1)
     radius = repmat(radius,1,size(corner_numbers,2));
 end
+try
 PL_save = CPLselectinout(PL,1);
+catch
+PL_save =[];    
+end
 PL = CPLselectinout(PL,0);
 corners = {};
 for i=1:size(corner_numbers,2)
