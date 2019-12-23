@@ -63,7 +63,9 @@ SG_back_sledge_plate = SGtransrelSG(SG_back_sledge_plate,SG_toolholder_base,'ali
 
 PL_cam_servo_mount = [PLsquare(46,28.5);NaN NaN;PLtrans(PLpatternXY(PLcircle(1.5),2,2,24,12),[4 0])];
 PL_cam_servo_mount = CPLbool('-',PL_cam_servo_mount,PLtrans(PLsquare(23.25,17),[-11.625,-8.5]));
-PL_cam_servo_mount = PLroundcorners(PL_cam_servo_mount,[2,3,4,5,6],[10,5,5,5,-5]);
+
+PL_cam_servo_mount = PLroundcorners(PL_cam_servo_mount,[2,3,4,5,6],[10,5,5,5,5],[-6]);
+
 SG_cam_servo_mount = SGofCPLx(PL_cam_servo_mount,5.6);
 SG_cam_servo_mount =  SGtransrelSG(SG_cam_servo_mount,SG_back_sledge_plate,'infront','alignleft','aligntop',-18.5);
 SG_cam_servo_mount = SGcat(SG_cam_servo_mount,SGmirror(SG_cam_servo_mount,'yz'));
@@ -75,7 +77,8 @@ PL_rotator_servo_mount = [PLtrans(PLsquare(52,28.5),[-10 0]);NaN NaN;PLpatternXY
 SG_rotator_servo_mount = SGofCPLx(PL_rotator_servo_mount,5);
 SG_rotator_servo_mount = SGtransrelSG(SG_rotator_servo_mount,SG_back_sledge_plate,'behind','alignbottom',-8,'alignleft');
 
-SG_rotator_servo_mount_bracket = SGofCPLz(PLsquare(40,52),5);
+PL_rotator_servo_mount_bracket = PLroundcorners(PLsquare(52,5),[3,4],2.5,[-4]);
+SG_rotator_servo_mount_bracket = SGofCPLx(PL_rotator_servo_mount_bracket,40);
 SG_rotator_servo_mount_bracket = SGtransrelSG(SG_rotator_servo_mount_bracket,SG_rotator_servo_mount,'ontop','alignback','alignleft');
 
 height_guide = 8.5;

@@ -4,13 +4,14 @@
 %	=== OUTPUT RESULTS ======
 function [PL] = PLroundcorners(PL,corner_numbers,varargin)
 radius = ones(1,size(corner_numbers,2)); if nargin>=3 && ~isempty(varargin{1}); radius=varargin{1}; end
+connection = []; if nargin >=4 && ~isempty(varargin{2}); connection = varargin{2}; end
 if(size(radius,1)==1)
     radius = repmat(radius,1,size(corner_numbers,2));
 end
 try
-PL_save = CPLselectinout(PL,1);
+    PL_save = CPLselectinout(PL,1);
 catch
-PL_save =[];    
+    PL_save =[];
 end
 PL = CPLselectinout(PL,0);
 corners = {};
@@ -33,10 +34,15 @@ for i=1:size(corner_numbers,2)
     end
     following_point = PL(corner_numbers(i),:)+(v1*abs(radius(i)));
     trailing_point = PL(corner_numbers(i),:)+(v2*abs(radius(i)));
-%     corners{end+1} = CPLradialEdges([trailing_point;PL(corner_numbers(i),:);following_point],radius);
+    %     corners{end+1} = CPLradialEdges([trailing_point;PL(corner_numbers(i),:);following_point],radius);
     corners{end+1} = PLcircarc2([trailing_point;PL(corner_numbers(i),:);following_point]);
-    if radius(i)<0
-        corners{end} = PLmirror0(corners{end},'y',1);
+    [is_member,pos] = ismember(corner_numbers(i),abs(connection));
+    if is_member
+        if connection(pos) <0
+            corners{end} = PLmirror0(corners{end},[trailing_point;PL(corner_numbers(i),:)],1);
+        else
+            corners{end} = PLmirror0(corners{end},[following_point;PL(corner_numbers(i),:)],1);
+        end
     end
 end
 for i=1:size(corner_numbers,2)
