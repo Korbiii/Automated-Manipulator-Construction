@@ -77,7 +77,7 @@ PL_rotator_servo_mount = [PLtrans(PLsquare(52,28.5),[-10 0]);NaN NaN;PLpatternXY
 SG_rotator_servo_mount = SGofCPLx(PL_rotator_servo_mount,5);
 SG_rotator_servo_mount = SGtransrelSG(SG_rotator_servo_mount,SG_back_sledge_plate,'behind','alignbottom',-8,'alignleft');
 
-PL_rotator_servo_mount_bracket = PLroundcorners(PLsquare(52,5),[3,4],2.5,[-4]);
+PL_rotator_servo_mount_bracket = PLroundcorners(PLsquare(52,5),[4],2.5,[-4]);
 SG_rotator_servo_mount_bracket = SGofCPLx(PL_rotator_servo_mount_bracket,40);
 SG_rotator_servo_mount_bracket = SGtransrelSG(SG_rotator_servo_mount_bracket,SG_rotator_servo_mount,'ontop','alignback','alignleft');
 
@@ -86,7 +86,7 @@ PL_rotator_servo_mount_top_guide = [0 0;10 0;10 -5;5 -5;5 -height_guide;0 -heigh
 PL_rotator_servo_mount_top_guide = [flip(PL_rotator_servo_mount_top_guide);VLswapX(PL_rotator_servo_mount_top_guide)];
 PL_rotator_servo_mount_top_guide = CPLbool('-',PL_rotator_servo_mount_top_guide,PLcircle(3.1));
 SG_rotator_servo_mount_top_guide = SGofCPLy(PL_rotator_servo_mount_top_guide,10);
-SG_rotator_servo_mount_top_guide = SGtransrelSG(SG_rotator_servo_mount_top_guide,SG_rotator_servo_mount_bracket,'ontop','alignback','transx',10);
+SG_rotator_servo_mount_top_guide = SGtransrelSG(SG_rotator_servo_mount_top_guide,SG_rotator_servo_mount_bracket,'ontop',-2.5,'alignback','transx',10);
 
 PL_rotator_servo_mount_top_guide_fixer = [0 0;10.2 0;10.2 -5.2;5 -5.2;5 -height_guide;0 -height_guide];
 PL_rotator_servo_mount_top_guide_fixer = [flip(PL_rotator_servo_mount_top_guide_fixer);VLswapX(PL_rotator_servo_mount_top_guide_fixer)];

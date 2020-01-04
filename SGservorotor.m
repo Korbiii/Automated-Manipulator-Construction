@@ -23,7 +23,9 @@ if ~isempty(CPL_screw_circle)
 else
     SG_base_layer = SGofCPLz([PLcircle(1.75);NaN NaN;PLcircle(base_r)],1.5);
 end
+if ~isempty(SG_connector)
 SG_base_layer = SGcat(SGunder(SG_connector,SG_base_layer),SG_base_layer);
+end
 
 f = 0.2;
 phi_diff = 0.2;
