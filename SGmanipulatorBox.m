@@ -40,7 +40,7 @@ for i=1:dofs
     PL_guide = [PL_side;NaN NaN;VLswapX(PL_side)];
     SG_guide = SGofCPLz(PL_guide,15);
     if(i==1)
-        SG_side_holes = SGtransrelSG(SGbox([30,20,box_height/2]),SG_guide,'centerx','aligntop',-box_height/5,'infront',-2);
+        SG_side_holes = SGtransrelSG(SGbox([30,40,box_height/2]),SG_guide,'centerx','aligntop',-box_height/5,'infront',-10);
     end
     sizex_old = sizex;
     [sizex,~,~,~,~,~] = sizeVL(SG_guide);
@@ -48,7 +48,7 @@ for i=1:dofs
         distance_next = (2*(rotor_radius-(sizex/2)))+10;
     else
         distance_next = 10;
-    end    
+    end
     if ~isempty(SG_servo_guides)
         SG_guide = SGtransrelSG(SG_guide,SG_servo_guides,'left',distance_next,'alignback');
         SG_servo_guides = SGcat(SG_servo_guides,SG_guide);
@@ -65,18 +65,18 @@ for i=1:dofs
             SG_side_holes =  SGtransrelSG(SG_sm40_holes,SG_guide,'centerx','aligntop',-9.5,'alignback',15);
         end
         SG_hole_t = SGtransrelSG(SGofCPLz(PLcircle(14),20),SG_guide,'ontop',-5,'centerx','alignfront',-7.25);
-    else        
+    else
         distance_next_y = -21;
         SG_hole_t = SGtransrelSG(SGofCPLz(PLcircle(16),20),SG_guide,'ontop',-2.5,'centerx','alignfront',-9);
         SG_holes = SGtransrelSG(SG_sm85_holes,SG_hole_t,'aligntop','centerx','centery',14);
-        SG_hole_t = SGcat(SG_hole_t,SG_holes);        
+        SG_hole_t = SGcat(SG_hole_t,SG_holes);
     end
-     if isempty(SG_top_holes)            
-           SG_top_holes = SG_hole_t;
-        else
-           SG_top_holes = SGcat(SG_top_holes,SG_hole_t);
-     end    
-     PL_top_holes = [PL_top_holes;-distance_next_x distance_next_y];
+    if isempty(SG_top_holes)
+        SG_top_holes = SG_hole_t;
+    else
+        SG_top_holes = SGcat(SG_top_holes,SG_hole_t);
+    end
+    PL_top_holes = [PL_top_holes;-distance_next_x distance_next_y];
 end
 [sizex,sizey,~,~,~,~] = sizeVL(SG_servo_guides);
 PL_main_frame = CPLbool('-',PLsquare(sizex+20,sizey+20),PLsquare(sizex,sizey));
@@ -87,6 +87,12 @@ SG_main_frame = SGboolh('-',SG_main_frame,SG_side_holes);
 SG_main_frame_top = SGofCPLz(PLroundcorners(PLsquare(sizex+20,sizey+10),4,10),10);
 SG_main_frame_top = SGtransrelSG(SG_main_frame_top,SG_main_frame,'ontop','alignright','alignback');
 SG_main_frame_top = SGboolh('-',SG_main_frame_top,SG_top_holes);
+
+PL_positioning = [PLsquare(sizex+9,sizey+1);NaN NaN;PLsquare(sizex+4,sizey-4)];
+PL_positioning = CPLbool('-',PL_positioning,PLsquare(sizex-10,sizey*2));
+PL_positioning = CPLbool('-',PL_positioning,PLsquare(sizex*2,sizey-20));
+SG_positioning = SGofCPLz(PL_positioning,5);
+SG_positioning = SGtransrelSG(SG_positioning,SG_main_frame_top,'centerx','centery','ontop');
 
 
 PL_back_plate = CPLbool('+',PLsquare(30,box_height),PLtrans(PLsquare(40,10),[5 box_height/2+5]));
@@ -118,12 +124,29 @@ PL_tool_move_connection = CPLbool('-',PL_tool_move_connection,PLtrans(PLsquare(5
 SG_tool_mover_connection = SGofCPLx(PL_tool_move_connection,28.5);
 SG_tool_mover_connection = SGtransrelSG(SG_tool_mover_connection,SG_main_frame,'alignbottom','right','alignback');
 
-SG_top_cover = SGtransrelSG(SGbox([57,66.5,5]),SG_tool_mover_connection,'aligntop',30,'alignleft','centery',-10);
+SG_top_cover_side = SGtransrelSG(SGbox([57,66.5,5]),SG_tool_mover_connection,'aligntop',30,'alignleft','centery',-10);
 PL_side_covers = [PLsquare(42.75,25);NaN NaN;PLtrans(CPLcopypattern(PLcircle(1.5),[1 2],[0 12]),[13.375 -9.5])];
 SG_side_covers = SGofCPLy(PL_side_covers,4.7);
-SG_side_covers = SGtransrelSG(SG_side_covers,SG_top_cover,'under','alignleft','alignback');
-SG_side_covers_2 = SGtransrelSG(SG_side_covers,SG_top_cover,'under','alignleft','alignfront');
+SG_side_covers = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignback');
+SG_side_covers_2 = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignfront');
 SG_side_covers = SGcat(SG_side_covers,SG_side_covers_2);
+
+PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];
+PL_nut_holder_base = [PLsquare(12);NaN NaN;PLcircle(2.5)];
+SG_nut_holder = SGofCPLz(PL_nut_holder,6);
+SG_nut_holder_base = SGofCPLz(PL_nut_holder_base,3);
+SG_nut_holder = SGstack('z',SG_nut_holder_base,SG_nut_holder);
+SG_nut_holder = SGpatternXY(SG_nut_holder,2,2,sizex-12,sizey-12);
+SG_nut_holder = SGtransrelSG(SG_nut_holder,SG_main_frame,'center','alignbottom');
+SG_texts = {};
+for i=1:dofs
+    if ~ismember(i,tensioner)
+        SG_text = SGoftext("SM40BL",[20 8 1]);
+    else
+        SG_text = SGoftext("SM85CL",[20 8 1]);
+    end
+    SG_texts{end+1} = SGtransrelSG(SG_text,SG_main_frame,'rotx',pi/2,'rotz',pi,'behind','transx',10,'alignbottom',-10,'transx',PL_top_holes(i,1));
+end
 
 
 
@@ -146,12 +169,12 @@ PL_rotor_conn_top_85 = [PLcircle(17,5);NaN NaN;PLcircle(3);NaN NaN;CPLcopyradial
 SG_rotor_conn_top_85 = SGofCPLz(PL_rotor_conn_top_85,3.5);
 SG_sm85_rotor = SGstack('z',SG_sm85_rotor,SG_cover_rotor_85,SG_rotor_conn_bot_85,SG_rotor_conn_top_85);
 
-for i=1:dofs   
+for i=1:dofs
     if ~ismember(i,tensioner)
         SG_rotors{end+1} = SGtransrelSG(SG_sm40_rotor,SG_main_frame_top,'ontop',-8,'transy',PL_top_holes(i,2),'transx',PL_top_holes(i,1));
-    else        
+    else
         SG_rotors{end+1} = SGtransrelSG(SG_sm85_rotor,SG_main_frame_top,'ontop',-8,'transy',PL_top_holes(i,2),'transx',PL_top_holes(i,1));
-    end    
+    end
 end
 
 
@@ -185,12 +208,12 @@ SG_connection_top_top_85 = SGofCPLz(PLcircle(19),2);
 SG_connection_top_through_85 = SGofCPLz(PLcircle(10),6);
 SG_connection_top_85 = SGstack('z',SG_connection_top_85,SG_connection_top_top_85,SG_connection_top_through_85,SG_rotor_top);
 
-for i=1:dofs   
+for i=1:dofs
     if ~ismember(i,tensioner)
         SG_rotors_top_plate{end+1} = SGtransrelSG(SG_connection_top,SG_top_plate,'ontop',-14,'transy',PL_top_holes(i,2),'transx',PL_top_holes(i,1));
-    else        
+    else
         SG_rotors_top_plate{end+1} = SGtransrelSG(SG_connection_top_85,SG_top_plate,'ontop',-14,'transy',PL_top_holes(i,2),'transx',PL_top_holes(i,1));
-    end    
+    end
 end
 
 SG_tensioners = {};
@@ -227,6 +250,20 @@ SG_side_2= SGtransrelSG(SGofCPLx(PL_sides,3),SG_top_cover,'right');
 SG_top_cover = SGcat(SG_top_cover,SG_side_1,SG_side_2);
 SG_top_cover = SGtransrelSG(SG_top_cover,SG_top_plate,'ontop','alignback','alignleft');
 
+SG_hinge = SGrealhinge(50,6,8);
+SG_hinge = SGtransrelSG(SG_hinge,SG_top_cover,'infront','aligntop',-11);
+SG_hinge_2 = SGtrans(SG_hinge,[-sizex+60 0 0]);
+PL_hinge_brace = [0 0;0 6;13 6;10 1];
+PL_hinge_brace = CPLbool('-',PL_hinge_brace,PLcircle((6/2)+3));
+SG_hinge_brace = SGofCPLx(PL_hinge_brace,42);
+SG_hinge_brace = SGtransrelSG(SG_hinge_brace,SG_hinge,'centerx','behind',-8.1,'aligntop');
+SG_hinge_brace = SGcat(SG_hinge_brace,SGtrans(SG_hinge_brace,[-sizex+60 0 0]));
+SG_top_cover = SGcat(SG_top_cover,SG_hinge_brace,SG_teeth);
+H = [rotx(0) [0;-64;43]; 0 0 0 1];
+SG_top_cover =SGTset(SG_top_cover,'B',H);
+SG_top_cover = SGTrotate(SG_top_cover,'B','x',0.1);
+
+
 %% Abdeckung
 PL_cover = CPLbool('-',PLsquare(30,box_height+10),PLtrans(PLsquare(30,box_height+10),[3 -3]));
 PL_cover = PLroundcorners(PL_cover,[2,5],20);
@@ -245,13 +282,17 @@ SG_cover_plate = SGtransrelSG(SGofCPLx(PL_cover_plate,10),SG_cover,'left','align
 %% CAT
 % SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
 % SG_tool_mover = SGtransrelSG(SG_tool_mover,SG_tool_mover_connection,'right',-23,'alignbottom','alignback',10);
-SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_back_plate,SG_bottom_plate,SG_guide_bot,SG_guide_top,SG_arduino_mounting,SG_feetech_mounting,SG_tool_mover_connection,SG_top_cover,SG_side_covers);
+SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_back_plate,SG_bottom_plate,SG_guide_bot,SG_guide_top,SG_arduino_mounting,SG_feetech_mounting,SG_tool_mover_connection,SG_side_covers,SG_positioning,SG_top_cover_side,SG_nut_holder);
 SG_cover = SGcat(SG_cover,SG_guide_cover_top,SG_guide_cover_bot,SG_guide_cover_top_add,SG_cover_plate);
-SG_top_plate = SGcat([{SG_top_plate} SG_rotors_top_plate {SG_tensionerblock} SG_tensioners {SG_top_frame} {SG_teeth} {SG_top_cover}]);
-SG = SGcat([{SG_bottom} SG_rotors {SG_top_plate}]);
-% SGwriteSTL(SG_sm40_rotor,"SG_rotor_sm40");
-% SGwriteSTL(SG_cover,"SG_cover");
-% SGwriteSTL(SG_bottom,"SG_bottom");
-% SGwriteSTL(SG_top_plate,"SG_top_plate");
-SGwriteSTL(SG,"SG_box");
+SG_top_plate = SGcat([{SG_top_plate} SG_rotors_top_plate {SG_tensionerblock} SG_tensioners {SG_top_frame} {SG_top_cover} {SG_hinge} {SG_hinge_2} ]);
+SG = SGcat([{SG_bottom} SG_rotors SG_texts]);
+SGwriteSTL(SG_cover,"SG_cover",'','y');
+SGwriteSTL(SG_bottom,"SG_bottom",'','y');
+SGwriteSTL(SG_top_plate,"SG_top_plate",'','y');
+for i=1:size(SG_rotors,2)
+    SGwriteSTL(SG_rotors{i},"Rotor"+i,'','y');
+end
+
+
+% SGwriteSTL(SG,"SG_box");
 end
