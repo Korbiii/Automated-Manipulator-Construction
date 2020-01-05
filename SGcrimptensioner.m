@@ -3,7 +3,7 @@
 %	length:         crimp length
 %	width:          crimp max width
 %	tension length:	dx of tensioning
-%   which:          1 = screw 2= Nut 0 = both
+%   which:          1 = screw 2= Nut 0 = both 3 = nut nut
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of crimp tensioner
 function [SG] = SGcrimptensioner(length,width,tension_length,which)
@@ -26,6 +26,8 @@ elseif which == 1
     SG = SG_screw;
 elseif which == 2
     SG = SG_stationary;
+elseif which == 3
+    SG = SGscrewDIN(-10,5,'',PLcircle(8,6));
 end
     SG = SGtrans(SG,TofR(roty(90)*rotx(-90)));
 
