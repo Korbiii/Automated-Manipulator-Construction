@@ -16,12 +16,13 @@ end
 
 r_mid = (r-screw_head_s)/2; % dicke Ropelayer 
 r_mid_pos = screw_head_s+r_mid; % Positions mittelkreis
-base_r = min(50,max(27,r+2));
+% base_r = min(50,max(27,r+2));
+base_r = r+2;
 
 if ~isempty(CPL_screw_circle)
     SG_base_layer = SGofCPLz([PLcircle(1.75);NaN NaN;PLcircle(base_r);NaN NaN;CPL_screw_circle],1.5);
 else
-    SG_base_layer = SGofCPLz([PLcircle(1.75);NaN NaN;PLcircle(base_r)],1.5);
+    SG_base_layer = SGofCPLz([PLcircle(base_r)],1.5);
 end
 if ~isempty(SG_connector)
 SG_base_layer = SGcat(SGunder(SG_connector,SG_base_layer),SG_base_layer);
