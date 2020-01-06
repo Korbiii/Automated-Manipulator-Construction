@@ -31,6 +31,6 @@ SG_connector_SM85 = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0
 % SGplot(SGtoolmanipulatorSM40(CPL_servo,SG_connector_SM40));
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
-SGplot(SGmanipulatorBox(2,[2]));
+SGplot(SGmanipulatorBox(3,[1,2]));
 % SGwriteSTL(SGmanipulatorBox(3,3));
 
