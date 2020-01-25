@@ -56,7 +56,7 @@ for i=1:size(h_axis,1)
     if ~isempty(CPL_holes)
         CPL_limit = CPLbool('-',CPL_limit,CPLgrow(CPL_holes,+0.5+hole_r));
     end
-    %% Searching point with furthest distant to axis that still can be mirrored on the other side
+    %% Searching point with furthest distant to axis that still can be mirrored to the other side
     dis = 0;
     dis_pos=0;
     for j=1:size(CPL_limit,1)

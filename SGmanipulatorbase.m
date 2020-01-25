@@ -40,7 +40,7 @@ CPL = CPLbool('-',CPL,PLtrans([PLcircle((max_value+sizex/2));NaN NaN;PLcircle(ma
 CPL = CPLbool('-',CPL,PLtrans([PLcircle((max_value+sizey/2));NaN NaN;PLcircle(max_value*4)],[abs(sizeCPL(1)-size(1))+sizex/2+1 0]));
 CPL = CPLbool('-',CPL,PLtrans([PLcircle((max_value+sizey/2));NaN NaN;PLcircle(max_value*4)],[-abs(sizeCPL(1)-size(1))-sizex/2-1 0]));
 end
-CPL = [CPL;NaN NaN;PLtrans(PLcircle(1.5),[0 -7.5])];
+% CPL = [CPL;NaN NaN;PLtrans(PLcircle(1.5),[0 -7.5])];
 
 if sensor_channel
     CPL_outer_contour = CPLselectinout(CPL,0);

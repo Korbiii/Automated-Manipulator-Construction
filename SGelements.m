@@ -1,14 +1,14 @@
-%%   [SG]=SGelements(CPL,h_dir,h_offset,[bottom_ele,side_stabi,hinge_width,ele_height])
+%%  [SG]=SGelements(CPL,h_dir,h_offset,[bottom_ele,side_stabi,hinge_width,ele_height])
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of element with tool hole
 %	h_dir:          Angle of hinge
 %	h_offset:       Hinge offset from middleplane
 %	bottom_ele:     1: Is starting Element default: isnt starting Element
 %   side_stabi:     1: Create Side Stabilisation. default: No stabi
-%   hinge_width:    Override default hinge width of 1.2
-%   ele_height:     Override default element height of 2
+%   hinge_width:    Override default hinge width of 1.2mm
+%   ele_height:     Override default element height of 2mm
 %	=== OUTPUT RESULTS ======
-%	SG:         SG of element
+%	SG:             SG of element
 function [SG,CPL] = SGelements(CPL,h_dir,h_offset,varargin)
 %% Initializing
 height = 0.5;
@@ -85,10 +85,8 @@ end
 %% Add frames to element
 H_f = TofR(rotx(90)*roty(90+h_dir),[-h_offset 0 height+(height_SG/2)]);
 
-% H_f = [rotx(90)*roty(90+h_dir) [0;0;height+(height_SG/2)]; 0 0 0 1];
 if ~bottom_ele
     H_b = TofR(rotx(90)*roty(-90+h_dir),[-h_offset 0 -(height_SG/2)-height]);
-%     H_b = [rotx(90)*roty(-90+h_dir) [0;0;(-(height_SG/2)-height)]; 0 0 0 1];
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(height_SG/2))]; 0 0 0 1];
 end
