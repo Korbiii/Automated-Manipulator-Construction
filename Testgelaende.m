@@ -1,7 +1,11 @@
 clf;clear;
 addpath('Essentials');
-CPL = CPLsample(4);
- CPLplot(CPL);
-CPL = PLroundcorners2(CPL,3,3);
 
- CPLplot(CPL);
+h_r = 1;
+
+CPL1 = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -2])]);
+CPL2 = CPLbool('-',PLcircle(h_r),PLtrans(PLcircle(h_r+0.1),[0 -0.4]));
+% CPLplot(CPL1);
+% CPLplot(CPL2,'g');
+SG = SGof2CPLsz(CPL2,CPL1);
+SGplot(SG);

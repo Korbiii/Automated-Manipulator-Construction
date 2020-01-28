@@ -42,7 +42,7 @@ for i=1:size(h_axis,1)
         CPL_no_go_area = CPLbool('OR',CPL_no_go_area,cross_points);
     end
     %% Generating CPL of points where holes currently can go
-    CPL_o_in = CPLgrow(CPL_out,-0.7-hole_r);
+    CPL_o_in = CPLgrow(CPL_out{size(h_axis,1)+1-i},-0.7-hole_r);
     [~,pos]=separateNaN(CPL_in);
     if size(pos,1) > 2
         CPL_1 = CPLgrow(CPL_in(1:pos(2)-1,:),-0.5-hole_r);        

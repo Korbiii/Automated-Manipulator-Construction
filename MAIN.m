@@ -5,7 +5,11 @@ path = prefdir; path = strsplit(path, '\');path{7} = 'MATLAB Add-Ons\Toolboxes\S
 
 
 CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
-SGwriteSTL(SGmanipulator(CPL,3.4,[90 75 4.2;0 90 0;90 270 0],0,0,1),"SGmanipulator",'','y');
+CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
+CPL3 = PLtrans(PLkidney(2,12,pi/6.5),[-7 0]);
+
+
+SGwriteSTL(SGmanipulator({CPL CPL2},3.4,[90 75 4.2;0 90 0;90 270 0],0,0,0),"SGmanipulator",'','y');
 
 
 
@@ -53,4 +57,5 @@ SG_connector_SM85 = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
 % SGwriteSTL(SGmanipulatorBox(3,3));
+% SGplot(SGpushpullmountSM85BL);
 
