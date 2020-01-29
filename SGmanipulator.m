@@ -44,23 +44,23 @@ total_progress = (2*size(M_paras,1))+2;
 [CPLs_holes,positions] = PLholeFinder(CPL_out,CPL_in,M_paras(:,[1,3]),hole_r,push_rod); updateProgress;
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,1),M_paras(1,3),1); updateProgress;
-SG_top = SGconnector(CPLs{size(M_paras,1)},CPLs{size(M_paras,1)},CPLs_holes{end},'',positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1); updateProgress;
+SG_top = SGconnector(CPLs{size(M_paras,1)},CPLs{size(M_paras,1)},CPLs_holes{end},'',positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1,'','','','','y'); updateProgress;
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPLs{i},CPLs_holes{i});
     if i==1
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4)];  updateProgress;
         if side_stabi == 1 
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,2)]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,2,'y')]; updateProgress;
         else
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,0)]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,0,'y')]; updateProgress;
         end
     elseif i==2
         SG_temp = SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',side_stabi,1.4-(0.2*i),4);        
         SG_elements = [SG_elements SG_temp];  updateProgress;
         if side_stabi == 1
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,1)]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,1,'y')]; updateProgress;
         else
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,0)]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,0,'y')]; updateProgress;
         end
     else
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i))];  updateProgress;
