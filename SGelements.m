@@ -2,20 +2,31 @@
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of element with tool hole
 %	h_dir:          Angle of hinge
-%	h_offset:       Hinge offset from middleplane
+%	h_opti:       Hinge offset from middleplane
 %	bottom_ele:     1: Is starting Element default: isnt starting Element
 %   side_stabi:     1: Create Side Stabilisation. default: No stabi
 %   hinge_width:    Override default hinge width of 1.2mm
 %   ele_height:     Override default element height of 2mm
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of element
-function [SG,CPL] = SGelements(CPL,h_dir,h_offset,varargin)
+function [SG,CPL] = SGelements(CPL,h_dir,varargin)
 %% Initializing
-height = 0.5;
-bottom_ele = 0;     if nargin>=4 && ~isempty(varargin{1});  bottom_ele = varargin{1};   end
-side_stabi = 0;     if nargin>=5 && ~isempty(varargin{2});  side_stabi = varargin{2};   end
-hinge_width = 1.2;  if nargin>=6 && ~isempty(varargin{3});  hinge_width = varargin{3};  end
-ele_height = 2;     if nargin>=7 && ~isempty(varargin{3});  ele_height = varargin{4};   end
+height = 0.5; bottom_ele = 0;side_stabi = 0; 
+h_opti = 0;             if nargin>=3 && ~isempty(varargin{1});  h_opti = varargin{1};  end
+hinge_width = 1.2;  if nargin>=4 && ~isempty(varargin{2});  hinge_width = varargin{2};  end
+ele_height = 2;     if nargin>=5 && ~isempty(varargin{3});  ele_height = varargin{3};   end
+
+for f=3:size(varargin,2)
+   switch varargin{f}
+       case 'bottom_element'
+           bottom_ele = 1;
+       case 'side_stabi'
+           side_stabi = 1;           
+   end
+end
+
+
+
 %% Creating base and zeroing it in z
 if side_stabi == 1
     maxY = max(CPL(:,2));
@@ -61,9 +72,8 @@ end
 
 %% Add hinge to base
 SG_hinge = SGhingeround(0.5,hinge_width,height);
-SG_hinge = SGtrans(SG_hinge,[0 h_offset 0]);
 SG_hinge = SGtransR(SG_hinge,rotz(h_dir));
-SG_hinge= SGcreateHinge(CPL,SG_hinge,h_dir);
+SG_hinge= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width);
 
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
@@ -83,22 +93,20 @@ else
 end
 
 %% Add frames to element
-H_f = TofR(rotx(90)*roty(90+h_dir),[-h_offset 0 height+(height_SG/2)]);
+H_f = TofR(rotx(90)*roty(90+h_dir),[-h_opti 0 height+(height_SG/2)]);
 
 if ~bottom_ele
-    H_b = TofR(rotx(90)*roty(-90+h_dir),[-h_offset 0 -(height_SG/2)-height]);
+    H_b = TofR(rotx(90)*roty(-90+h_dir),[-h_opti 0 -(height_SG/2)-height]);
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(height_SG/2))]; 0 0 0 1];
 end
 
 SG = SGTset(SG,'F',H_f);
 SG = SGTset(SG,'B',H_b);
-SG = SGcolor(SG);
 if side_stabi ==1
     SG_2 = SGcolor(SG_2);
     SG_2 = SGTset(SG_2,'F',H_f);
     SG_2 = SGTset(SG_2,'B',H_b);
-    SG_2 = SGcolor(SG_2);
     SG = [SG SG_2];
 end
 

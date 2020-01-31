@@ -3,16 +3,24 @@
 %	CPL_out:        CPL of outer contour of elements
 %   tool_r:         tool hole at [0 0] with radius tool_r
 %	M_paras:        3xn Vector of DoFs [direction_angle total_angle offset]
-%   push_rod:       1 = push_rod; 0 = double rope pull
-%   sensor_channel: 1 = sensor channel, default: no sensor channel
-%   side_stabi:     1 = sidestabi; default = no Sidestabi
+%   flags:          'single';'sensor_channel','side_stabi','first_single'
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
-function [SG] = SGmanipulator(CPL_out,tool_r,M_paras,varargin)
-push_rod=0;             if nargin>=4 && ~isempty(varargin{1}); push_rod=varargin{1}; end
-sensor_channel=0;       if nargin>=5 && ~isempty(varargin{2}); sensor_channel=varargin{2}; end
-side_stabi = 0;         if nargin>=6 && ~isempty(varargin{3}); side_stabi = varargin{3}; end
-
+%   SGc:        SGTchain of Manipulator
+function [SG] = SGmanipulator(CPL_out,tool_r,M_paras,varargin) 
+single=0; sensor_channel=0; side_stabi = 0; 
+for f=1:size(varargin,2)
+      switch varargin{f}
+          case 'single'
+              single = 1;
+          case 'sensor_channel'
+              sensor_channel = 1;
+          case 'side_stabi'
+              side_stabi = 1;
+          case 'first_single'
+              single = 2;
+      end   
+end
 %% Setting up variables
 CPLs = {};
 if ~iscell(CPL_out)
@@ -41,29 +49,20 @@ SG_conns =[];
 progress = 0;
 total_progress = (2*size(M_paras,1))+2;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,CPL_in,M_paras(:,[1,3]),hole_r,push_rod); updateProgress;
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,M_paras(:,[1,4]),hole_r,single); updateProgress;
 %%  Creating elements and connectors
-SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,1),M_paras(1,3),1); updateProgress;
-SG_top = SGconnector(CPLs{size(M_paras,1)},CPLs{size(M_paras,1)},CPLs_holes{end},'',positions(1,:),[M_paras(end,[1,3]);M_paras(end,[1,3])],hole_r,1,'','','','','y'); updateProgress;
+SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,1),M_paras(1,4),'','','bottom_element'); updateProgress;
+SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,'','','end_cap','y'); updateProgress;
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPLs{i},CPLs_holes{i});
     if i==1
-        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i),4)];  updateProgress;
-        if side_stabi == 1 
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,2,'y')]; updateProgress;
-        else
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),1,0,'y')]; updateProgress;
-        end
+        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.2,4)];  updateProgress;
+        SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.2,1.0,'single','y')]; updateProgress;       
     elseif i==2
-        SG_temp = SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',side_stabi,1.4-(0.2*i),4);        
-        SG_elements = [SG_elements SG_temp];  updateProgress;
-        if side_stabi == 1
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,1,'y')]; updateProgress;
-        else
-            SG_conns = [SG_conns SGconnector(CPLs{i},CPLs{i+1},CPLs_holes{i},CPLs_holes{i+1},flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,'',1.4-(0.2*i),1.2-(0.2*i),0,0,'y')]; updateProgress;
-        end
+        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',side_stabi,1.0,4)];  updateProgress;
+        SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,3]),hole_r,1.0,0.8,'y')]; updateProgress;
     else
-        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,1.4-(0.2*i))];  updateProgress;
+        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,3),'',0,0.8)];  updateProgress;
     end
 end
 %% Filling cell list with elements for a single arm
