@@ -17,48 +17,43 @@ function [SG] = SGconnector(CPL,CPL_holes,positions,axis_h,h_r,varargin)
 %%
 hinge_width_b = 1.2;    if nargin>=6 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
 hinge_width_t = 1.2;    if nargin>=7 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
-cut_orientation = 'x'; single = 0; end_cap = 0;
+cut_orientation = 'x'; single = 0; end_cap = 0; crimp = 1;
 for f=3:size(varargin,2)
    switch varargin{f}
        case 'end_cap'
            end_cap = 1;
        case 'single'
            single = 1;
+           crimp = 0;
        case 'x'
            cut_orientation = 'x';
        case 'y'
            cut_orientation = 'y';
+       case 'crimp'
+           crimp = 1;
    end
 end
-
-
-
-
 CPL_b = CPL{1};
-if size(CPL) == 2
+if size(CPL,2) == 2
     CPL_f = CPL{2};
 else
     CPL_f = CPL{1};
 end
 CPL_holes_b = CPL_holes{1};
-if size(CPL_holes) == 2 
+if size(CPL_holes,2) == 2 
     CPL_holes_f = CPL_holes{2}; 
 else
     CPL_holes_f = [];
 end
 
-crimp = 2;
-
 %% Shifting all holes to positive x_values
 for i=1:size(positions,1)
-    if positions(i,1) < 0
+    if positions(i,1) < 0  && ~single
         positions(i,:) = -positions(i,:);
     end
 end
 
-
-
-if crimp == 1
+if crimp
     SG = SGof2CPLsz(CPL_b,CPL_f,12);
     height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
     SG_holes = SGofCPLz(CPL_holes_b,height_SG-2);
@@ -95,20 +90,19 @@ else
     [sizex,sizey,~,~,~,~] = sizeVL(CPL_b);
     
     CPL_b_wireescape = CPLbool('-',CPL_b,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
-    CPL_f_wireescape = CPLbool('-',CPL_f_baseholes,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:))); 
-    
+    CPL_f_wireescape = CPLbool('-',CPL_f_baseholes,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
         
     if cut_orientation == 'x'
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(3,sizey),[sizex/2 0]));    %% TODO
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(3,sizey),[sizex/2 0]));    
     else
         width = (sizey/2)-abs(positions(1,2))+(h_r);
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizex,width),[0 positions(1,2)-width/2])); %% TODO
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizex,width),[0 positions(1,2)-width/2])); 
     end
     
     if positions(1,1)>0
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[-(sizex/2+2)/2 -positions(1,2)])); %% TODO
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[-(sizex/2+2)/2 -positions(1,2)])); 
     else
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 positions(1,2)]));  %% TODO
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 positions(1,2)]));  
     end
     
     if ~single
@@ -136,23 +130,17 @@ end
 height = 0.5;
 
 SG_hinge = SGhingeround(0.5,hinge_width_b,height);
-
-SG_hinge_b = SGtrans(SG_hinge,[0 axis_h(1,2) 0]);
-SG_hinge_b = SGtransR(SG_hinge_b,rotz(axis_h(1,1)));
+SG_hinge_b = SGtransR(SG_hinge,rotz(axis_h(1,1)));
 SG_hinge_b = SGcreateHinge(CPL_b,SG_hinge_b,axis_h(1,1),axis_h(1,2),hinge_width_b);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 
 if ~end_cap
     SG_hinge_t = SGhingeround(0.5,hinge_width_t,height);
-    SG_hinge_t = SGtrans(SG_hinge_t,[0 axis_h(2,2) 0]);
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(axis_h(2,1)));
     SG_hinge_t = SGcreateHinge(CPL_f,SG_hinge_t,axis_h(2,1),axis_h(2,2),hinge_width_t);
     SG_hinge_b = SGunder(SG_hinge_b,SG);
     SG_hinge_t = SGontop(SG_hinge_t,SG);
     SG = SGcat(SG_hinge_b,SG_hinge_t,SG);
-%     if side_stabi == 2
-%         SG = SGcat(SG,SGontop(SG_stabilisator,SG,-1));
-%     end
 else
     SG = SGcat(SGunder(SG_hinge_b,SG),SG);
 end

@@ -11,6 +11,8 @@ function [SG] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width)
 max_dim = max(sizeVL(CPL))+1;
 middle_axis = PLtransR([-max_dim 0;max_dim 0],rot(deg2rad(hinge_dir)));
 e_dir = middle_axis/norm(middle_axis);
+e_dir_p = e_dir(1,:)/norm(e_dir(1,:));
+e_dir_n = e_dir(2,:)/norm(e_dir(2,:));
 PL_offsetline = middle_axis;
 middle_axis = PLtransR(middle_axis,rot(pi/2));
 pos_plane = [flip(middle_axis);middle_axis+50]; % Plane for finding points in positive area
@@ -18,24 +20,22 @@ hinge_width = hinge_width+1;
 
 %% Calculating best offset
 if hinge_opti ~= 0
-    PL_offsetline = PLtrans(PL_offsetline,e_dir(1,:)*rot(pi/2)*max_dim);
+    PL_offsetline = PLtrans(PL_offsetline,e_dir_p*rot(pi/2)*max_dim);
     size_h = 0; res = 0.3; offset = max_dim;
-    while size_h < 3
+    while size_h < 2
         size_h = 0;
-        PL_offsetline = PLtrans(PL_offsetline,e_dir(1,:)*rot(pi/2)*-res);
+        PL_offsetline = PLtrans(PL_offsetline,e_dir_n*rot(pi/2)*res);
         offset = offset-res;
         c_p = PLcrossCPLLine2(PL_offsetline,CPL);
         if ~isempty(c_p)
             c_p = sortrows(c_p);
-            c_p_2 = PLcrossCPLLine2(PLtrans(PL_offsetline,e_dir(1,:)*rot(pi/2)*-hinge_width),CPL);
-            c_p_2 = sortrows(c_p_2);
-            for c=1:size(c_p,2)
-                for k=1:size(c_p_2,2)
-                    dis = sqrt(pdist2(c_p(c,:),c_p_2(k,:))-0.8^2);
+            for c=1:size(c_p,2)   
+                for k=c+1:size(c_p,2)
+                    dis = pdist2(c_p(c,:),c_p(k,:));
                     if dis > 1
-                        PL_hinge_area = [c_p(c,:);c_p(c,1) c_p_2(k,2);c_p_2(k,:); c_p_2(k,1) c_p(c,2)];
-                        inside = min(insideCPS(CPL,PL_hinge_area));
-                        if inside >= 0
+                        PL_hinge_area = [c_p(c,:);PLtrans(c_p(c,:),e_dir_n*rot(pi/2)*hinge_width);PLtrans(c_p(k,:),e_dir_n*rot(pi/2)*hinge_width);c_p(k,:)];
+                        inside = inside2C(CPL,PL_hinge_area);
+                        if inside(1) ~= 0
                             size_h = size_h+dis;
                         end
                     end
@@ -44,10 +44,10 @@ if hinge_opti ~= 0
         end
         
     end
-SG_hinge = SGtrans(SG_hinge,[e_dir(1,:)*rot(pi/2)*(offset-(hinge_width/2)) 0]);
+SG_hinge = SGtrans(SG_hinge,[e_dir_p*rot(pi/2)*(offset-(hinge_width/2)) 0]);
 end
 SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); %% TODO OFFSET
-VL_hinge = SG_hinge.VL;<
+VL_hinge = SG_hinge.VL;
 
 SG =[];
 proj_points = {};
