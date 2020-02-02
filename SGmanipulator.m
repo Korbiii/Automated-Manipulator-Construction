@@ -32,14 +32,11 @@ while size(CPL_out,2)<size(M_paras,1)
     CPL_out{end+1} = CPL_out{end};
 end
 CPL_out = CPL_out';
-
+CPL_in = PLcircle(tool_r,tool_r*20);
 for i=1:size(CPL_out,1)
-    if sensor_channel
-        CPL_in = PLcircle(tool_r);
+    if sensor_channel          
         CPL_in = CPLbool('-',CPL_in,PLtrans(PLcircle(tool_r),[0 tool_r+1.75]));
         CPL_in = [CPL_in;NaN NaN;PLtrans(PLcircle(1.4),[0 tool_r])];
-    else
-        CPL_in = PLcircle(tool_r);
     end
     CPLs{end+1} = CPLbool('-',CPL_out{i},CPL_in);
 end
@@ -54,31 +51,32 @@ total_progress = (2*size(M_paras,1))+2;
 [CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,M_paras(:,[1,4]),hole_r,single); updateProgress;
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,1),M_paras(1,4),'','','bottom_element'); updateProgress;
-if ~single
-SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,'','','end_cap','y'); updateProgress;
+if single == 1
+     SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,tool_r,'','','end_cap','y','single'); updateProgress;
 else
-  SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,'','','end_cap','y','single'); updateProgress;  
+    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,tool_r,'','','end_cap','y'); updateProgress;
 end
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPLs{i},CPLs_holes{i});
     if i==1
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.2,4)];  updateProgress;
-        if single
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.2,1.0,'single','y')]; updateProgress;
+        if single == 2
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'single','y','crimp')]; updateProgress;
+        elseif single == 1
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'single','y')];
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.2,1.0,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'y')]; updateProgress;
         end
     elseif i==2
-        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.0,4)];  updateProgress;
-        if single == 2
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.0,0.8,'single','y','crimp')]; updateProgress;
-        elseif single == 1
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.0,0.8,'single','y')]; updateProgress;
+       SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.0,4)];  updateProgress;
+       if single == 1
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.0,0.8,'single','y')]; updateProgress;
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,1.0,0.8,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.0,0.8,'y')]; updateProgress;
         end
     else
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),0.8)];  updateProgress;
+       
     end
 end
 %% Filling cell list with elements for a single arm

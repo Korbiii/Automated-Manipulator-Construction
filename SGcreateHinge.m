@@ -6,7 +6,8 @@
 %   hinge_opti: 0 no opti; 1 opti in pos -1 in negative
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of connector element
-function [SG] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width)
+%   offset:     Calculated offset in positive y direction
+function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width)
 %% Initializing and generating general values
 max_dim = max(sizeVL(CPL))+1;
 middle_axis = PLtransR([-max_dim 0;max_dim 0],rot(deg2rad(hinge_dir)));
@@ -15,7 +16,7 @@ e_dir_p = e_dir(1,:)/norm(e_dir(1,:));
 e_dir_n = e_dir(2,:)/norm(e_dir(2,:));
 PL_offsetline = middle_axis;
 middle_axis = PLtransR(middle_axis,rot(pi/2));
-pos_plane = [flip(middle_axis);middle_axis+50]; % Plane for finding points in positive area
+pos_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir_n*50)]; % Plane for finding points in positive area
 hinge_width = hinge_width+1;
 
 %% Calculating best offset
@@ -44,7 +45,8 @@ if hinge_opti ~= 0
         end
         
     end
-SG_hinge = SGtrans(SG_hinge,[e_dir_p*rot(pi/2)*(offset-(hinge_width/2)) 0]);
+    offset = (offset-(hinge_width/2));
+SG_hinge = SGtrans(SG_hinge,[e_dir_p*rot(pi/2)*offset 0]);
 end
 SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); %% TODO OFFSET
 VL_hinge = SG_hinge.VL;
@@ -56,11 +58,10 @@ proj_points = {};
 for i=1:size(VL_hinge,1)
     PL_cross_line = [VL_hinge(i,1:2);VL_hinge(i,1:2)+(e_dir*50)];
     c_p =  PLcrossCPLLine2(PL_cross_line,CPL);
-    if mod(size(c_p,1),2) ~=0 warning("halt"); end
     c_p(:,3) = pdist2(c_p,VL_hinge(i,1:2));
     c_p = sortrows(c_p,3);
     c_p = c_p(:,1:2);
-    proj_points{end+1} = c_p;
+    proj_points{end+1} = c_p;   
 end
 %% Getting number of hinge elements below and above axis through [0 0]
 [proj_points_size, max_index] = max(cellfun('size', proj_points, 1));
@@ -92,7 +93,6 @@ for k=1:size(proj_points,2)
             negative_v = [negative_v;repmat(negative_v(end-1:end,:),floor((negative_gl-negative)/2),1)];
             proj_points{k} = [positive_v;negative_v];
         end
-        
     end
 end
 %% Replacing values to minimize overlapping triangles
@@ -106,12 +106,12 @@ e_dir = e_dir(1,:)/norm(e_dir(1,:));
 for u=1:size(proj_points,2)
     for j=1:size(plains,2)
         or_point = proj_points{u}(j*2-1,:);
-        curr_point = proj_points{u}(j*2,:);        
+        curr_point = proj_points{u}(j*2,:); 
         distance_point_plain = distPointLine(plains{j},or_point);        
         if pdist2(or_point,curr_point)>distance_point_plain
             new_point = or_point+distance_point_plain*e_dir;
-            proj_points{u}(j*2,:) = new_point;
-        end     
+            proj_points{u}(j*2,:) = new_point;  
+        end    
         or_point_2 = proj_points{u}(j*2+2,:);
         curr_point_2 = proj_points{u}(j*2+1,:);
         distance_point_plain_2 = distPointLine(plains{j},or_point_2);
@@ -124,8 +124,8 @@ end
 %% Replacing values in hinge VLs with projected values
 for m=1:2:proj_points_size
     SG_hinge_new = SG_hinge;
-    for n=1:size(SG_hinge.VL,1)/2
-        SG_hinge_new.VL(n,1:2) = proj_points{n}(m+1,1:2);
+    for n=1:size(SG_hinge.VL,1)/2        
+        SG_hinge_new.VL(n,1:2) = proj_points{n}(m+1,1:2);   
     end
     for n=size(SG_hinge.VL,1)/2+1:size(SG_hinge.VL,1)
         SG_hinge_new.VL(n,1:2) = proj_points{n}(m,1:2);

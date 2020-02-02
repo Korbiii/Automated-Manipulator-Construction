@@ -13,10 +13,10 @@
 %   cut_orientation:    'x' or 'y' default 'x'
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of connector element
-function [SG] = SGconnector(CPL,CPL_holes,positions,axis_h,h_r,varargin)
+function [SG] = SGconnector(CPL,CPL_holes,positions,axis_h,h_r,tool_radius,varargin)
 %%
-hinge_width_b = 1.2;    if nargin>=6 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
-hinge_width_t = 1.2;    if nargin>=7 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
+hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
+hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
 cut_orientation = 'x'; single = 0; end_cap = 0; crimp = 1;
 for f=3:size(varargin,2)
    switch varargin{f}
@@ -53,78 +53,80 @@ for i=1:size(positions,1)
     end
 end
 
+CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
+CPL_f_baseholes = CPLbool('-',CPL_f,CPL_holes_b);
+CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
+PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -2*h_r])]);
+PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -2])]);
+angle = atan2(positions(1,1),positions(1,2));  %double angle  pi-angle2 -angle2 Angle between centerpoint and holeposition
+[sizey,sizex,~,~,~,~] = sizeVL(CPL_b);
+CPL_b_wireescape = CPLbool('-',CPL_b,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
+CPL_f_wireescape = CPLbool('-',CPL_f_baseholes,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
+SG_bottom = SGofCPLz(CPL_b,2);
+
 if crimp
-    SG = SGof2CPLsz(CPL_b,CPL_f,12);
-    height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
-    SG_holes = SGofCPLz(CPL_holes_b,height_SG-2);
-    PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -2])]);
-    PL_crimp_holes = [];
-    for i=1:size(positions,1)
-        if single && i == 1
-            angle = atan2(positions(i,1),positions(i,2))+pi/2;
-            PL_crimp_holes = CPLbool('+',PL_crimp_holes,PLtrans(PLtransR(PL_crimp_hole,rot(angle)),positions(i,:)));
-        else
-            angle = atan2(positions(i,1),positions(i,2));
-            PL_crimp_holes = CPLbool('+',PL_crimp_holes,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle)),positions(i,:)));
-        end
-        if i ~=1 || single == 0
-            PL_crimp_holes = CPLbool('+',PL_crimp_holes,PLtrans(PLtransR(PL_crimp_hole,rot(-angle)),-positions(i,:)));
-        end
-    end
-    SG_holes_crimp = SGtrans(SGofCPLz(PL_crimp_holes,8),[0 0 2]);
-    
-    
-    SG_holes = SGboolh('+',SG_holes,SG_holes_crimp);
-    if ~isempty(CPL_holes_f)
-        SG_holes_top = SGofCPLz(CPL_holes_f,3);
-        SG_holes = SGboolh('+',SG_holes,SGtrans(SG_holes_top,[0 0 height_SG-2.5]));
-    end
-    SG = SGbool3('-',SG,SGtrans(SG_holes,[0 0 -0.1]));
-    SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
-else
-    CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
-    CPL_f_baseholes = CPLbool('-',CPL_f,CPL_holes_b);
-    CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
-    PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -2*h_r])]);
-    angle = atan2(positions(1,1),positions(1,2));  %double angle  pi-angle2 -angle2 Angle between centerpoint and holeposition
-    [sizex,sizey,~,~,~,~] = sizeVL(CPL_b);
-    
-    CPL_b_wireescape = CPLbool('-',CPL_b,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
-    CPL_f_wireescape = CPLbool('-',CPL_f_baseholes,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
+    if size(positions,1) == 2
+        angle2 = atan2(positions(2,1),positions(2,2));
+        CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions(2,:)));
+        CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions(2,:)));
+        CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions(2,:)));
+        CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions(2,:)));
         
-    if cut_orientation == 'x'
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(3,sizey),[sizex/2 0]));    
-    else
-        width = (sizey/2)-abs(positions(1,2))+(h_r);
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizex,width),[0 positions(1,2)-width/2])); 
     end
-    
-    if positions(1,1)>0
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[-(sizex/2+2)/2 -positions(1,2)])); 
-    else
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 positions(1,2)]));  
-    end
-    
     if ~single
         CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
         CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-        if cut_orientation == 'x'
-            CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(3,sizey),[-sizex/2 0]));    %% TODO
+    end
+    SG_middle = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,10.5);
+    SG_top = SGofCPLz(CPL_f,2);
+    SG = SGstack('z',SG_bottom,SG_middle,SG_top);
+    
+else      
+    PL_tool_guard = [PLcircle(tool_radius);NaN NaN;PLcircle(tool_radius+0.5)]; 
+    if cut_orientation == 'x'
+        width = (sizey/2)-abs(positions(1,1))+(h_r)+5;
+        if positions(1,1)>0
+            offset = positions(1,1)+width/2-h_r;
         else
-            CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2,3),[sizex/4 -sizey/2]));    %% TODO
+            offset = positions(1,1)-width/2+h_r;
         end
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 -positions(1,2)]));
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(width,sizex*2),[offset 0]));
+    else
+        width = (sizex/2)-abs(positions(1,2))+(h_r)+5;
+        if positions(1,2)>0
+            offset = positions(1,2)+width/2-h_r;
+        else
+            offset = positions(1,2)-width/2+h_r;
+        end
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizey*2,width),[0 offset]));
+    end
+    
+    if positions(1,1)>0
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[-sizey -positions(1,2)]));
+    else
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[sizey -positions(1,2)]));
     end    
-          
-    SG_bottom = SGofCPLz(CPL_b,2);
+    CPL_b_wirechannels = CPLbool('+',CPL_b_wirechannels,PL_tool_guard);
+    
+%     if ~single
+%         CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
+%         CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
+%         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
+%         if cut_orientation == 'x'
+%             CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(3,sizey),[-sizex/2 0]));    %% TODO
+%         else
+%             CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2,3),[sizex/4 -sizey/2]));    %% TODO
+%         end
+%         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 -positions(1,2)]));
+%     end    
+    
     SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.8);
     SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2);
     SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);
-    SG = SGstack('z',SG_bottom,SG_wire_layer,SG_top_connector,SG_top_layer);
-    height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
-    SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
+    SG = SGstack('z',SG_bottom,SG_wire_layer,SG_top_connector,SG_top_layer);    
 end
+height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
+SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 
 %% add hinge
 height = 0.5;
