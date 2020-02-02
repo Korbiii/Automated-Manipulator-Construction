@@ -73,7 +73,7 @@ end
 %% Add hinge to base
 SG_hinge = SGhingeround(0.5,hinge_width,height);
 SG_hinge = SGtransR(SG_hinge,rotz(h_dir));
-SG_hinge= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width);
+[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width);
 
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
@@ -91,6 +91,55 @@ if ~bottom_ele
 else
     SG = SGcat(SG,SG_hinge_top);
 end
+
+%% Add stops
+max_dim = max(sizeVL(CPL))+1;
+middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
+e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
+e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
+left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
+right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*-max_dim)];
+
+CPL_out =  CPLselectinout(CPL,0);
+CPL_out_left = CPLbool('-',CPL_out,left_plane);
+CPL_out_right = CPLbool('-',CPL_out,right_plane);
+
+max_distance_left = 0;
+for k=1:size(CPL_out_left,1)
+    temp_dis = distPointLine(middle_axis,CPL_out_left(k,:));
+    if temp_dis>max_distance_left
+        max_distance_left = temp_dis;
+    end
+end
+max_distance_right = 0;
+for k=1:size(CPL_out_right,1)
+     temp_dis = distPointLine(middle_axis,CPL_out_right(k,:));
+    if temp_dis>max_distance_right
+        max_distance_right = temp_dis;
+    end
+end
+
+PLsquare_left = PLsquare(max(hinge_width+1,max_distance_left-2),max_dim*2);
+PLsquare_right = PLsquare(max(hinge_width+1,max_distance_right-2),max_dim*2);
+PLsquare_left = PLtrans(PLsquare_left,[-offset+(max(hinge_width+1,max_distance_left-2)/2) 0]);
+PLsquare_right= PLtrans(PLsquare_right,[-offset-(max(hinge_width+1,max_distance_right-2)/2) 0]);
+
+PL_cut = CPLbool('+',PLsquare_left,PLsquare_right);
+CPL_cut = CPLbool('-',CPL,PL_cut);
+
+offset_p = floor((max_distance_right/(max_distance_right+max_distance_left))*500);
+
+PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(0.5,1,offset_p) linspace(1,0,500-offset_p)]';
+
+SG_stop = SGofCPLz(CPL_cut,0.1);
+n=size(SG_stop.VL,1);
+PLup=[SG_stop.VL(n/2+1:end,1) SG_stop.VL(n/2+1:end,2)];
+VLprojection = PLtoVLprojection(PLup, PLcontour);
+SG_stop.VL = [SG_stop.VL(1:n/2,1) SG_stop.VL(1:n/2,2) SG_stop.VL(1:n/2,3);VLprojection];
+SG_stop = SGtrans(SG_stop,[0 0 height_SG/2]);
+
+SG = SGcat(SG,SG_stop);
+SG = SGcat(SG,SGmirror(SG_stop,'xy'));
 
 %% Add frames to element
 H_f = TofR(rotx(90)*roty(90+h_dir),[-h_opti 0 height+(height_SG/2)]);

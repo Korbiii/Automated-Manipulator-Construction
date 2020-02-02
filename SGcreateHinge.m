@@ -9,6 +9,7 @@
 %   offset:     Calculated offset in positive y direction
 function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width)
 %% Initializing and generating general values
+offset = 0;
 max_dim = max(sizeVL(CPL))+1;
 middle_axis = PLtransR([-max_dim 0;max_dim 0],rot(deg2rad(hinge_dir)));
 e_dir = middle_axis/norm(middle_axis);

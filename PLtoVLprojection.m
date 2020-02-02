@@ -41,6 +41,7 @@ function [ VLprojection ] = PLtoVLprojection(PL, PLcontour)
 
 %convert PL contour to VLcontour (contour in x-z-plane and y=0)
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
+% VLplot(VLcontour);
 
 %PL of contour, that shall be projected onto PLcontour, create VLprojection
 VLprojection = [PL(:,1) PL(:,2) zeros(size(PL,1),1)]; %create VL
