@@ -13,7 +13,7 @@
 %   cut_orientation:    'x' or 'y' default 'x'
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of connector element
-function [SG] = SGconnector(CPL,CPL_holes,positions,axis_h,h_r,tool_radius,varargin)
+function [SG] = SGconnector(CPL,CPL_holes,positions,section_p,h_r,tool_radius,varargin)
 %%
 hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
 hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
@@ -132,14 +132,14 @@ SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 height = 0.5;
 
 SG_hinge = SGhingeround(0.5,hinge_width_b,height);
-SG_hinge_b = SGtransR(SG_hinge,rotz(axis_h(1,1)));
-SG_hinge_b = SGcreateHinge(CPL_b,SG_hinge_b,axis_h(1,1),axis_h(1,2),hinge_width_b);
+SG_hinge_b = SGtransR(SG_hinge,rotz(section_p(1,1)));
+[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,4),hinge_width_b);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 
 if ~end_cap
     SG_hinge_t = SGhingeround(0.5,hinge_width_t,height);
-    SG_hinge_t = SGtransR(SG_hinge_t,rotz(axis_h(2,1)));
-    SG_hinge_t = SGcreateHinge(CPL_f,SG_hinge_t,axis_h(2,1),axis_h(2,2),hinge_width_t);
+    SG_hinge_t = SGtransR(SG_hinge_t,rotz(section_p(2,1)));
+    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,4),hinge_width_t);
     SG_hinge_b = SGunder(SG_hinge_b,SG);
     SG_hinge_t = SGontop(SG_hinge_t,SG);
     SG = SGcat(SG_hinge_b,SG_hinge_t,SG);
@@ -147,9 +147,20 @@ else
     SG = SGcat(SGunder(SG_hinge_b,SG),SG);
 end
 
+%% add stops
+
+SG_stop_b = SGelementstops(CPL_b,section_p(1,1),12,1,hinge_width_b,offset_b);
+SG_stop_b = SGmirror(SG_stop_b,'xy');
+SG_stop_b = SGtrans(SG_stop_b,[0 0 -height_SG/2]);
+if ~end_cap
+    SG_stop_t = SGelementstops(CPL_f,section_p(2,1),12,1,hinge_width_t,offset_t);
+    SG_stop_t = SGtrans(SG_stop_t,[0 0 height_SG/2]);    
+    SG_stop_b = SGcat(SG_stop_b,SG_stop_t);
+end
+SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
-H_f = [rotx(90)*roty(90+axis_h(2,1)) [-axis_h(2,2);0;((height_SG/2)+height)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+axis_h(1,1)) [-axis_h(1,2);0;(-(height_SG/2)-height)]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+section_p(2,1)) [-section_p(2,4);0;((height_SG/2)+height)]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+section_p(1,1)) [-section_p(1,4);0;(-(height_SG/2)-height)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);

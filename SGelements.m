@@ -9,12 +9,14 @@
 %   ele_height:     Override default element height of 2mm
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of element
-function [SG,CPL] = SGelements(CPL,h_dir,varargin)
+function [SG,CPL] = SGelements(CPL,parameters,varargin)
 %% Initializing
 height = 0.5; bottom_ele = 0;side_stabi = 0; 
-h_opti = 0;             if nargin>=3 && ~isempty(varargin{1});  h_opti = varargin{1};  end
-hinge_width = 1.2;  if nargin>=4 && ~isempty(varargin{2});  hinge_width = varargin{2};  end
-ele_height = 2;     if nargin>=5 && ~isempty(varargin{3});  ele_height = varargin{3};   end
+hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
+ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargin{2};   end
+
+h_dir = parameters(1);
+h_opti = parameters(4);
 
 for f=3:size(varargin,2)
    switch varargin{f}
@@ -93,57 +95,13 @@ else
 end
 
 %% Add stops
-max_dim = max(sizeVL(CPL))+1;
-middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
-e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
-e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
-left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
-right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*-max_dim)];
-
-CPL_out =  CPLselectinout(CPL,0);
-CPL_out_left = CPLbool('-',CPL_out,left_plane);
-CPL_out_right = CPLbool('-',CPL_out,right_plane);
-
-max_distance_left = 0;
-for k=1:size(CPL_out_left,1)
-    temp_dis = distPointLine(middle_axis,CPL_out_left(k,:));
-    if temp_dis>max_distance_left
-        max_distance_left = temp_dis;
-    end
-end
-max_distance_right = 0;
-for k=1:size(CPL_out_right,1)
-     temp_dis = distPointLine(middle_axis,CPL_out_right(k,:));
-    if temp_dis>max_distance_right
-        max_distance_right = temp_dis;
-    end
-end
-
-PLsquare_left = PLsquare(max(hinge_width+1,max_distance_left-2),max_dim*2);
-PLsquare_right = PLsquare(max(hinge_width+1,max_distance_right-2),max_dim*2);
-PLsquare_left = PLtrans(PLsquare_left,[-offset+(max(hinge_width+1,max_distance_left-2)/2) 0]);
-PLsquare_right= PLtrans(PLsquare_right,[-offset-(max(hinge_width+1,max_distance_right-2)/2) 0]);
-
-PL_cut = CPLbool('+',PLsquare_left,PLsquare_right);
-CPL_cut = CPLbool('-',CPL,PL_cut);
-
-offset_p = floor((max_distance_right/(max_distance_right+max_distance_left))*500);
-
-PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(0.5,1,offset_p) linspace(1,0,500-offset_p)]';
-
-SG_stop = SGofCPLz(CPL_cut,0.1);
-n=size(SG_stop.VL,1);
-PLup=[SG_stop.VL(n/2+1:end,1) SG_stop.VL(n/2+1:end,2)];
-VLprojection = PLtoVLprojection(PLup, PLcontour);
-SG_stop.VL = [SG_stop.VL(1:n/2,1) SG_stop.VL(1:n/2,2) SG_stop.VL(1:n/2,3);VLprojection];
+SG_stop = SGelementstops(CPL,h_dir,1,12,hinge_width,offset);
 SG_stop = SGtrans(SG_stop,[0 0 height_SG/2]);
-
 SG = SGcat(SG,SG_stop);
 SG = SGcat(SG,SGmirror(SG_stop,'xy'));
-
 %% Add frames to element
 H_f = TofR(rotx(90)*roty(90+h_dir),[-h_opti 0 height+(height_SG/2)]);
-
+clf;
 if ~bottom_ele
     H_b = TofR(rotx(90)*roty(-90+h_dir),[-h_opti 0 -(height_SG/2)-height]);
 else

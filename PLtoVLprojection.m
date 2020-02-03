@@ -1,4 +1,4 @@
-function [ VLprojection ] = PLtoVLprojection(PL, PLcontour)
+function [ VLprojection ] = PLtoVLprojection(PL, PLcontour,angle)
 %PLtoVLprojection Projection of a 2D-PL (point list) towards a vertical 2D-contour. The result is a
 %   3D-VL (vertex list) list of the projected PL (point list). 
 %   PL: point list (2D; x-y-plane)
@@ -41,19 +41,18 @@ function [ VLprojection ] = PLtoVLprojection(PL, PLcontour)
 
 %convert PL contour to VLcontour (contour in x-z-plane and y=0)
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
-% VLplot(VLcontour);
+VLcontour = VLtrans(VLcontour,TofR(rotz(angle)));
+
 
 %PL of contour, that shall be projected onto PLcontour, create VLprojection
 VLprojection = [PL(:,1) PL(:,2) zeros(size(PL,1),1)]; %create VL
 
-%find closest value in x for protection
-for i = 1:size(VLprojection,1)
-[~,idx]=min(abs(VLprojection(i,1)-VLcontour(:,1)));
-Minidx(i)=idx; % gives index of the fittet fct x1 corresponding to the point x(i) 
-% idx
-VLprojection(i,3) = VLcontour(idx,3); %procetion by defining a z-value for the 2D-PL
 
-end;
+%find closest value in x for protection
+for i = 1:size(VLprojection,1)    
+    [~,idx] = min(pdist2(VLprojection(i,1:2),VLcontour(:,[1,2])));      
+    VLprojection(i,3) = VLcontour(idx,3); %procetion by defining a z-value for the 2D-PL    
+end
 
 % FIND FUNCTION FOR CONTOUR
 % % %find the edges of the given contour

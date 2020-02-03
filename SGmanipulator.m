@@ -50,32 +50,32 @@ total_progress = (2*size(M_paras,1))+2;
 %% Finding Positions of holes and creating CPLs
 [CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,M_paras(:,[1,4]),hole_r,single); updateProgress;
 %%  Creating elements and connectors
-SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,1),M_paras(1,4),'','','bottom_element'); updateProgress;
+SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,:),'','','bottom_element'); updateProgress;
 if single == 1
-     SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,tool_r,'','','end_cap','y','single'); updateProgress;
+    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y','single'); updateProgress;
 else
-    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,[1,4]);M_paras(end,[1,4])],hole_r,tool_r,'','','end_cap','y'); updateProgress;
+    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y'); updateProgress;
 end
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPLs{i},CPLs_holes{i});
     if i==1
-        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.2,4)];  updateProgress;
+        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),1.2,4)];  updateProgress;
         if single == 2
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'single','y','crimp')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y','crimp')]; updateProgress;
         elseif single == 1
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'single','y')];
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y')];
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.2,1.0,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'y')]; updateProgress;
         end
     elseif i==2
-       SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),1.0,4)];  updateProgress;
+       SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),1.0,4)];  updateProgress;
        if single == 1
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.0,0.8,'single','y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'single','y')]; updateProgress;
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,[1,4]),hole_r,tool_r,1.0,0.8,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'y')]; updateProgress;
         end
     else
-        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,1),M_paras(i,4),0.8)];  updateProgress;
+        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),0.8)];  updateProgress;
        
     end
 end
