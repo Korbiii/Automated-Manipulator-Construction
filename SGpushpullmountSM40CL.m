@@ -20,7 +20,7 @@ SG_fork = SGtransrelSG(SG_fork,SG_sledge,'centery','ontop');
 
 
 %% Gear
-SG_gear =  SGofCPLz([PLgearDIN(1,30,1);NaN NaN;PLcircle(12.5)],6);
+SG_gear =  SGofCPLz([PLgearDIN(1,28,1);NaN NaN;PLcircle(12.5)],6);
 SG_gear = SGtransrelSG(SG_gear,SG_sledge_gear_rack,'alignbottom','left',-2,'centery');
 PL_connector_middle = [PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;CPLcopyradial(PLcircle(1.5),7,4)];
 SG_connector_middle = SGofCPLz(PL_connector_middle,1.5);
@@ -48,11 +48,11 @@ SG_servo_mount_l = SGtransrelSG(SG_servo_mount,SG_gear,'center','centery',-12,'u
 SG_servo_mount_r = SGtransrelSG(SG_servo_mount,SG_gear,'center','centery',-12,'under',2,'transx',(servo_d(1)/2)+2.5);
 SG_servo_mount = SGcat(SG_servo_mount_l,SG_servo_mount_r);
 
-PL_bracket_left = [0 0;-5 0;-5 19;5 19;5 9;0 9];
+PL_bracket_left = [0 0;-5 0;-5 24.3;13.2 24.3;13.2 14.3;0 14.3];
 SG_bracket_left = SGofCPLy(PL_bracket_left,servo_d(2));
-SG_bracket_left = SGtransrelSG(SG_bracket_left,SG_servo_mount_l,'ontop','alignleft','alignfront');
+SG_bracket_left = SGtransrelSG(SG_bracket_left,SG_servo_mount_l,'ontop',-5,'alignleft',5,'alignfront');
 
-PL_bracket_right = [5 -5;15.7 -5;15.7 9.3;10.7 9.3;10.7 0;5 0];
+PL_bracket_right = [5 -5;19.7 -5;19.7 9.3;9.7 9.3;9.7 0;5 0];
 SG_bracket_right = SGofCPLy(PL_bracket_right,servo_d(2));
 SG_bracket_right = SGtransrelSG(SG_bracket_right,SG_servo_mount_r,'ontop',-5,'alignfront','right');
 
@@ -73,9 +73,11 @@ SG_act = SGcat(SGbox([25,60,18]),SGtrans(SGbox([17,24,12]),[0 42 0]));
 SG_act = SGtransrelSG(SG_act,SG_fork,'alignbottom','alignback',-5);
 SG_servo = SGbox(servo_d);
 SG_servo = SGtransrelSG(SG_servo,SG_gear,'centerx','centery',-12,'under',2);
-SG = SGcat(SG_sledge,SG_stops,SG_base,SG_fork,SG_act,SG_sledge_gear_rack,SG_gear,SG_servo,SG_servo_mount,SG_bracket_left,SG_bracket_right,SG_bracket);
-
-
+% SG = SGcat(,SG_act,SG_sledge_gear_rack,SG_gear,SG_servo,SG_servo_mount,SG_bracket_left,SG_bracket_right,SG_bracket);
+% SG = SGcat(SG_sledge,SG_stops,SG_base,SG_fork,SG_act,SG_sledge_gear_rack,SG_gear);
+SG_base = SGcat(SG_sledge,SG_stops,SG_base,SG_fork,SG_servo_mount,SG_bracket_left,SG_bracket_right,SG_bracket,SG_sledge_gear_rack);
+SGwriteSTL(SG_base);
+SG = SGcat(SG_base,SG_gear);
 
 
 end
