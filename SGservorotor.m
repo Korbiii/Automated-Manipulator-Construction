@@ -67,19 +67,6 @@ SG_crimp_holder = SGtrans(SG_crimp_holder,[-r_mid_pos -3 0]);
 SG_crimp_holder_2 = SGmirror(SG_crimp_holder,'xz');
 SG_crimp_holder_2= SGtransR(SG_crimp_holder_2,rot(0,0,phi_closest));
 
-
-% PL_crimp_holder = [0.5 0;4 0;4 8;1.5 8;1.5 4;0.5 4];
-% PL_crimp_holder = [PL_crimp_holder;NaN NaN;VLswapX(PL_crimp_holder)];
-% SG_crimp_holder = SGofCPLz(PL_crimp_holder,2.5);
-% PL_crimp_holder_top = [0.5 0;4 0;4 8;1.5 8;1.5 6;0.5 6];
-% PL_crimp_holder_top = [PL_crimp_holder_top;NaN NaN;VLswapX(PL_crimp_holder_top)];
-% SG_crimp_holder_top = SGofCPLz(PL_crimp_holder_top,2);
-% SG_crimp_holder = SGcat(SGontop(SG_crimp_holder_top,SG_crimp_holder),SG_crimp_holder);
-% SG_crimp_holder = SGtransrelSG(SG_crimp_holder,SG,'ontop');
-% SG_crimp_holder = SGmirror(SG_crimp_holder,'xz');
-% SG_crimp_holder = SGtrans(SG_crimp_holder,[-r_mid_pos 0 0]);
-% SG_crimp_holder_2 = SGmirror(SG_crimp_holder,'xz');
-% SG_crimp_holder_2= SGtransR(SG_crimp_holder_2,rot(0,0,phi_closest));
 SG = SGcat(SG,SG_crimp_holder,SG_crimp_holder_2);
 
 SG.FC = repmat([255 255 0],size(SG.VL,1),1);

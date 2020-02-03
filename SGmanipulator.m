@@ -7,7 +7,7 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
-function [SG] = SGmanipulator(CPL_out,tool_r,M_paras,varargin) 
+function [SG,SGc] = SGmanipulator(CPL_out,tool_r,M_paras,varargin) 
 single=0; sensor_channel=0; side_stabi = 0; 
 for f=1:size(varargin,2)
       switch varargin{f}
@@ -50,29 +50,30 @@ total_progress = (2*size(M_paras,1))+2;
 %% Finding Positions of holes and creating CPLs
 [CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,M_paras(:,[1,4]),hole_r,single); updateProgress;
 %%  Creating elements and connectors
+
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),M_paras(1,:),'','','bottom_element'); updateProgress;
 if single == 1
-    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y','single'); updateProgress;
+    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(end,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y','single'); updateProgress;
 else
-    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(1,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y'); updateProgress;
+    SG_top = SGconnector(CPLs(size(M_paras,1)),CPLs_holes(end),positions(end,:),[M_paras(end,:);M_paras(end,:)],hole_r,tool_r,'','','end_cap','y'); updateProgress;
 end
 for i=1:size(M_paras,1)
     CPL_curr = CPLbool('-',CPLs{i},CPLs_holes{i});
     if i==1
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),1.2,4)];  updateProgress;
         if single == 2
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y','crimp')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(end-i:end-i+1,:),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y','crimp')]; updateProgress;
         elseif single == 1
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y')];
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(end-i:end-i+1,:),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'single','y')];
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(end-i:end-i+1,:),M_paras(i:i+1,:),hole_r,tool_r,1.2,1.0,'y')]; updateProgress;
         end
     elseif i==2
        SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),1.0,4)];  updateProgress;
        if single == 1
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'single','y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(end-i:end-i+1,:),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'single','y')]; updateProgress;
         else
-            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),flip(positions(end-i:end-i+1,:)),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'y')]; updateProgress;
+            SG_conns = [SG_conns SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(end-i:end-i+1,:),M_paras(i:i+1,:),hole_r,tool_r,1.0,0.8,'y')]; updateProgress;
         end
     else
         SG_elements = [SG_elements SGelements(CPL_curr,M_paras(i,:),0.8)];  updateProgress;
@@ -94,16 +95,15 @@ else
     arm = [arm repelem({SG_elements(3)},floor(M_paras(3,2)/15))];
 end
 arm = [{SG_bottom} arm {SG_top}];
-%% Generating single arm with SGTchain()
-phis = [0 repmat(-0.1,1,6) zeros(1,15)];
-arm = SGTchain(arm,phis);
-arm = SGcat(arm);
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},3,positions(end,:),1,sensor_channel);
-SG = [{base} {arm} {arm}];
+base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},3,positions(1,:),1,sensor_channel);
+SGs = [{base} arm arm];
+num = size(SGs,2);
 %% Generating full manipulator with framechain
-framechain = SGTframeChain(1:2,[1 'F1' 3 'B']);
-SG = SGcat(SGcat(SGTchain(SG,[0 0 0],0,framechain)));
+framechain = SGTframeChain2(num);
+phis = [repmat(-0.1,1,6) zeros(1,27)];
+SGc = SGTchain(SGs,[0 0 phis phis],'',framechain);
+SG = SGcat(SGc);
 SGplot(SG);
     function updateProgress
         progress = progress+1;

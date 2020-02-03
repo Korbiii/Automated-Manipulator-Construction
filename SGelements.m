@@ -95,7 +95,7 @@ else
 end
 
 %% Add stops
-SG_stop = SGelementstops(CPL,h_dir,1,12,hinge_width,offset);
+SG_stop = SGelementstops(CPL,h_dir,12,1,hinge_width,offset);
 SG_stop = SGtrans(SG_stop,[0 0 height_SG/2]);
 SG = SGcat(SG,SG_stop);
 SG = SGcat(SG,SGmirror(SG_stop,'xy'));

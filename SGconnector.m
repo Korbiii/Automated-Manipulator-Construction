@@ -164,5 +164,5 @@ H_b = [rotx(90)*roty(-90+section_p(1,1)) [-section_p(1,4);0;(-(height_SG/2)-heig
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);
-SGwriteSTL(SG,rand+"");
+% SGwriteSTL(SG,rand+"");
 end

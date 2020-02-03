@@ -96,4 +96,5 @@ for i=1:size(h_axis,1)
     positions = [positions;hole_positions(1,:)];
 end
 CPLs = flip(CPLs);
+positions = flip(positions);
 end
