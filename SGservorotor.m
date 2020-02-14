@@ -37,6 +37,7 @@ endp = pi;
 PL_rope_layer = [PLcircseg(r,'',startp,endp);flip(PLcircseg(screw_head_s,'',startp,endp))];
 
 PL_rope_ramp_cutout = [-r_mid_pos+0.5 0;-r_mid_pos+1 r_mid;-r_mid_pos-1 r_mid;-r_mid_pos-0.5 0];
+PL_rope_ramp_cutout = CPLbool('+',PL_rope_ramp_cutout,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
 PL_half_circles = PLtrans(PLcircseg(r_mid,'',pi,0),[-screw_head_s-(r_mid) 0]);
 PL_half_circles = CPLbool('-',PL_half_circles,PLtransR(PL_rope_ramp_cutout,rot(0)));
 PL_half_circles = [PL_half_circles;NaN NaN;PLtransC(VLswapY(PL_half_circles),[0 0],phi_closest)];
@@ -54,20 +55,37 @@ PL_top_layer = [PLcircle(screw_head_s);NaN NaN;PLcircle(r+2);NaN NaN;PL_rope_ram
 SG_top_layer = SGofCPLz(PL_top_layer,1.5);
 SG = SGcat(SG,SGontop(SG_top_layer,SG),SG_rope_ramp);
 
-PL_crimp_holder_bot = PLcircle(5);
-PL_crimp_holder_top = PLcircle(6);
-PL_crimp_cutout = [-0.5 5.5;-0.5 2;-6.5 2;-6.5 1;-2 1;-2 -6;2 -6;2 1;8 1;8 2;0.5 2;0.5 5.5;0.5 5.5];
-PL_crimp_holder_bot = CPLbool('-',PL_crimp_holder_bot,PL_crimp_cutout);
-SG_crimp_holder_bot = SGofCPLz(PL_crimp_holder_bot,2.5);
-PL_crimp_holder_top = CPLbool('-',PL_crimp_holder_top,[0.5 6;-0.5 6;-0.6 -6;0.5 -6]);
-SG_crimp_holder_top = SGofCPLz(PL_crimp_holder_top,2.5);
-SG_crimp_holder = SGcat(SGontop(SG_crimp_holder_top,SG_crimp_holder_bot),SG_crimp_holder_bot);
-SG_crimp_holder = SGtransrelSG(SG_crimp_holder,SG,'ontop');
-SG_crimp_holder = SGtrans(SG_crimp_holder,[-r_mid_pos -3 0]);
-SG_crimp_holder_2 = SGmirror(SG_crimp_holder,'xz');
-SG_crimp_holder_2= SGtransR(SG_crimp_holder_2,rot(0,0,phi_closest));
+PL_rope_guide = [r+2 0;r+7 0;r+7 5;r+2 5;r+2 3.5;r+5 3.5;r+5 1.5;r+2 1.5];
+PL_rope_guide = PLroundcorners(PL_rope_guide,[2,3,6,7],1);
+SG_rope_guide = SGcat(SGofCPLrota(PL_rope_guide,0.75,false,1.5),SGofCPLrota(PL_rope_guide,0.75,false,3.2));
+SG_rope_guide = SGtransrelSG(SG_rope_guide,SG,'ontop',-5);
 
-SG = SGcat(SG,SG_crimp_holder,SG_crimp_holder_2);
+% PL_front_wall = [PLsquare(12,4);NaN NaN;PLcircle(0.4)];
+% SG_front_wall = SGofCPLy(PL_front_wall,3);
+% PL_back_wall = CPLbool('-',PLsquare(12,6),PLsquare(2,10));
+% PL_back_wall = CPLbool('-',PL_back_wall,PLtrans(PLsquare(8,4),[0 1]));
+% SG_back_wall = SGofCPLz(PL_back_wall,4);
+% 
+% SG_front_walls = SGtransrelSG(SG_front_wall,SG,'ontop','transx',-r_mid_pos,'transy',-3);
+% SG_back_wall = SGtransrelSG(SG_back_wall,SG_front_walls,'aligntop','infront','alignright');
+PL_walls = CPLbool('-',PLsquare(11,9),PLtrans(PLsquare(9,4),[0 -1]));
+PL_walls = CPLbool('-',PL_walls,PLtrans(PLsquare(2,5),[0 -2]));
+PL_walls = PLroundcorners(PL_walls,[1,2,3,4],[1,3,3,1]);
+SG_walls = SGtrans(SGofCPLz(PL_walls,5),[0 -11/2 0]);
+SG_walls = SGtransrelSG(SG_walls,SG,'ontop','transx',-r_mid_pos,'transy',-1.5);
+SG_hole = SGtransrelSG(SGofCPLy(PLcircle(0.35),10),SG_walls,'aligntop',-3,'centerx','alignfront');
+SG_walls = SGboolh('-',SG_walls,SG_hole);
 
-SG.FC = repmat([255 255 0],size(SG.VL,1),1);
+SG_walls_2 = SGtransR(SGmirror(SG_walls,'xz'),rot(0,0,phi_closest));
+SG_walls = SGcat(SG_walls_2,SG_walls);
+
+PL_stamp = CPLbool('+',PLsquare(8.7,5),PLtrans(PLsquare(4.7,1.25),[0 -3.125]));
+PL_stamp = PLroundcorners2(PL_stamp,[1,2,4,5,6,7],1);
+SG_stamp = SGtrans(SGofCPLz(PL_stamp,4),[0 10 0]);
+SG_stamps = SGcircularpattern(SG_stamp,4,20);
+SG_stamps = SGtransrelSG(SG_stamps,SG,'ontop',-3);
+
+SG = SGcat(SG,SG_rope_guide,SG_walls,SG_stamps);
+
+SGplot(SG);
 end

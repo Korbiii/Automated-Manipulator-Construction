@@ -49,7 +49,7 @@ if hinge_opti ~= 0
     offset = (offset-(hinge_width/2));
 SG_hinge = SGtrans(SG_hinge,[e_dir_p*rot(pi/2)*offset 0]);
 end
-SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); %% TODO OFFSET
+SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); 
 VL_hinge = SG_hinge.VL;
 
 SG =[];

@@ -17,8 +17,12 @@ function [SG] = SGconnector(CPL,CPL_holes,positions,section_p,h_r,tool_radius,va
 %%
 hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
 hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
+angles = [1,12;1,12];        if nargin>=9 && ~isempty(varargin{3}); angles = varargin{3}; end
 cut_orientation = 'x'; single = 0; end_cap = 0; crimp = 1;
-for f=3:size(varargin,2)
+% if size(positions,1)>1
+%     positions = flip(positions);
+% end
+for f=4:size(varargin,2)
    switch varargin{f}
        case 'end_cap'
            end_cap = 1;
@@ -120,7 +124,7 @@ else
 %         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 -positions(1,2)]));
 %     end    
     
-    SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.8);
+    SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.6);
     SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2);
     SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);
     SG = SGstack('z',SG_bottom,SG_wire_layer,SG_top_connector,SG_top_layer);    
@@ -149,11 +153,11 @@ end
 
 %% add stops
 
-SG_stop_b = SGelementstops(CPL_b,section_p(1,1),12,1,hinge_width_b,offset_b);
+SG_stop_b = SGelementstops(CPL_b,section_p(1,1),angles(1,1),angles(2,1),hinge_width_b,offset_b);
 SG_stop_b = SGmirror(SG_stop_b,'xy');
 SG_stop_b = SGtrans(SG_stop_b,[0 0 -height_SG/2]);
 if ~end_cap
-    SG_stop_t = SGelementstops(CPL_f,section_p(2,1),12,1,hinge_width_t,offset_t);
+    SG_stop_t = SGelementstops(CPL_f,section_p(2,1),angles(2,1),angles(2,2),hinge_width_t,offset_t);
     SG_stop_t = SGtrans(SG_stop_t,[0 0 height_SG/2]);    
     SG_stop_b = SGcat(SG_stop_b,SG_stop_t);
 end

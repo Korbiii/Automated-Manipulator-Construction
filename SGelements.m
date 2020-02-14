@@ -1,24 +1,23 @@
-%%  [SG]=SGelements(CPL,h_dir,h_offset,[bottom_ele,side_stabi,hinge_width,ele_height])
+%%  [SG]=SGelements(CPL,parameters,[hinge_width,ele_height])
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of element with tool hole
-%	h_dir:          Angle of hinge
-%	h_opti:       Hinge offset from middleplane
-%	bottom_ele:     1: Is starting Element default: isnt starting Element
-%   side_stabi:     1: Create Side Stabilisation. default: No stabi
+%   parameters:     nx4
 %   hinge_width:    Override default hinge width of 1.2mm
 %   ele_height:     Override default element height of 2mm
+%   flags:          'bottom_element';'side_stabi'
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of element
-function [SG,CPL] = SGelements(CPL,parameters,varargin)
+function [SG,CPL] = SGelements(CPL,section_p,varargin)
 %% Initializing
 height = 0.5; bottom_ele = 0;side_stabi = 0; 
 hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
 ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargin{2};   end
+angles = [1 12];     if nargin>=5 && ~isempty(varargin{3});  angles = varargin{3};   end
 
-h_dir = parameters(1);
-h_opti = parameters(4);
+h_dir = section_p(1);
+h_opti = section_p(4);
 
-for f=3:size(varargin,2)
+for f=4:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
            bottom_ele = 1;
@@ -95,7 +94,7 @@ else
 end
 
 %% Add stops
-SG_stop = SGelementstops(CPL,h_dir,12,1,hinge_width,offset);
+SG_stop = SGelementstops(CPL,h_dir,angles(1),angles(2),hinge_width,offset);
 SG_stop = SGtrans(SG_stop,[0 0 height_SG/2]);
 SG = SGcat(SG,SG_stop);
 SG = SGcat(SG,SGmirror(SG_stop,'xy'));
