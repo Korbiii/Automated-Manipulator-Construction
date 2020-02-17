@@ -10,10 +10,10 @@ CPL3 = PLtrans(PLkidney(2,12,pi/6.5),[-7 0]);
 % SGwriteSTL(SGmanipulator({CPL CPL2},3.4,[90 75 4.2;0 90 0;90 270 0]),"SGmanipulator",'','y');
 
 % SGm = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 270 270 0],'first_single'); %% Aktuellen Manipulator ausgeben
-SGm = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 270 270 0],'single'); %% Kleinen Manipulator ausgeben
+% SGm = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 270 270 0],'single'); %% Kleinen Manipulator ausgeben
 
 
-SGwriteSTL(SGm,"SGmanipulator",'','y');
+% SGwriteSTL(SGm,"SGmanipulator",'','y');
 % 
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
 
@@ -50,7 +50,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGwriteSTL(SGmanipulatorBox(3,3));
+SGplot(SGmanipulatorBox(3,[1 2 3]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 
