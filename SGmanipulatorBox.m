@@ -4,10 +4,7 @@
 %   increased_power:  1xn Vector, 1 = 4Nm 2 = 8Nm 3 = 12Nm
 %	=== OUTPUT RESULTS ======
 %
-function [SG] = SGmanipulatorBox(dofs,varargin)
-%%Varargin
-power=0;  if nargin>=2 && ~isempty(varargin{1}); power=varargin{1}; end
-push_rod = 0; if nargin>=3 && ~isempty(varargin{2}); push_rod = varargin{2}; end
+function [SG] = SGmanipulatorBox(dofs,power)
 %% Variables defining
 
 rotor_radius = 20;
@@ -22,7 +19,7 @@ SM40BL_holes = [2,2,16,12];                 %x_num,y_num,x_dis,y_dis
 SM85CL_holes = [2,3,28,28];                 %x_num,y_num,x_dis,y_dis
 SM120BL_holes = [2,3,35,35];                %x_num,y_num,x_dis,y_dis
 
-
+top_plate_holes = [13.5,16,20];
 servo_d = {SM40BL_dimensions,SM85CL_dimensions,SM120BL_dimensions};
 servo_ax = [SM40BL_axle_distance,SM85CL_axle_distance,SM120BL_axle_distance];
 
@@ -77,8 +74,8 @@ SG_main_frame = SGtransrelSG(SG_main_frame,SG_servo_guides,'centerx','alignback'
 SG_main_frame = SGboolh('-',SG_main_frame,SG_side_holes);
 
 PL_main_frame_top = PLtrans(PLroundcorners(PLsquare(sizex+30,sizey+20),4,10),[(sizex+20)/-2,(sizey+10)/-2]);
-for k=1:dofs
-    PL_main_frame_top = [PL_main_frame_top;NaN NaN;PLtrans(PLcircle(16),[-dists(k)-(box_wall_thickness*2)-sizex_first;-servo_ax(power(k))])];
+for k=1:dofs    
+    PL_main_frame_top = [PL_main_frame_top;NaN NaN;PLtrans(PLcircle(top_plate_holes(power(k))),[-dists(k)-(box_wall_thickness*2)-sizex_first;-servo_ax(power(k))])];
     if power(k)>1
         PL_main_frame_top = [PL_main_frame_top;NaN NaN;PLtrans(servo_hol{power(k)-1},[-dists(k)-(box_wall_thickness*2)-sizex_first;0])];
     end
@@ -95,6 +92,14 @@ if sizex+30 > 190
     SG_close = SGofCPLz(PL_close,box_height-6.5);
     SG_close = SGtransrelSG(SG_close,SG_main_frame,'alignbottom','alignleft','infront');
 end
+
+if box_height>59.5
+    h = box_height-57.5;
+    SG_gap_fill = SGbox([sizex+20 5 h]);
+    SG_gap_fill = SGtransrelSG(SG_gap_fill,SG_main_frame_top,'under','alignfront','alignleft',-5);
+    
+end
+
 
 PL_positioning = [PLsquare(sizex,sizey+10);NaN NaN;PLsquare(sizex-6,sizey+4)];
 PL_positioning = CPLbool('-',PL_positioning,PLsquare(sizex-20,sizey*2));
@@ -171,12 +176,19 @@ PL_rotor_conn_top_85 = [PLcircle(17,5);NaN NaN;PLcircle(3);NaN NaN;CPLcopyradial
 SG_rotor_conn_top_85 = SGofCPLz(PL_rotor_conn_top_85,3.5);
 SG_sm85_rotor = SGstack('z',SG_sm85_rotor,SG_cover_rotor_85,SG_rotor_conn_bot_85,SG_rotor_conn_top_85);
 
+SG_sm120_rotor = SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0 -12.5,c 16,h 7,enter,c 34.5,c 38,h 2.5,rel under 0,cat,col y');
+SG_cover_rotor_120 = SGofCPLz([PLcircle(21);NaN NaN;PLcircle(1.5);NaN NaN;CPLcopyradial(PLcircle(1.5),12.5,4)],2);
+PL_rotor_conn_bot_120 = [PLcircle(21,5);NaN NaN;PLcircle(1.5);NaN NaN;CPLcopyradial(PLcircle(1.5),12.5,4)];
+SG_rotor_conn_bot_120 = SGofCPLz(PL_rotor_conn_bot_120,3.5);
+PL_rotor_conn_top_120 = [PLcircle(21,5);NaN NaN;PLcircle(3);NaN NaN;CPLcopyradial(PLcircle(3),12.5,4)];
+SG_rotor_conn_top_120 = SGofCPLz(PL_rotor_conn_top_120,3.5);
+SG_sm120_rotor = SGstack('z',SG_sm120_rotor,SG_cover_rotor_120,SG_rotor_conn_bot_120,SG_rotor_conn_top_120);
+
+
+SG_rotors_o = {SG_sm40_rotor,SG_sm85_rotor,SG_sm120_rotor};
+
 for i=1:dofs
-    if ~ismember(i,power)
-        SG_rotors{end+1} = SGtransrelSG(SG_sm40_rotor,SG_main_frame_top,'ontop',-8,'transy',-servo_ax(power(i)),'transx',-dists(i));
-    else
-        SG_rotors{end+1} = SGtransrelSG(SG_sm85_rotor,SG_main_frame_top,'ontop',-8,'transy',-servo_ax(power(i)),'transx',-dists(i));
-    end
+        SG_rotors{end+1} = SGtransrelSG(SG_rotors_o{power(i)},SG_main_frame_top,'ontop',-8,'transy',-servo_ax(power(i)),'transx',-dists(i));
 end
 
 
@@ -186,12 +198,8 @@ SG_rotor_top = SGtrans(SGservorotor(rotor_radius,'',''),TofR(rotz(110)));
 
 PL_top_plate = PLsquare(sizex+30,sizey+20);
 PL_top_plate = PLtrans(PL_top_plate,[(sizex+20)/-2,(sizey+20)/-2]);
-for k=1:dofs
-    if ~ismember(k,push_rod)
-        PL_top_plate = [PL_top_plate;NaN NaN;PLtrans(PLcircle(16),[-dists(k)-(2*box_wall_thickness)-sizex_first;-servo_ax(power(k))-box_wall_thickness])];
-    else
-        PL_top_plate = [PL_top_plate;NaN NaN;PLtrans(PLsquare(18,60),[-dists(k)-(2*box_wall_thickness)-sizex_first;-servo_ax(power(k))-box_wall_thickness])];
-    end
+for k=1:dofs    
+   PL_top_plate = [PL_top_plate;NaN NaN;PLtrans(PLcircle(16),[-dists(k)-(2*box_wall_thickness)-sizex_first;-servo_ax(power(k))-box_wall_thickness])];
 end
 SG_top_plate = SGofCPLz(PLroundcorners(PL_top_plate,4,10),5);
 SG_top_plate = SGtransrelSG(SG_top_plate,SG_main_frame,'ontop',18,'alignright','alignback');
@@ -214,29 +222,15 @@ SG_connection_top_through_85 = SGofCPLz(PLcircle(10),6);
 SG_connection_top_85 = SGstack('z',SG_connector_85,SG_connection_top_top_85,SG_connection_top_through_85,SG_rotor_top);
 
 %top sm120
-SG_connector_120 = SGofCPLz([PLcircle(17.1,5);NaN NaN;PLcircle(19)],6.5);
-SG_connection_top_120 = SGofCPLz(PLcircle(19),2);
+SG_connector_120 = SGofCPLz([PLcircle(21.1,5);NaN NaN;PLcircle(23)],6.5);
+SG_connection_top_120 = SGofCPLz(PLcircle(21),2);
 SG_connection_top_through_120 = SGofCPLz(PLcircle(10),6);
 SG_connection_120 = SGstack('z',SG_connector_120,SG_connection_top_120,SG_connection_top_through_120,SG_rotor_top);
 
 SG_connections = {SG_connection_top,SG_connection_top_85,SG_connection_120};
 
 for i=1:dofs
-    if ~ismember(i,push_rod)
         SG_rotors_top_plate{end+1} = SGtransrelSG(SG_connections{power(i)},SG_top_plate,'ontop',-14,'transy',-servo_ax(power(i)),'transx',-dists(i));
-    else
-        SG_sledge = SGof2CPLsz(PLsquare(30,30),PLsquare(25,30),5);
-        SG_sledge_slot = SGofCPLz(CPLbool('-',PLsquare(8,20),PLsquare(8,5)),12.5);
-        SG_sledge_guide = SGtrans(SGof2CPLsz(PLsquare(9.8,sizey+10),PLtrans(PLsquare(12.5,sizey+10),[1.35,0]),5.4),[-20.2 0 0]);
-        SG_sledge_guide = SGcat(SG_sledge_guide,SGmirror(SG_sledge_guide,'yz'));
-        SG_sledge_guide_bot = SGofCPLz(CPLbool('-',PLsquare(50,sizey+10),PLsquare(20,sizey+10)),2);
-        SG_sledge_guide = SGcat(SG_sledge_guide,SGunder(SG_sledge_guide_bot,SG_sledge_guide));
-        SG_sledge_guide = SGtransrelSG(SG_sledge_guide,SG_top_plate,'ontop',-12.4,'alignfront',-5,'transx',-dists(i));
-        SG_sledge = SGstack('z',SG_sledge,SG_sledge_slot);
-        SG_rotors_top_plate{end+1} = SGtransrelSG(SG_sledge,SG_top_plate,'ontop',-10.2,'transy',-servo_ax(power(i)),'transx',-dists(i));
-        SG_rotors_top_plate{end} = SGcat(SG_rotors_top_plate{end},SG_sledge_guide);
-        
-    end
 end
 
 SG_tensioners = {};
@@ -254,10 +248,8 @@ SG_crimp_tensioner = SGcat(SG_crimp_tensioner_1,SG_crimp_tensioner_2);
 SG_crimp_tensioner = SGcat(SG_crimp_tensioner,SG_tensionerblock);
 
 for i=1:dofs
-    if ~ismember(i,push_rod)
         SG_tensioners{end+1} = SGtrans(SG_crimp_tensioner,[-dists(i) 0 0]);
         SG_teeth_cut{end+1} = SGtrans(SG_tensioner_teeth_block,[-dists(i) 0 0]);
-    end
 end
 
 PL_teeth = PLroundcorners(PLsquare(sizex+30,10),4,10);
@@ -306,13 +298,14 @@ SG_cover_plate = SGtransrelSG(SGofCPLx(PL_cover_plate,10),SG_cover,'left','align
 %% CAT
 % SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
 % SG_tool_mover = SGtransrelSG(SG_tool_mover,SG_tool_mover_connection,'right',-23,'alignbottom','alignback',10);
-SG_bottom = SGcat(SG_close,SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_back_plate,SG_bottom_plate,SG_guide_bot,SG_guide_top,SG_arduino_mounting,SG_feetech_mounting,SG_tool_mover_connection,SG_side_covers,SG_positioning,SG_top_cover_side,SG_nut_holder);
+SG_bottom = SGcat(SG_close,SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_back_plate,SG_bottom_plate,SG_guide_bot,SG_guide_top,SG_arduino_mounting,SG_feetech_mounting,SG_gap_fill,SG_tool_mover_connection,SG_side_covers,SG_positioning,SG_top_cover_side,SG_nut_holder);
 SG_bottom = SGcat([{SG_bottom} SG_texts {SG_main_frame_side}]);
 SG_cover = SGcat(SG_cover,SG_guide_cover_top,SG_guide_cover_bot,SG_cover,SG_cover_plate);
 SG_top_plate = SGcat([{SG_top_plate} SG_rotors_top_plate {SG_tensionerblock} SG_tensioners {SG_top_frame}]);
 % SG = SGcat([{SG_bottom} SG_rotors {SG_top_plate} {SG_cover}]);
-SG = SG_bottom;
-SG = SGcat(SG_bottom,SG_top_plate);
+SG = SGcat([{SG_bottom} SG_rotors {SG_cover}]);
+% SG = SG_top_plate;
+% SG = SGcat(SG_bottom,SG_top_plate);
 % SGwriteSTL(SG_cover,"SG_cover",'','y');
 % SGwriteSTL(SG_bottom,"SG_bottom",'','y');
 % SGwriteSTL(SG_top_plate,"SG_top_plate",'','y');

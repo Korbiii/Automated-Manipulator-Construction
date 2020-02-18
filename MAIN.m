@@ -38,7 +38,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGwriteSTL(SGservorotor(25,SG_starhorn_conn,''),"Rotor_SCS40",'','y');
 % SGwriteSTL(SGservorotor(25,SG_connector_SM40,[7 4 1.5]),"Rotor_SM40BL",'','y');
 % SGwriteSTL(SGservorotor(25,SG_connector_SM40,[7 4 1.5]),"Servorotor",'','y');
-% % SGwriteSTL(SGservorotor(25,SG_connector_SM85,[10.5 4 1.5]),"Rotor_SM85CL",'','y');
+% SGwriteSTL(SGservorotor(25,SG_connector_SM85,[10.5 4 1.5]),"Rotor_SM85CL",'','y');
 % SGwriteSTL(SGservorotor(25,SG_connector_SM120,[12.5 4 1.5]),"Rotor_SM120BCL",'','y');
 % SGplot(SGmotormountSCS(25,CPL_servo));
 % % SGwriteSTL(SGmotormountSM40CL(25),"MotormountSM40",'','y'); 
