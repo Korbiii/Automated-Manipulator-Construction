@@ -22,11 +22,17 @@ hinge_width = hinge_width+1;
 
 %% Calculating best offset
 if hinge_opti ~= 0
-    PL_offsetline = PLtrans(PL_offsetline,e_dir_p*rot(pi/2)*max_dim);
+    e_dir_ = [e_dir_p;e_dir_n];
+    if hinge_opti < 0 e_dir_ =  flip(e_dir_); end
+    PL_offsetline = PLtrans(PL_offsetline,e_dir_(1,:)*rot(pi/2)*max_dim);
     size_h = 0; res = 0.3; offset = max_dim;
+    clf;
+    axis equal;
+    CPLplot(CPL,'g');
     while size_h < 2
         size_h = 0;
-        PL_offsetline = PLtrans(PL_offsetline,e_dir_n*rot(pi/2)*res);
+        PL_offsetline = PLtrans(PL_offsetline,e_dir_(2,:)*rot(pi/2)*res);
+        PLplot(PL_offsetline);
         offset = offset-res;
         c_p = PLcrossCPLLine2(PL_offsetline,CPL);
         if ~isempty(c_p)
@@ -35,7 +41,7 @@ if hinge_opti ~= 0
                 for k=c+1:size(c_p,2)
                     dis = pdist2(c_p(c,:),c_p(k,:));
                     if dis > 1
-                        PL_hinge_area = [c_p(c,:);PLtrans(c_p(c,:),e_dir_n*rot(pi/2)*hinge_width);PLtrans(c_p(k,:),e_dir_n*rot(pi/2)*hinge_width);c_p(k,:)];
+                        PL_hinge_area = [c_p(c,:);PLtrans(c_p(c,:),e_dir_(2,:)*rot(pi/2)*hinge_width);PLtrans(c_p(k,:),e_dir_(2,:)*rot(pi/2)*hinge_width);c_p(k,:)];
                         inside = inside2C(CPL,PL_hinge_area);
                         if inside(1) ~= 0
                             size_h = size_h+dis;
@@ -47,7 +53,7 @@ if hinge_opti ~= 0
         
     end
     offset = (offset-(hinge_width/2));
-SG_hinge = SGtrans(SG_hinge,[e_dir_p*rot(pi/2)*offset 0]);
+SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
 end
 SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); 
 VL_hinge = SG_hinge.VL;
