@@ -10,21 +10,21 @@ CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
 CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 
 %% Ovals
-CPL = PLtrans0(PLtransR(PLcircleoval(5.2,'',5),rot(pi/2)));
-CPL2 = PLtrans0(PLtransR(PLcircleoval(5.2,'',4),rot(pi/2)));
-CPL3 = PLtrans0(PLtransR(PLcircleoval(5.2,'',2),rot(pi/2)));
+% CPL = PLtrans0(PLtransR(PLcircleoval(5.2,'',5),rot(pi/2)));
+% CPL2 = PLtrans0(PLtransR(PLcircleoval(5.2,'',4),rot(pi/2)));
+% CPL3 = PLtrans0(PLtransR(PLcircleoval(5.2,'',2),rot(pi/2)));
 
-%% Ovals small
-CPL = PLtrans0(PLtransR(PLcircleoval(3.5,'',5),rot(pi/2)));
-CPL2 = PLtrans0(PLtransR(PLcircleoval(3,'',4),rot(pi/2)));
-CPL3 = PLtrans0(PLtransR(PLcircleoval(3,'',2),rot(pi/2)));
+% %% Ovals small
+% CPL = PLtrans0(PLtransR(PLcircleoval(3.5,'',5),rot(pi/2)));
+% CPL2 = PLtrans0(PLtransR(PLcircleoval(3,'',4),rot(pi/2)));
+% CPL3 = PLtrans0(PLtransR(PLcircleoval(3,'',2),rot(pi/2)));
 
 % SGwriteSTL(SGmanipulator({CPL CPL2},3.4,[90 75 4.2;0 90 0;90 270 0]),"SGmanipulator",'','y');
 
 % SGm = SGmanipulator({CPL},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2;30 4 1.0;55 2 0.8],'first_single'); %% Aktuellen Manipulator ausgeben
-% [SGm,SGc] = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2;30 4 1.0;55 2 0.8],'single'); %% Push Pull
+[SGm,SGc] = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2;30 4 1.0;55 2 0.8],'single'); %% Push Pull
 % SGm = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0;0 90 90 1],[27 4 1.2;30 4 1.0;55 2 0.8;20 2 0.6],'single'); %% Push Pull Extra Long
-SGm = SGmanipulator({CPL CPL2 CPL3},1.5,[90 75 75 1;0 90 90 0;90 90 180 -1],[12 1 0.8;12 1 0.8;24 1 0.8],'single'); %% MiniPushpull
+% SGm = SGmanipulator({CPL CPL2 CPL3},1.5,[90 75 75 1;0 90 90 0;90 90 180 -1],[12 1 0.8;12 1 0.8;24 1 0.8],'single'); %% MiniPushpull
 
 
 SGwriteSTL(SGm,"SGmanipulator",'','y');
