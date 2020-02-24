@@ -7,17 +7,17 @@
 %   flags:          'bottom_element';'side_stabi'
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of element
-function [SG,CPL] = SGelements(CPL,section_p,varargin)
+function [SG,offset] = SGelements(CPL,section_p,varargin)
 %% Initializing
 height = 0.5; bottom_ele = 0;side_stabi = 0; 
 hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
 ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargin{2};   end
-angles = [1 12];     if nargin>=5 && ~isempty(varargin{3});  angles = varargin{3};   end
 
 h_dir = section_p(1);
 h_opti = section_p(4);
 
-for f=4:size(varargin,2)
+
+for f=3:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
            bottom_ele = 1;
@@ -93,11 +93,6 @@ else
     SG = SGcat(SG,SG_hinge_top);
 end
 
-%% Add stops
-SG_stop = SGelementstops(CPL,h_dir,angles(1),angles(2),hinge_width,offset);
-SG_stop = SGtrans(SG_stop,[0 0 height_SG/2]);
-SG = SGcat(SG,SG_stop);
-SG = SGcat(SG,SGmirror(SG_stop,'xy'));
 %% Add frames to element
 H_f = TofR(rotx(90)*roty(90+h_dir),[-h_opti 0 height+(height_SG/2)]);
 clf;
@@ -115,5 +110,5 @@ if side_stabi ==1
     SG_2 = SGTset(SG_2,'B',H_b);
     SG = [SG SG_2];
 end
-
+SG.offest = offset;
 end

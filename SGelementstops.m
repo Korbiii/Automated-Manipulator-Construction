@@ -40,8 +40,8 @@ CPL_cut = CPLbool('-',CPL,PL_cut);
 
 offset_p = floor((max_distance_right/(max_distance_right+max_distance_left))*500);
 
-left_height = max(0,0.5-(tand(left_angle)*max_distance_left));
-right_height = max(0,0.5-(tand(right_angle)*max_distance_right));
+right_height = max(0,0.5-(tand(left_angle)*max_distance_left));
+left_height = max(0,0.5-(tand(right_angle)*max_distance_right));
 
 PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(left_height,0.5,offset_p) linspace(0.5,right_height,500-offset_p)]';
 

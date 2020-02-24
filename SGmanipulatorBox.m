@@ -1,7 +1,7 @@
 %%  [SG] = SGmanipulatorBox(dofs,varargin)
 %	=== INPUT PARAMETERS ===
 %	dofs:       number of degress of freedom
-%   increased_power:  1xn Vector, 1 = 4Nm 2 = 8Nm 3 = 12Nm
+%   power:      1xn Vector, 1 = 4Nm 2 = 8Nm 3 = 12Nm
 %	=== OUTPUT RESULTS ======
 %
 function [SG] = SGmanipulatorBox(dofs,power)

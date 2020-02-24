@@ -17,13 +17,13 @@ function [SG] = SGconnector(CPL,CPL_holes,positions,section_p,h_r,tool_radius,va
 %%
 hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
 hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
-angles = [1,12;1,12];        if nargin>=9 && ~isempty(varargin{3}); angles = varargin{3}; end
-cut_orientation = 'x'; single = 0; end_cap = 0; crimp = 1;
+flags = {};             if nargin>=9 && ~isempty(varargin{3}); flags = varargin{3}; end
+cut_orientation = 'y'; single = 0; end_cap = 0; crimp = 1;
 % if size(positions,1)>1
 %     positions = flip(positions);
 % end
-for f=4:size(varargin,2)
-   switch varargin{f}
+for f=1:size(flags,2)
+   switch flags{f}
        case 'end_cap'
            end_cap = 1;
        case 'single'
@@ -139,7 +139,7 @@ SG_hinge = SGhingeround(0.5,hinge_width_b,height);
 SG_hinge_b = SGtransR(SG_hinge,rotz(section_p(1,1)));
 [SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,4),hinge_width_b);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
-
+offset_t =0;
 if ~end_cap
     SG_hinge_t = SGhingeround(0.5,hinge_width_t,height);
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(section_p(2,1)));
@@ -152,21 +152,22 @@ else
 end
 
 %% add stops
-
-SG_stop_b = SGelementstops(CPL_b,section_p(1,1),angles(1,1),angles(2,1),hinge_width_b,offset_b);
-SG_stop_b = SGmirror(SG_stop_b,'xy');
-SG_stop_b = SGtrans(SG_stop_b,[0 0 -height_SG/2]);
-if ~end_cap
-    SG_stop_t = SGelementstops(CPL_f,section_p(2,1),angles(2,1),angles(2,2),hinge_width_t,offset_t);
-    SG_stop_t = SGtrans(SG_stop_t,[0 0 height_SG/2]);    
-    SG_stop_b = SGcat(SG_stop_b,SG_stop_t);
-end
-SG = SGcat(SG,SG_stop_b);
+% 
+% SG_stop_b = SGelementstops(CPL_b,section_p(1,1),angles(1,1),angles(2,1),hinge_width_b,offset_b);
+% SG_stop_b = SGmirror(SG_stop_b,'xy');
+% SG_stop_b = SGtrans(SG_stop_b,[0 0 -height_SG/2]);
+% if ~end_cap
+%     SG_stop_t = SGelementstops(CPL_f,section_p(2,1),angles(2,1),angles(2,2),hinge_width_t,offset_t);
+%     SG_stop_t = SGtrans(SG_stop_t,[0 0 height_SG/2]);    
+%     SG_stop_b = SGcat(SG_stop_b,SG_stop_t);
+% end
+% SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
 H_f = [rotx(90)*roty(90+section_p(2,1)) [-section_p(2,4);0;((height_SG/2)+height)]; 0 0 0 1];
 H_b = [rotx(90)*roty(-90+section_p(1,1)) [-section_p(1,4);0;(-(height_SG/2)-height)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);
+SG.offset = [offset_b,offset_t];
 % SGwriteSTL(SG,rand+"");
 end

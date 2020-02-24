@@ -65,8 +65,8 @@ for i=1:size(axis_o,1)
             if single == 1 || (single == 2 && i == size(axis_o,1))
                 dis = new_dis;
                 dis_pos = j;
-            else
-                is_inside = insideCPS(CPL_limit,PLtransC(CPL_limit(j,:),curr_mid_point,pi));
+            else                
+                is_inside = insideCPS(CPL_limit,PLtransC(CPL_limit(j,:),curr_mid_point,pi));               
                 if is_inside >= 0
                     dis = new_dis;
                     dis_pos = j;
