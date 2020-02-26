@@ -55,19 +55,14 @@ for i=1:dofs
         SG_guide = SGtransrelSG(SG_guide,SG_servo_guides,'transx',-dists(i),'alignback');
         SG_servo_guides = SGcat(SG_servo_guides,SG_guide);
     end
-    
-    %  Kabelschacht
-    if(i==1)
-        SG_cable_hole = SGtransrelSG(SGbox([30,40,box_height/2]),SG_guide,'centerx','aligntop',-box_height/5);
-    end
-   
+       
     %ScrewHoles
     if power(i) == 1       
         SG_side_holes = SGcat(SG_side_holes,SGtransrelSG(SG_sm40_holes,SG_guide,'centerx','aligntop',-9.5,'alignback',-15));
     end   
 end
 [sizex,sizey,~,~,~,~] = sizeVL(SG_servo_guides);
-PL_main_frame = CPLbool('-',PLsquare(sizex+30,sizey+20),PLtrans(PLsquare(sizex+20,sizey+20),[0 -5]));
+PL_main_frame = CPLbool('-',PLsquare(sizex+30,sizey+20),PLsquare(sizex+20,sizey+10));
 PL_main_frame = PLroundcorners(PL_main_frame,2,10);
 SG_main_frame = SGofCPLz(PL_main_frame,box_height+2);
 SG_main_frame = SGtransrelSG(SG_main_frame,SG_servo_guides,'centerx','alignback',5,'aligntop');
@@ -82,26 +77,9 @@ for k=1:dofs
 end
 SG_main_frame_top = SGofCPLz(PL_main_frame_top,5);
 SG_main_frame_top = SGtransrelSG(SG_main_frame_top,SG_main_frame,'ontop','alignright','alignback');
-SG_main_frame_side = SGbox([190,10,59.5]);
-SG_main_frame_side = SGtransrelSG(SG_main_frame_side,SG_main_frame,'alignbottom','infront','alignright');
-SG_main_frame_side = SGboolh('-',SG_main_frame_side,SGtransrelSG(SG_cable_hole,SG_main_frame_side,'alignfront',1));
-
-if sizex+30 > 190
-    gap = sizex+30-190;
-    PL_close = [0 0;gap 0;gap -10];
-    SG_close = SGofCPLz(PL_close,box_height-6.5);
-    SG_close = SGtransrelSG(SG_close,SG_main_frame,'alignbottom','alignleft','infront');
-end
-
-if box_height>59.5
-    h = box_height-57.5;
-    SG_gap_fill = SGbox([sizex+20 5 h]);
-    SG_gap_fill = SGtransrelSG(SG_gap_fill,SG_main_frame_top,'under','alignfront','alignleft',-5);
-    
-end
 
 
-PL_positioning = [PLsquare(sizex,sizey+10);NaN NaN;PLsquare(sizex-6,sizey+4)];
+PL_positioning = [PLsquare(sizex+15,sizey+10);NaN NaN;PLsquare(sizex+9,sizey+4)];
 PL_positioning = CPLbool('-',PL_positioning,PLsquare(sizex-20,sizey*2));
 PL_positioning = CPLbool('-',PL_positioning,PLsquare(sizex*2,sizey-20));
 SG_positioning = SGofCPLz(PL_positioning,5);
@@ -110,49 +88,35 @@ SG_positioning = SGtransrelSG(SG_positioning,SG_main_frame_top,'centerx','center
 PL_back_plate = CPLbool('+',PLsquare(30,box_height-10.5),PLtrans(PLsquare(40,13),[5 box_height/2+1.25]));
 PL_back_plate = CPLbool('-',PL_back_plate,PLtrans(PLcircle(8),[5 -10]));
 PL_back_plate = PLroundcorners(PL_back_plate,2,20);
-SG_back_plate = SGofCPLx(PL_back_plate,10);
-SG_back_plate = SGtransrelSG(SG_back_plate,SG_main_frame_side,'alignbottom','alignright','infront',-10);
+SG_back_plate = SGofCPLx(PL_back_plate,5);
+SG_back_plate = SGtransrelSG(SG_back_plate,SG_main_frame,'alignbottom','alignright','infront',-10);
 
-SG_bottom_plate = SGofCPLx(CPLbool('-',PLsquare(17,10),PLtrans(PLsquare(14.5,7.5),[3 1.25])),170);
-SG_bottom_plate = SGtransrelSG(SG_bottom_plate,SG_back_plate,'left','alignbottom','alignfront',-13);
+% PL_guide = CPLbool('-',PLsquare(10,7),PLtrans(PLsquare(5),[2.5 -1.75]));
+% SG_guide = SGofCPLx(PL_guide,170);
 
-PL_guide = CPLbool('-',PLsquare(10,7),PLtrans(PLsquare(5),[2.5 -1.75]));
-SG_guide = SGofCPLx(PL_guide,170);
-SG_guide_bot = SGtransrelSG(SG_guide,SG_bottom_plate,'aligntop','alignleft','infront');
-SG_guide_top = SGtransrelSG(SG_guide,SG_main_frame_side,'rotx',-pi/2,'rotz',pi,'ontop','alignright',-10,'alignfront');
-
-SG_pin = SGofCPLrot([0 0;5 0;5 4;1.5 4;1.5 10;0 10]);
-SG_screw_pin = SGscrewDIN(-2,4,'',PLcircle(4));
-
-SG_arduino_mounting = SGcat(SG_pin,SGtrans(SG_pin,[81.28 -48.26 0]),SGtrans(SG_screw_pin,[74.93 0 0]),SGtrans(SG_screw_pin,[-1.27 -48.26 0]));
-SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_main_frame_side,'rotx',pi/2,'infront','alignbottom',-10,'alignleft',-24);
-
-SG_feetech_mounting = SGcat(SG_pin,SGtrans(SG_pin,[29 -49 0]),SGtrans(SG_screw_pin,[29 0 0]),SGtrans(SG_screw_pin,[0 -49 0]));
-SG_feetech_mounting = SGtransrelSG(SG_feetech_mounting,SG_main_frame_side,'rotx',pi/2,'infront','alignbottom',-10,'alignright',-15);
-
-PL_tool_move_connection = CPLbool('-',PLsquare(120,39),PLtrans(PLsquare(100,30),[0 -5]));
-PL_tool_move_connection = PLroundcorners(PL_tool_move_connection,[2,3,6,7],[10 10 5 5]);
-PL_tool_move_connection = CPLbool('-',PL_tool_move_connection,PLtrans(PLsquare(56.7,10),[-10 14.5]));
-SG_tool_mover_connection = SGofCPLx(PL_tool_move_connection,28.5);
-SG_tool_mover_connection = SGtransrelSG(SG_tool_mover_connection,SG_main_frame,'alignbottom','right','alignback');
-
-SG_top_cover_side = SGtransrelSG(SGbox([57,66.5,5]),SG_tool_mover_connection,'aligntop',30,'alignleft','centery',-10);
-PL_side_covers = [PLsquare(42.75,25);NaN NaN;PLtrans(CPLcopypattern(PLcircle(1.5),[1 2],[0 12]),[13.375 -9.5])];
-SG_side_covers = SGofCPLy(PL_side_covers,4.7);
-SG_side_covers = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignback');
-SG_side_covers_2 = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignfront');
-SG_side_covers = SGcat(SG_side_covers,SG_side_covers_2);
+% PL_tool_move_connection = CPLbool('-',PLsquare(120,39),PLtrans(PLsquare(100,30),[0 -5]));
+% PL_tool_move_connection = PLroundcorners(PL_tool_move_connection,[2,3,6,7],[10 10 5 5]);
+% PL_tool_move_connection = CPLbool('-',PL_tool_move_connection,PLtrans(PLsquare(56.7,10),[-10 14.5]));
+% SG_tool_mover_connection = SGofCPLx(PL_tool_move_connection,28.5);
+% SG_tool_mover_connection = SGtransrelSG(SG_tool_mover_connection,SG_main_frame,'alignbottom','right','alignback');
+% 
+% SG_top_cover_side = SGtransrelSG(SGbox([57,66.5,5]),SG_tool_mover_connection,'aligntop',30,'alignleft','centery',-10);
+% PL_side_covers = [PLsquare(42.75,25);NaN NaN;PLtrans(CPLcopypattern(PLcircle(1.5),[1 2],[0 12]),[13.375 -9.5])];
+% SG_side_covers = SGofCPLy(PL_side_covers,4.7);
+% SG_side_covers = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignback');
+% SG_side_covers_2 = SGtransrelSG(SG_side_covers,SG_top_cover_side,'under','alignleft','alignfront');
+% SG_side_covers = SGcat(SG_side_covers,SG_side_covers_2);
 
 PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];
 PL_nut_holder_base = [PLsquare(12);NaN NaN;PLcircle(2.5)];
 SG_nut_holder = SGofCPLz(PL_nut_holder,6);
 SG_nut_holder_base = SGofCPLz(PL_nut_holder_base,3);
 SG_nut_holder = SGstack('z',SG_nut_holder_base,SG_nut_holder);
-SG_nut_holder = SGpatternXY(SG_nut_holder,2,2,sizex+8,sizey+3);
-SG_nut_holder = SGtransrelSG(SG_nut_holder,SG_main_frame,'centerx','centery',-2.5,'alignbottom');
+SG_nut_holder = SGpatternXY(SG_nut_holder,2,2,sizex+8,sizey-1);
+SG_nut_holder = SGtransrelSG(SG_nut_holder,SG_main_frame,'centerx','centery','alignbottom');
 SG_texts = {};
 for i=1:dofs    
-    SG_texts{end+1} = SGtransrelSG(SG_text{power(i)},SG_main_frame,'rotx',pi/2,'rotz',pi,'behind','transx',10,'alignbottom',-10,'transx',-dists(i));
+    SG_texts{end+1} = SGtransrelSG(SG_text{power(i)},SG_main_frame,'rotx',pi/2,'rotz',pi,'behind','transx',10,'alignbottom',-2.5,'transx',-dists(i));
 end
 
 
@@ -289,21 +253,32 @@ SG_cover = SGtransrelSG(SGofCPLx(PL_cover,170),SG_back_plate,'alignfront','align
 PL_guide_cover = CPLbool('-',PLsquare(10,6.8),PLtrans(PLsquare(5.4,5),[2.3 -1.75]));
 SG_guide_cover = SGmirror(SGmirror(SGofCPLx(PL_guide_cover,170),'xy'),'xz');
 SG_guide_cover_top = SGtransrelSG(SG_guide_cover,SG_cover,'rotx',pi/2,'roty',pi,'alignback','aligntop',-3,'alignleft');
-SG_guide_cover_bot = SGtransrelSG(SG_guide_cover,SG_guide_bot,'alignfront','aligntop',-3,'alignleft');
 
 PL_cover_plate = PL_back_plate;
 SG_cover_plate = SGtransrelSG(SGofCPLx(PL_cover_plate,10),SG_cover,'left','alignfront','alignbottom');
+
+%% Platinenbox
+
+
+SG_pin = SGofCPLrot([0 0;3 0;3 2;1.5 2;1.5 8;0 8]);
+SG_screw_pin = SGscrewDIN(-2,4,'',PLcircle(4));
+SG_arduino_mounting = SGcat(SG_pin,SGtrans(SG_pin,[81.28 -48.26 0]),SGtrans(SG_screw_pin,[74.93 0 0]),SGtrans(SG_screw_pin,[-1.27 -48.26 0]));
+SG_feetech_mounting = SGcat(SG_pin,SGtrans(SG_pin,[29 -49 0]),SGtrans(SG_screw_pin,[29 0 0]),SGtrans(SG_screw_pin,[0 -49 0]));
+
+SG_base_plate = SGbox([50 50 3]);
 
 
 %% CAT
 % SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
 % SG_tool_mover = SGtransrelSG(SG_tool_mover,SG_tool_mover_connection,'right',-23,'alignbottom','alignback',10);
-SG_bottom = SGcat(SG_close,SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_back_plate,SG_bottom_plate,SG_guide_bot,SG_guide_top,SG_arduino_mounting,SG_feetech_mounting,SG_gap_fill,SG_tool_mover_connection,SG_side_covers,SG_positioning,SG_top_cover_side,SG_nut_holder);
-SG_bottom = SGcat([{SG_bottom} SG_texts {SG_main_frame_side}]);
-SG_cover = SGcat(SG_cover,SG_guide_cover_top,SG_guide_cover_bot,SG_cover,SG_cover_plate);
+SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_positioning,SG_nut_holder);
+SG_bottom = SGcat([{SG_bottom} SG_texts]);
+SG_cover = SGcat(SG_cover,SG_guide_cover_top,SG_cover,SG_cover_plate);
 SG_top_plate = SGcat([{SG_top_plate} SG_rotors_top_plate {SG_tensionerblock} SG_tensioners {SG_top_frame}]);
 % SG = SGcat([{SG_bottom} SG_rotors {SG_top_plate} {SG_cover}]);
-SG = SGcat([{SG_bottom} SG_rotors {SG_cover}]);
+SG = SGcat([{SG_bottom} SG_rotors ]);
+
+SG = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting);
 % SG = SG_top_plate;
 % SG = SGcat(SG_bottom,SG_top_plate);
 % SGwriteSTL(SG_cover,"SG_cover",'','y');

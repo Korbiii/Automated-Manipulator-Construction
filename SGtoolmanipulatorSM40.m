@@ -138,11 +138,14 @@ SG_main_servo_bracket = SGofCPLx(PL_main_servo_bracket,28.5);
 SG_main_servo_bracket = SGtransrelSG(SG_main_servo_bracket,SG_main_guide_base,'alignbottom','left',-10,'centery');
 %% Base Gear
 SG_base_gear = SGofCPLz([PLgearDIN(2,36);NaN NaN;PLcircle(12.5)],6);
+SG_base_gear = SGtransR(SG_base_gear,roty(90));
+[SG_base_gear,~] = SGcut(SG_base_gear,5);
+SG_base_gear = SGtransR(SG_base_gear,roty(-90));
 PL_gear_insert = [PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;PLcircularpattern(PLcircle(3),7,pi/2,4)];
 SG_gear_insert = SGofCPLz(PL_gear_insert,3);
 SG_servo_connector_base_gear = SGstack('z',SG_gear_insert,SGmirror(SG_servo_connector,'xy'));
 SG_base_gear = SGcat(SG_base_gear,SGtransrelSG(SG_servo_connector_base_gear,SG_base_gear,'centery','alignbottom'));
-SG_base_gear = SGtransrelSG(SG_base_gear,SG_main_servo_mount,'centerx','centery',10,'under',2);
+SG_base_gear = SGtransrelSG(SG_base_gear,SG_main_servo_mount,'centerx',14,'centery',10,'under',2);
 
 %% Tool Rotating Socket 
 SG_clamp = SGofCPLz([PLcircle(3.1);NaN NaN;PLcircle(8)],10);
