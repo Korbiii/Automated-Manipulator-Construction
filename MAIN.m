@@ -60,11 +60,11 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGwriteSTL(SGmotormountSM120BL(25),"MotormountSM120BL",'','y');
 % Motormount_SM40CL(25); 
 % SGplot(SGtoolmanipulator(CPL_servo,SG_starhorn_conn));
-SGplot(SGtoolmanipulatorSM40(CPL_servo,SG_connector_SM40));
+% SGplot(SGtoolmanipulatorSM40(CPL_servo,SG_connector_SM40));
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGplot(SGmanipulatorBox(3,[1 1 1]));
+% SGplot(SGmanipulatorBox(3,[2 2 3]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 

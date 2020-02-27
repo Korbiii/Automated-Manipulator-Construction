@@ -259,14 +259,30 @@ SG_cover_plate = SGtransrelSG(SGofCPLx(PL_cover_plate,10),SG_cover,'left','align
 
 %% Platinenbox
 
+PL_pin_base = PLcircle(2.5);
+PL_pin_top = PLcircle(1.4);
+PL_pin_counterp = [PLcircle(2.5);NaN NaN;PLcircle(3)];
 
-SG_pin = SGofCPLrot([0 0;3 0;3 2;1.5 2;1.5 8;0 8]);
-SG_screw_pin = SGscrewDIN(-2,4,'',PLcircle(4));
-SG_arduino_mounting = SGcat(SG_pin,SGtrans(SG_pin,[81.28 -48.26 0]),SGtrans(SG_screw_pin,[74.93 0 0]),SGtrans(SG_screw_pin,[-1.27 -48.26 0]));
-SG_feetech_mounting = SGcat(SG_pin,SGtrans(SG_pin,[29 -49 0]),SGtrans(SG_screw_pin,[29 0 0]),SGtrans(SG_screw_pin,[0 -49 0]));
+SG_pin_fe = SGstack('z',SGofCPLz(PL_pin_base,20),SGofCPLz(PL_pin_top,5));
+SG_pin_ard = SGstack('z',SGofCPLz(PL_pin_base,25),SGofCPLz(PL_pin_top,10));
+SG_pin_counter = SGofCPLz(PL_pin_counterp,20);
 
-SG_base_plate = SGbox([50 50 3]);
+SG_arduino_mounting = SGcat(SG_pin_ard,SGtrans(SG_pin_ard,[81.28 -48.26 0]),SGtrans(SG_pin_ard,[74.93 0 0]),SGtrans(SG_pin_ard,[-1.27 -48.26 0]));
+SG_feetech_mounting = SGcat(SG_pin_fe,SGtrans(SG_pin_fe,[29 -49 0]),SGtrans(SG_pin_fe,[29 0 0]),SGtrans(SG_pin_fe,[0 -49 0]));
 
+SG_base_plate = SGtrans(SGbox([103 60 3]),[0 0 1.5]);
+SG_base_frame = SGofCPLz(CPLbool('-',PLsquare(109,66),PLtrans(PLsquare(106,60),[3 0])),27.5);
+PL_power_16 = [PLtrans(PLcircle(1.6),[-9.5 0]);NaN NaN;PLcircle(6.5);NaN NaN;PLtrans(PLcircle(1.6),[9.5 0])];
+PL_front_bot = [PLsquare(60,27.5);NaN NaN;PLtrans(PL_power_16,[-10 0]),;NaN NaN;PLtrans(PLsquare(14,7),[20 0])];
+SG_front_bot = SGofCPLx(PL_front_bot,3);
+SG_front_bot = SGtransrelSG(SG_front_bot,SG_base_plate,'alignbottom','right');
+SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_base_plate,'center','ontop');
+SG_feetech_mounting = SGtransrelSG(SG_feetech_mounting,SG_base_plate,'rotz',pi/2,'center','ontop');
+
+SG_top_frame = SGtransrelSG(SG_base_frame,SG_base_frame,'ontop',5);
+SG_top_plate_f = SGtransrelSG(SG_base_plate,SG_top_frame,'aligntop');
+SG_arduino_mounting_top = SGcat(SG_pin_counter,SGtrans(SG_pin_counter,[81.28 -48.26 0]),SGtrans(SG_pin_counter,[74.93 0 0]),SGtrans(SG_pin_counter,[-1.27 -48.26 0]));
+SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'center','under');
 
 %% CAT
 % SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
@@ -278,7 +294,13 @@ SG_top_plate = SGcat([{SG_top_plate} SG_rotors_top_plate {SG_tensionerblock} SG_
 % SG = SGcat([{SG_bottom} SG_rotors {SG_top_plate} {SG_cover}]);
 SG = SGcat([{SG_bottom} SG_rotors ]);
 
-SG = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting);
+SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot);
+SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
+
+SG_electric = SGtransrelSG(SGcat(SG_electic_bot,SG_electric_top),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback');
+SG = SGcat(SG,SG_electric);
+
+
 % SG = SG_top_plate;
 % SG = SGcat(SG_bottom,SG_top_plate);
 % SGwriteSTL(SG_cover,"SG_cover",'','y');
@@ -291,5 +313,5 @@ SG = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting);
 % SGwriteSTL(SGcrimptensioner(10,3,20,3),"SG_nut",'','y');
 % SGwriteSTL(SGcrimptensioner(10,3,20,1),"SG_big_nut",'','y');
 
-% SGwriteSTL(SG,"SG_box");
+SGwriteSTL(SG,"SG_box");
 end
