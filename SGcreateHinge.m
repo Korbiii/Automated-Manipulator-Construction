@@ -26,27 +26,53 @@ if hinge_opti ~= 0
     if hinge_opti < 0; e_dir_ =  flip(e_dir_); end
     PL_offsetline = PLtrans(PL_offsetline,e_dir_(1,:)*rot(pi/2)*max_dim);
     size_h = 0; res = 0.3; offset = max_dim;
-    while size_h < 2
+    CPLplot(CPL,'k');
+    while size_h < min_len
         size_h = 0;
         PL_offsetline = PLtrans(PL_offsetline,e_dir_(2,:)*rot(pi/2)*res);
+        hold on;
+        CPLplot(PL_offsetline,'b');
         offset = offset-res;
         c_p = PLcrossCPLLine2(PL_offsetline,CPL);
         if ~isempty(c_p)
             c_p = sortrows(c_p);
-            for c=1:size(c_p,2)   
-                for k=c+1:size(c_p,2)
-                    dis = pdist2(c_p(c,:),c_p(k,:));
-                    if dis > min_len
-                        PL_hinge_area = [c_p(c,:);PLtrans(c_p(c,:),e_dir_(2,:)*rot(pi/2)*hinge_width);PLtrans(c_p(k,:),e_dir_(2,:)*rot(pi/2)*hinge_width);c_p(k,:)];
-                        inside = inside2C(CPL,PL_hinge_area);
-                        if inside(1) ~= 0
-                            size_h = size_h+dis;
-                        end
-                    end
-                end
+            ex_1 = c_p(1,:);
+            ex_2 = c_p(end,:);
+            ex_1_n = floor(distPointLine(middle_axis,ex_1)/res);
+            ex_2_n = floor(distPointLine(middle_axis,ex_2)/res);
+            PL_ex_1 = [ex_1;PLtrans(ex_1,e_dir_(2,:)*rot(pi/2)*hinge_width)];
+            PL_ex_2 = [ex_2;PLtrans(ex_2,e_dir_(2,:)*rot(pi/2)*hinge_width)];
+            counting = 0;
+            hold on;
+                 PLplot(PL_ex_1);
+            for k=0:ex_1_n
+                 inside_ex_1 = inside2C(CPL,PL_ex_1);
+                 if (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && counting
+                    size_h = size_h + res;
+                 elseif (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && ~counting
+                     counting = 1;
+                 else  
+                     counting = 0;
+                 end
+                 PL_ex_1 = PLtrans(PL_ex_1,e_dir_(2,:)*res);    
+                 hold on;
+                 PLplot(PL_ex_1);
             end
+            counting = 0;
+            for k=0:ex_2_n 
+                 inside_ex_2 = inside2C(CPL,PL_ex_2);
+                 if (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && counting
+                    size_h = size_h + res;
+                 elseif (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && ~counting
+                     counting = 1;
+                 else  
+                     counting = 0;
+                 end
+                 PL_ex_2 = PLtrans(PL_ex_2,e_dir_(1,:)*res);
+                  hold on;
+                 PLplot(PL_ex_2);
+            end  
         end
-        
     end
     offset = (offset-(hinge_width/2));
 SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
