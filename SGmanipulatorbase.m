@@ -19,7 +19,7 @@ elseif tool_pos == 1
     arm_midpoint = (sizex/2)+0.5;
 end
 
-PL_crimp_hole = PLtrans(PLcircle(1.3),base_point);
+PL_crimp_hole = PLtrans(PLcircle(0.8),base_point);
 PL_crimp_holes = [PL_crimp_hole;NaN NaN;PLtransR(PL_crimp_hole,rot(pi))];
 CPL = CPLbool('+',CPL,PL_crimp_holes);
 

@@ -53,27 +53,26 @@ CPL_com ={};
 offsets = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),hole_r,single); 
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),hole_r,length_p(:,4),single); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
-SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),'bottom_element');
+SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),length_p(1,4),'bottom_element');
 SG_conns = {SG_bottom};
 for i=1:size(angle_p,1)
-    CPL_com{end+1} = CPLbool('-',CPLs{i},CPLs_holes{i});
-    
+    CPL_com{end+1} = CPLbool('-',CPLs{i},CPLs_holes{i});    
     if i == size(angle_p,1)   %% Top of arms
         if single == 1
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',{'end_cap' 'single'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),{'end_cap' 'single'}); 
         else
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',{'end_cap'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),{'end_cap'}); 
         end  
          SG_conn_temp.hole_positions = positions(end,:);
     else
-        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,:),hole_r,tool_r,length_p(i,3),length_p(i+1,3),c_inputs); 
+        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,:),hole_r,tool_r,length_p(i,3),length_p(i+1,3),length_p(i,4),c_inputs); 
         SG_conn_temp.hole_positions = positions(i:i+1,:);
     end    
     
-    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,:),length_p(i,3),length_p(i,2)); 
+    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,:),length_p(i,3),length_p(i,2),length_p(i,4)); 
     if i == size(angle_p,1)   
         SG_ele_temp.hole_positions = positions(end,:);
     else

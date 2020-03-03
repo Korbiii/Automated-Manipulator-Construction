@@ -8,7 +8,7 @@
 %	=== OUTPUT RESULTS ======
 %	CPLs:         SG of Manipulator
 %	positions:    2xn vector of positions of holes
-function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,axis_o,hole_r,varargin)
+function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,axis_o,hole_r,min_len,varargin)
 single = 0; if nargin>=5 && ~isempty(varargin{1}); single=varargin{1}; end
 %% Initializing
 CPL_no_go_area = [];
@@ -19,8 +19,8 @@ axis_o = flip(axis_o);
 CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
 %% Generating CPL of area where no holes can go based on axis constraints
-CPL_axis_constraint = [tool_r+1.5 0.6;tool_r+1.5 -0.6;-tool_r-1.5 -0.6;-tool_r-1.5 0.6];
 for i=1:size(axis_o,1)
+    CPL_axis_constraint = [tool_r+min_len(i) 0.6;tool_r+min_len(i) -0.6;-tool_r-min_len(i) -0.6;-tool_r-min_len(i) 0.6];
     CPL_no_go_area = CPLbool('+',CPL_no_go_area,PLtransR(CPL_axis_constraint,rot(deg2rad(axis_o(i,1)))));
 end
 max_dim = 2*max(sizeVL(CPL_out{size(axis_o,1)}));

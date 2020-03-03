@@ -12,12 +12,13 @@ function [SG,offset] = SGelements(CPL,section_p,varargin)
 height = 0.5; bottom_ele = 0;side_stabi = 0; 
 hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
 ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargin{2};   end
+min_len = 1;        if nargin>=5 && ~isempty(varargin{3});  min_len = varargin{3}; end
 
 h_dir = section_p(1);
 h_opti = section_p(4);
 
 
-for f=3:size(varargin,2)
+for f=4:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
            bottom_ele = 1;
@@ -74,7 +75,7 @@ end
 %% Add hinge to base
 SG_hinge = SGhingeround(0.5,hinge_width,height);
 SG_hinge = SGtransR(SG_hinge,rotz(h_dir));
-[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width);
+[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width,min_len);
 
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');

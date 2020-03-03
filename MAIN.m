@@ -4,10 +4,10 @@ path = prefdir; path = strsplit(path, '\');path{7} = 'MATLAB Add-Ons\Toolboxes\S
 axis equal; hold on;
 
 
-% %% Kidneys
-% CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
-% CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
-% CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
+%% Kidneys
+CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
+CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
+CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 
 %% Ovals
 % CPL = PLtrans0(PLtransR(PLcircleoval(5.2,'',5),rot(pi/2)));
@@ -21,13 +21,13 @@ axis equal; hold on;
 
 % SGwriteSTL(SGmanipulator({CPL CPL2},3.4,[90 75 4.2;0 90 0;90 270 0]),"SGmanipulator",'','y');
 
-% SGm = SGmanipulator({CPL},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2;30 4 1.0;55 2 0.8],'first_single'); %% Aktuellen Manipulator ausgeben
-% [SGm,SGc] = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2;30 4 1.0;55 2 0.8],'single'); %% Push Pull
+SGm = SGmanipulator({CPL},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 1.5;30 4 1.0 1.5;55 2 0.8 1.5],'first_single'); %% Aktuellen Manipulator ausgeben
+% [SGm,SGc] = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 1;30 4 1.0 1;55 2 0.8 1],'single'); %% Push Pull
 % SGm = SGmanipulator({CPL CPL2},3.4,[90 75 75 1;0 90 90 0;90 10 270 0;0 90 90 1],[27 4 1.2;30 4 1.0;55 2 0.8;20 2 0.6],'single'); %% Push Pull Extra Long
 % SGm = SGmanipulator({CPL CPL2 CPL3},1.5,[90 75 75 1;0 90 90 0;90 90 180 -1],[12 1 0.8;12 1 0.8;24 1 0.8],'single'); %% MiniPushpull
 
 
-% SGwriteSTL(SGm,"SGmanipulator",'','y');
+SGwriteSTL(SGm,"SGmanipulator",'','y');
 % 
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
 
@@ -64,7 +64,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGplot(SGmanipulatorBox(3,[2 2 3]));
+% SGplot(SGmanipulatorBox(3,[1 2 3]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 
