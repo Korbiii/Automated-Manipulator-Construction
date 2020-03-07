@@ -8,7 +8,7 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
-function [SG,SGc] = SGmanipulator(CPL_out,tool_r,angle_p,length_p,varargin) 
+function [SG,SGc] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 single=0; sensor_channel=0; side_stabi = 0; 
 c_inputs = {};
 for f=1:size(varargin,2)
@@ -27,7 +27,7 @@ for f=1:size(varargin,2)
               c_inputs{end+1} = 'crimp';
       end   
 end
-
+tool_r = tool_d/2;
 %% Setting up variables
 CPLs = {};
 if ~iscell(CPL_out)
@@ -53,7 +53,7 @@ CPL_com ={};
 offsets = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),hole_r,length_p(:,4),single); 
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,1); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),length_p(1,4),'bottom_element');

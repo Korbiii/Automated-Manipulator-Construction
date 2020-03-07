@@ -26,58 +26,53 @@ if hinge_opti ~= 0
     if hinge_opti < 0; e_dir_ =  flip(e_dir_); end
     PL_offsetline = PLtrans(PL_offsetline,e_dir_(1,:)*rot(pi/2)*max_dim);
     size_h = 0; res = 0.3; offset = max_dim;
-    CPLplot(CPL,'k');
-    while size_h < min_len
+    while size_h < min_len && offset > 0
         size_h = 0;
         PL_offsetline = PLtrans(PL_offsetline,e_dir_(2,:)*rot(pi/2)*res);
-        hold on;
-        CPLplot(PL_offsetline,'b');
         offset = offset-res;
         c_p = PLcrossCPLLine2(PL_offsetline,CPL);
         if ~isempty(c_p)
             c_p = sortrows(c_p);
             ex_1 = c_p(1,:);
             ex_2 = c_p(end,:);
-            ex_1_n = floor(distPointLine(middle_axis,ex_1)/res);
-            ex_2_n = floor(distPointLine(middle_axis,ex_2)/res);
+            ex_1_n = floor(distPointLine(middle_axis,ex_1)/res)-1;
+            ex_2_n = floor(distPointLine(middle_axis,ex_2)/res)-1;
             PL_ex_1 = [ex_1;PLtrans(ex_1,e_dir_(2,:)*rot(pi/2)*hinge_width)];
             PL_ex_2 = [ex_2;PLtrans(ex_2,e_dir_(2,:)*rot(pi/2)*hinge_width)];
             counting = 0;
-            hold on;
-                 PLplot(PL_ex_1);
             for k=0:ex_1_n
-                 inside_ex_1 = inside2C(CPL,PL_ex_1);
-                 if (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && counting
+                inside_ex_1 = inside2C(CPL,PL_ex_1);
+                if (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && counting
                     size_h = size_h + res;
-                 elseif (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && ~counting
-                     counting = 1;
-                 else  
-                     counting = 0;
-                 end
-                 PL_ex_1 = PLtrans(PL_ex_1,e_dir_(2,:)*res);    
-                 hold on;
-                 PLplot(PL_ex_1);
+                elseif (inside_ex_1(1)+inside_ex_1(3)) == size(PL_ex_1,1) && inside_ex_1(4) == 0  && ~counting
+                    counting = 1;
+                else
+                    counting = 0;
+                end
+                PL_ex_1 = PLtrans(PL_ex_1,e_dir_(2,:)*res);
             end
             counting = 0;
-            for k=0:ex_2_n 
-                 inside_ex_2 = inside2C(CPL,PL_ex_2);
-                 if (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && counting
+            for k=0:ex_2_n
+                inside_ex_2 = inside2C(CPL,PL_ex_2);
+                if (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && counting
                     size_h = size_h + res;
-                 elseif (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && ~counting
-                     counting = 1;
-                 else  
-                     counting = 0;
-                 end
-                 PL_ex_2 = PLtrans(PL_ex_2,e_dir_(1,:)*res);
-                  hold on;
-                 PLplot(PL_ex_2);
-            end  
+                elseif (inside_ex_2(1)+inside_ex_2(3)) == size(PL_ex_2,1) && inside_ex_2(4) == 0  && ~counting
+                    counting = 1;
+                else
+                    counting = 0;
+                end
+                PL_ex_2 = PLtrans(PL_ex_2,e_dir_(1,:)*res);
+            end
         end
     end
-    offset = (offset-(hinge_width/2));
-SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
+    if offset>0
+        offset = (offset-(hinge_width/2));
+        SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
+    else
+        error("Not enough space for hinge");
+    end
 end
-SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]); 
+SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]);
 VL_hinge = SG_hinge.VL;
 
 SG =[];
@@ -90,7 +85,7 @@ for i=1:size(VL_hinge,1)
     c_p(:,3) = pdist2(c_p,VL_hinge(i,1:2));
     c_p = sortrows(c_p,3);
     c_p = c_p(:,1:2);
-    proj_points{end+1} = c_p;   
+    proj_points{end+1} = c_p;
 end
 %% Getting number of hinge elements below and above axis through [0 0]
 [proj_points_size, max_index] = max(cellfun('size', proj_points, 1));
@@ -102,7 +97,7 @@ negative_gl = proj_points_size-positive_gl;
 for k=1:size(proj_points,2)
     if size(proj_points{k},1) < proj_points_size
         if size(proj_points{k},1) == 2
-            proj_points{k}=[proj_points{k};repmat(proj_points{k}(end-1:end,:),(proj_points_size-size(proj_points{k},1))/2,1)];                        
+            proj_points{k}=[proj_points{k};repmat(proj_points{k}(end-1:end,:),(proj_points_size-size(proj_points{k},1))/2,1)];
         else
             num_pos_neg = proj_points{k};
             in_out = insideCPS(pos_plane,num_pos_neg);
@@ -114,7 +109,7 @@ for k=1:size(proj_points,2)
                 negative_temp = negative_v(1,:);
                 positive_temp = positive_v(end,:);
                 positive_v = [positive_v;negative_temp];
-                negative_v = [positive_temp;negative_v];                
+                negative_v = [positive_temp;negative_v];
                 negative = negative+1;
                 positive = positive+1;
             end
@@ -135,12 +130,12 @@ e_dir = e_dir(1,:)/norm(e_dir(1,:));
 for u=1:size(proj_points,2)
     for j=1:size(plains,2)
         or_point = proj_points{u}(j*2-1,:);
-        curr_point = proj_points{u}(j*2,:); 
-        distance_point_plain = distPointLine(plains{j},or_point);        
+        curr_point = proj_points{u}(j*2,:);
+        distance_point_plain = distPointLine(plains{j},or_point);
         if pdist2(or_point,curr_point)>distance_point_plain
             new_point = or_point+distance_point_plain*e_dir;
-            proj_points{u}(j*2,:) = new_point;  
-        end    
+            proj_points{u}(j*2,:) = new_point;
+        end
         or_point_2 = proj_points{u}(j*2+2,:);
         curr_point_2 = proj_points{u}(j*2+1,:);
         distance_point_plain_2 = distPointLine(plains{j},or_point_2);
@@ -153,8 +148,8 @@ end
 %% Replacing values in hinge VLs with projected values
 for m=1:2:proj_points_size
     SG_hinge_new = SG_hinge;
-    for n=1:size(SG_hinge.VL,1)/2        
-        SG_hinge_new.VL(n,1:2) = proj_points{n}(m+1,1:2);   
+    for n=1:size(SG_hinge.VL,1)/2
+        SG_hinge_new.VL(n,1:2) = proj_points{n}(m+1,1:2);
     end
     for n=size(SG_hinge.VL,1)/2+1:size(SG_hinge.VL,1)
         SG_hinge_new.VL(n,1:2) = proj_points{n}(m,1:2);
