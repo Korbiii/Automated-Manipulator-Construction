@@ -8,7 +8,7 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
-function [SG,SGc] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
+function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 single=0; sensor_channel=0; side_stabi = 0; 
 c_inputs = {};
 for f=1:size(varargin,2)
@@ -51,6 +51,7 @@ arm = {};
 SG_elements = {};
 CPL_com ={};
 offsets = [];
+ranges = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
 [CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,1); 
@@ -116,8 +117,14 @@ for i=1:size(SG_elements,2)
      
      phi_left = min(phi_left,phi_left_max);
      phi_right = min(phi_right,phi_right_max);
+     [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i));
+     SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
+     dis_axis_pos = distPointLine(middle_axis,positions(i,:));
+     height_l = 0.5-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
+     height_r = 0.5-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
+        
+     ranges = [ranges;2*height_l*ele_num(i),2*height_r*ele_num(i)];
      
-     SG_stops = SGtrans(SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i)),[0 0 length_p(i,2)/2]);
      SG_elements{i} = SGcat(SG_elements{i},SG_stops);     
      SG_elements{i} = SGcat(SG_elements{i},SGmirror(SG_stops,'xy'));   
      SG_elements{i}.phi =  [phi_left,phi_right];

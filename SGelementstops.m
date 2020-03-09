@@ -3,7 +3,7 @@
 %   CPL:  CPL of element
 %	=== OUTPUT RESULTS ======
 %	SG: 	SGstops
-function [SG] =  SGelementstops(CPL,h_dir,left_angle,right_angle,hinge_width,offset)
+function [SG,left_height,right_height] =  SGelementstops(CPL,h_dir,left_angle,right_angle,hinge_width,offset)
 max_dim = max(sizeVL(CPL))+1;
 middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
