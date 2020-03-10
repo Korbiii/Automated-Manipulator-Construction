@@ -165,8 +165,8 @@ end
 % end
 % SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
-H_f = [rotx(90)*roty(90+section_p(2,1)) [-section_p(2,4);0;((height_SG/2)+height)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+section_p(1,1)) [-section_p(1,4);0;(-(height_SG/2)-height)]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+section_p(2,1)) [-offset_t;0;((height_SG/2)+height)]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+section_p(1,1)) [-offset_b;0;(-(height_SG/2)-height)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);

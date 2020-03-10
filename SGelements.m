@@ -95,10 +95,10 @@ else
 end
 
 %% Add frames to element
-H_f = TofR(rotx(90)*roty(90+h_dir),[-h_opti 0 height+(height_SG/2)]);
+H_f = TofR(rotx(90)*roty(90+h_dir),[-offset 0 height+(height_SG/2)]);
 clf;
 if ~bottom_ele
-    H_b = TofR(rotx(90)*roty(-90+h_dir),[-h_opti 0 -(height_SG/2)-height]);
+    H_b = TofR(rotx(90)*roty(-90+h_dir),[-offset 0 -(height_SG/2)-height]);
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(height_SG/2))]; 0 0 0 1];
 end
