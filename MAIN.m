@@ -65,7 +65,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-SGplot(SGmanipulatorBoxSimple(3,[70 70 110]));
+SGplot(SGmanipulatorBoxSimple(3,[70 110 70 ]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 
