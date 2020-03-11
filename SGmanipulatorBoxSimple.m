@@ -40,6 +40,8 @@ end
 SG_servo_guides = [];
 SG_side_holes = [];
 SG_texts = {};
+SG_rotors_or = {};
+SG_rotors = {};
 SG_sm40_holes = SGofCPLy(CPLcopypattern(PLcircle(1.5),SM40BL_holes(1:2),SM40BL_holes(3:4)),20);
 PL_sm85_holes = PLtrans0(CPLcopypattern(PLcircle(1.5),SM85CL_holes(1:2),SM85CL_holes(3:4)));
 PL_sm120_holes = PLtrans0(CPLcopypattern(PLcircle(1.5),SM120BL_holes(1:2),SM120BL_holes(3:4)));
@@ -75,12 +77,12 @@ for i=1:dofs
 end
 [sizex,sizey,~,~,~,~] = sizeVL(SG_servo_guides);
 PL_main_frame = CPLbool('-',PLsquare(sizex+30,sizey+20),PLsquare(sizex+20,sizey+10));
-PL_main_frame = PLroundcorners(PL_main_frame,2,10);
+PL_main_frame = PLroundcorners(PL_main_frame,[2,3],5);
 SG_main_frame = SGofCPLz(PL_main_frame,box_height+2);
 SG_main_frame = SGtransrelSG(SG_main_frame,SG_servo_guides,'centerx','alignback',5,'aligntop');
 SG_main_frame = SGboolh('-',SG_main_frame,SG_side_holes);
 
-PL_main_frame_top = PLtrans(PLroundcorners(PLsquare(sizex+30,sizey+20),4,10),[(sizex+20)/-2,(sizey+10)/-2]);
+PL_main_frame_top = PLtrans(PLroundcorners(PLsquare(sizex+30,sizey+20),[3,4],5),[(sizex+20)/-2,(sizey+10)/-2]);
 for k=1:dofs    
     PL_main_frame_top = [PL_main_frame_top;NaN NaN;PLtrans(PLcircle(top_plate_holes(power(k))),[-dists(k)-(box_wall_thickness*2)-sizex_first;-servo_ax(power(k))])];
     if power(k)>1
@@ -92,11 +94,11 @@ SG_main_frame_top = SGtransrelSG(SG_main_frame_top,SG_main_frame,'ontop','alignr
 
 SG_crimp_tensioner = SGcrimptensioner(10,3,20,2);
 SG_crimp_tensioner = SGtrans0(SGcat(SG_crimp_tensioner,SGtransrelSG(SG_crimp_tensioner,SG_crimp_tensioner,'transx',rotor_radius*2)));
-SG_crimp_tensioner = SGtransrelSG(SG_crimp_tensioner,SG_main_frame_top,'ontop','behind',10);
+SG_crimp_tensioner = SGtransrelSG(SG_crimp_tensioner,SG_main_frame_top,'ontop','behind');
 SG_crimp_tensioners = [];
 
 PL_tensionerblock = [PLsquare((rotor_radius+5)*2,10);NaN NaN;PLtrans(PLcircle(1.5),[rotor_radius 0]);NaN NaN;PLtrans(PLcircle(1.5),[-rotor_radius 0])];
-SG_tensionerblock = SGtransrelSG(SGofCPLy(PL_tensionerblock,10),SG_main_frame_top,'ontop','behind');
+SG_tensionerblock = SGtransrelSG(SGofCPLy(PL_tensionerblock,10),SG_main_frame_top,'ontop','alignback');
 SG_tensionerblocks = [];
 
 PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];
@@ -107,20 +109,24 @@ SG_nut_holder = SGstack('z',SG_nut_holder_base,SG_nut_holder);
 SG_nut_holder = SGpatternXY(SG_nut_holder,2,2,sizex+8,sizey-1);
 SG_nut_holder = SGtransrelSG(SG_nut_holder,SG_main_frame,'centerx','centery','alignbottom');
 
+%%Rotors
+
+SG_sm40_conn = SGofCPLcommand('c 25,d 3 7 0,d 3 -7 0,d 3 0 7,d 3 0 -7,c 8,h 7,enter,c 19,c 25,h 2.5,rel under 0,cat,col y');
+SG_rotors_or{end+1} = SGservorotor(rotor_radius,SG_sm40_conn,[7 4 1.5]);
+SG_sm85_conn = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0 -10.5,c 13.5,h 7,enter,c 26,c 30,h 2.5,rel under 0,cat,col y');
+SG_rotors_or{end+1} = SGservorotor(rotor_radius,SG_sm85_conn,[10.5 4 1.5]);
+SG_sm120_conn = SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0 -12.5,c 16,h 7,enter,c 34.5,c 38,h 2.5,rel under 0,cat,col y');
+SG_rotors_or{end+1} = SGservorotor(rotor_radius,SG_sm120_conn,[12.5 4 1.5]);
+
+
 for i=1:dofs    
     SG_texts{end+1} = SGtransrelSG(SG_text{power(i)},SG_main_frame,'rotx',pi/2,'rotz',pi,'behind','transx',10,'alignbottom',-2.5,'transx',-dists(i));
     SG_crimp_tensioners = SGcat(SG_crimp_tensioners,SGtrans(SG_crimp_tensioner,[-dists(i) 0 0]));
     SG_tensionerblocks = SGcat(SG_tensionerblocks,SGtrans(SG_tensionerblock,[-dists(i) 0 0]));
+    SG_rotors{end+1} = SGtransrelSG(SG_rotors_or{power(i)},SG_main_frame_top,'transx',-dists(i),'transy',-servo_ax(power(i)),'ontop',-5);
 end
 
-[size_x,~,~,~,~,~] = sizeVL(SG_tensionerblocks.VL);
-SG_tensioning_brace = SGof2CPLsz(PLtrans(PLsquare(size_x,0.2),[0 -4.9]),PLsquare(size_x,10),15);
-SG_tensioning_brace = SGtransrelSG(SG_tensioning_brace,SG_tensionerblocks,'centerx','under','alignfront');
 
-%%Rotors
-SG_sm85_conn = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0 -10.5,c 13.5,h 7,enter,c 26,c 30,h 2.5,rel under 0,cat,col y');
-SG_sm85_conn_rotor = SGservorotor(rotor_radius,SG_sm85_conn,[10.5 4 1.5]);
-SG_sm85_conn_rotor = SGtransrelSG(SG_sm85_conn_rotor,SG_main_frame_top,'transy',-SM85CL_axle_distance,'ontop',-5);
 
 %% Platinenbox
 
@@ -152,7 +158,7 @@ SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'c
 % SG_tool_mover = SGreadSTL("STLs\Assembly.STL");
 % SG_tool_mover = SGtransrelSG(SG_tool_mover,SG_tool_mover_connection,'right',-23,'alignbottom','alignback',10);
 SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_nut_holder);
-SG_bottom = SGcat([{SG_bottom} SG_texts {SG_crimp_tensioners} {SG_tensionerblocks} {SG_tensioning_brace} {SG_sm85_conn_rotor}]);
+SG_bottom = SGcat([{SG_bottom} SG_texts {SG_crimp_tensioners} {SG_tensionerblocks} SG_rotors]);
 
 SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot);
 SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);

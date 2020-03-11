@@ -86,4 +86,5 @@ SG_stamps = SGcircularpattern(SG_stamp,4,20);
 SG_stamps = SGtransrelSG(SG_stamps,SG,'ontop',-3);
 
 SG = SGcat(SG,SG_rope_guide,SG_walls,SG_stamps);
+SG = SGtransR(SG,rotz(120));
 end
