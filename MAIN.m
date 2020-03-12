@@ -54,7 +54,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGwriteSTL(SGservorotor(25,SG_connector_SM40,[7 4 1.5]),"Rotor_SM40BL",'','y');
 % SGwriteSTL(SGservorotor(25,SG_connector_SM40,[7 4 1.5]),"Servorotor",'','y');
 % SGwriteSTL(SGservorotor(25,SG_connector_SM85,[10.5 4 1.5]),"Rotor_SM85CL",'','y');
-% SGwriteSTL(SGservorotor(25,SG_connector_SM120,[12.5 4 1.5]),"Rotor_SM120BCL",'','y');
+% SGwriteSTL(SGservorotor(25,SG_connector_SM120,[12.5 4 1.5],1),"Rotor_SM120BCL",'','y');
 % SGplot(SGmotormountSCS(25,CPL_servo));
 % SGwriteSTL(SGmotormountSM40CL(25),"MotormountSM40",'','y'); 
 % SGwriteSTL(SGmotormountSM85BL(25),"MotormountSM85BL",'','y');
@@ -65,7 +65,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-SGplot(SGmanipulatorBoxSimple(3,[70 110 70 ]));
+SGplot(SGmanipulatorBoxSimple([70 70 110]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 
