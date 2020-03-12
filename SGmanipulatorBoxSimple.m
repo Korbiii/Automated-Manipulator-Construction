@@ -9,9 +9,9 @@ function [SG] = SGmanipulatorBoxSimple(power)
 
 rotor_radius = 25;
 
-SM40BL_dimensions = [46.5,28.5,34.5]+0.5;   %depth,widht,height
-SM85CL_dimensions = [62,34,47]+0.5;         %depth,widht,height
-SM120BL_dimensions = [78 43 65.5]+0.5;      %depth,widht,height
+SM40BL_dimensions = [46.5,28.5,36.5]+0.5;   %depth,widht,height
+SM85CL_dimensions = [62,34,49]+0.5;         %depth,widht,height
+SM120BL_dimensions = [78 43 67.5]+0.5;      %depth,widht,height
 SM40BL_axle_distance = 35.25;
 SM85CL_axle_distance = 47;
 SM120BL_axle_distance = 56.5;
@@ -216,8 +216,6 @@ SG_top_end = SGcat(SG_top_end,SG_top_end_2);
 
 SG = SGcat(SG_back_walls,SG_main_frame_top,SG_front_walls,SG_servo_guides,SG_tensioners,SG_top_end,SG_top_front);
 SG = SGcat([{SG} SG_texts]);
-SGwriteSTL(SG,"SG-Box");
-SG = SGcat([{SG} SG_rotors]);
 
 
 
@@ -235,21 +233,23 @@ SG = SGcat([{SG} SG_rotors]);
 % 
 
 %% Platinenbox
-
+% 25
 PL_pin_base = PLcircle(2.5);
 PL_pin_top = PLcircle(1.4);
-PL_pin_counterp = [PLcircle(2.5);NaN NaN;PLcircle(3)];
-SG_pin_fe = SGstack('z',SGofCPLz(PL_pin_base,20),SGofCPLz(PL_pin_top,5));
-SG_pin_ard = SGstack('z',SGofCPLz(PL_pin_base,25),SGofCPLz(PL_pin_top,10));
+PL_pin_counterp = [PLcircle(1.6);NaN NaN;PLcircle(3)];
+SG_pin_fe = SGstack('z',SGofCPLz(PL_pin_base,13),SGofCPLz(PL_pin_top,3));
+SG_pin_ard = SGstack('z',SGofCPLz(PL_pin_base,15),SGofCPLz(PL_pin_top,10));
 SG_pin_counter = SGofCPLz(PL_pin_counterp,20);
 
 SG_arduino_mounting = SGcat(SG_pin_ard,SGtrans(SG_pin_ard,[81.28 -48.26 0]),SGtrans(SG_pin_ard,[74.93 0 0]),SGtrans(SG_pin_ard,[-1.27 -48.26 0]));
 SG_feetech_mounting = SGcat(SG_pin_fe,SGtrans(SG_pin_fe,[29 -49 0]),SGtrans(SG_pin_fe,[29 0 0]),SGtrans(SG_pin_fe,[0 -49 0]));
+SG_arduino_mounting = SGmirror(SG_arduino_mounting,'xz');
 
-SG_base_plate = SGtrans(SGbox([103 60 3]),[0 0 1.5]);
-PL_base_frame = CPLbool('-',PLsquare(109,66),PLtrans(PLsquare(106,60),[3 0]));
-SG_base_frame = SGofCPLz(PL_base_frame,17.5);
-SG_base_frame_2 = SGofCPLz(CPLbool('-',PL_base_frame,PLtrans(PLsquare(20,100),[-20 50])),10);
+PL_base_plate = PLsquare(106,60);
+SG_base_plate = SGofCPLz(PL_base_plate,3);
+PL_base_frame = CPLbool('-',PLsquare(112,66),PLtrans(PLsquare(112,60),[3 0]));
+SG_base_frame = SGofCPLz(PLroundcorners(PL_base_frame,[1,2],5),10);
+SG_base_frame_2 = SGofCPLz(CPLbool('-',PLroundcorners(PL_base_frame,[1,2],5),PLtrans(PLsquare(20,100),[-20 50])),10);
 SG_base_frame = SGstack('z',SG_base_frame_2,SG_base_frame);
 
 PL_clips = CPLbool('-',PLsquare(8,15),PLtrans(PLsquare(8,15),[-5 5]));
@@ -259,16 +259,16 @@ SG_clips = SGcat(SG_clips,SGright(SG_clips,SG_clips,20));
 
 
 PL_power_16 = [PLtrans(PLcircle(1.6),[-9.5 0]);NaN NaN;PLcircle(6.5);NaN NaN;PLtrans(PLcircle(1.6),[9.5 0])];
-PL_front_bot = [PLsquare(60,27.5);NaN NaN;PLtrans(PL_power_16,[-10 0]),;NaN NaN;PLtrans(PLsquare(14,7),[20 0])];
+PL_front_bot = [PLsquare(60,20);NaN NaN;PLtrans(PL_power_16,[-15 0]),;NaN NaN;PLtrans(PLsquare(14,7),[20 0])];
 SG_front_bot = SGofCPLx(PL_front_bot,3);
 SG_front_bot = SGtransrelSG(SG_front_bot,SG_base_plate,'alignbottom','right');
-SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_base_plate,'center','ontop');
+SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_base_plate,'center','ontop','transx',-5);
 SG_feetech_mounting = SGtransrelSG(SG_feetech_mounting,SG_base_plate,'rotz',pi/2,'center','ontop');
 
-SG_top_frame = SGtransrelSG(SGofCPLz(PL_base_frame,27.5),SG_base_frame,'ontop',5);
+SG_top_frame = SGtransrelSG(SGofCPLz(PLroundcorners(PL_base_frame,[1,2],5),22),SG_base_frame,'ontop');
 SG_top_plate_f = SGtransrelSG(SG_base_plate,SG_top_frame,'aligntop');
 SG_arduino_mounting_top = SGcat(SG_pin_counter,SGtrans(SG_pin_counter,[81.28 -48.26 0]),SGtrans(SG_pin_counter,[74.93 0 0]),SGtrans(SG_pin_counter,[-1.27 -48.26 0]));
-SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'center','under');
+SG_arduino_mounting_top = SGtransrelSG(SGmirror(SG_arduino_mounting_top,'xz'),SG_top_plate_f,'center','under','transx',-5);
 
 
 %
@@ -281,9 +281,14 @@ SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'c
 SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot,SG_clips);
 SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
 %
-SG_electric = SGtransrelSG(SGcat(SG_electic_bot,SG_electric_top),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
-SG = SGcat(SG,SG_electric);
-%
-% SGplot(SG);
-SGwriteSTL(SG,"SG_box");
+% SG_electric = SGtransrelSG(SGcat(SG_electic_bot,SG_electric_top),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
+
+SGplot(SG);
+SGwriteSTL(SG,"Box",'','y');
+% SGwriteSTL(SG_electric_top,"Platinenbox Deckel",'','y');
+% SGwriteSTL(SG_electic_bot,"Platinenbox",'','y');
+% for i=1:dofs
+%     SGwriteSTL(SG_rotors{i},"Rotor "+i,'','y');
+% end
+
 end

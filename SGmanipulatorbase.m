@@ -42,6 +42,23 @@ CPL = CPLbool('-',CPL,PLtrans([PLcircle((max_value+sizey/2));NaN NaN;PLcircle(ma
 end
 % CPL = [CPL;NaN NaN;PLtrans(PLcircle(1.5),[0 -7.5])];
 
+CPL_out = CPLselectinout(CPL,0);
+CPL_seal_cup = [PLgrow(CPL_out,-0.5);NaN NaN;PLcircle(max_value+3)];
+CPL_seal_cup_bottom = [PLgrow(CPL_out,2);NaN NaN;PLcircle(max_value+3)];
+SG_seal_cup = SGofCPLz(CPL_seal_cup,10);
+SG_seal_cup_bottom = SGofCPLz(CPL_seal_cup_bottom,2);
+SG_seal_cup = SGstack('z',SG_seal_cup_bottom,SG_seal_cup);
+
+
+CPL_bayo_holder = [CPL_out;NaN NaN;PLcircle(max_value+3)];
+SG_bayo_holder = SGofCPLz(CPL_bayo_holder,3);
+
+
+
+
+
+
+
 if sensor_channel
     CPL_outer_contour = CPLselectinout(CPL,0);
     CPL_calibration = [PLcircle(20);NaN NaN;CPLgrow(CPL_outer_contour,0.2)];
