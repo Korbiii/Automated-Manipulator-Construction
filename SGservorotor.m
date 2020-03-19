@@ -109,9 +109,9 @@ SG_tex = SGcat(SG_tex,SG_tex_2);
 
 PL_stamp = CPLbool('+',PLsquare(8.7,5),PLtrans(PLsquare(4.7,1.25),[0 -3.125]));
 PL_stamp = PLroundcorners2(PL_stamp,[1,2,4,5,6,7],1);
-SG_stamp = SGtrans(SGofCPLz(PL_stamp,4),[0 10 0]);
-SG_stamps = SGcircularpattern(SG_stamp,4,20);
-SG_stamps = SGtransrelSG(SG_stamps,SG,'ontop',-3);
+SG_stamp = SGtrans(SGofCPLy(PL_stamp,4),[0 10 0]);
+% SG_stamps = SGcircularpattern(SG_stamp,4,20);
+% SG_stamps = SGtransrelSG(SG_stamps,SG,'ontop',-3);
 
 SG = SGcat(SG,SG_rope_guide,SG_walls,SG_tex);
 SG = SGtransR(SG,rotz(120));

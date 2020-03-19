@@ -18,7 +18,9 @@ function [SG] = SGconnector(CPL,CPL_holes,positions,section_p,h_r,tool_radius,va
 hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
 hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
 min_len = [1,1];        if nargin>=9 && ~isempty(varargin{3}); min_len = varargin{3}; end
-flags = {};             if nargin>=10 && ~isempty(varargin{4}); flags = varargin{4}; end
+height_b = 0.5;         if nargin>=10 && ~isempty(varargin{4}); height_b = varargin{4}; end
+height_t = 0.5;         if nargin>=11 && ~isempty(varargin{5}); height_t = varargin{5}; end
+flags = {};             if nargin>=12 && ~isempty(varargin{6}); flags = varargin{6}; end
 
 cut_orientation = 'y'; single = 0; end_cap = 0; crimp = 1;
 % if size(positions,1)>1
@@ -135,15 +137,14 @@ height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
 SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 
 %% add hinge
-height = 0.5;
 
-SG_hinge = SGhingeround(0.5,hinge_width_b,height);
+SG_hinge = SGhingeround(0.5,hinge_width_b,height_b);
 SG_hinge_b = SGtransR(SG_hinge,rotz(section_p(1,1)));
 [SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,4),hinge_width_b,min_len);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 offset_t =0;
 if ~end_cap
-    SG_hinge_t = SGhingeround(0.5,hinge_width_t,height);
+    SG_hinge_t = SGhingeround(0.5,hinge_width_t,height_t);
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(section_p(2,1)));
     [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,4),hinge_width_t,min_len);
     SG_hinge_b = SGunder(SG_hinge_b,SG);
@@ -165,8 +166,8 @@ end
 % end
 % SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
-H_f = [rotx(90)*roty(90+section_p(2,1)) [-offset_t;0;((height_SG/2)+height)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+section_p(1,1)) [-offset_b;0;(-(height_SG/2)-height)]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+section_p(2,1)) [-offset_t;0;((height_SG/2)+height_t)]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+section_p(1,1)) [-offset_b;0;(-(height_SG/2)-height_b)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);

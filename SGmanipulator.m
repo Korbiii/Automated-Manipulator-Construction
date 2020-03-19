@@ -57,23 +57,23 @@ s_n = 0;
 [CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,1); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
-SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),length_p(1,4),'bottom_element');
+SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
 SG_conns = {SG_bottom};
 for i=1:size(angle_p,1)
     CPL_com{end+1} = CPLbool('-',CPLs{i},CPLs_holes{i});    
     if i == size(angle_p,1)   %% Top of arms
         if single == 1
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),{'end_cap' 'single'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap' 'single'}); 
         else
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),{'end_cap'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap'}); 
         end  
          SG_conn_temp.hole_positions = positions(end,:);
     else
-        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,:),hole_r,tool_r,length_p(i,3),length_p(i+1,3),length_p(i,4),c_inputs); 
+        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,:),hole_r,tool_r,length_p(i,3),length_p(i+1,3),length_p(i,4),length_p(i,5),length_p(i+1,5),c_inputs); 
         SG_conn_temp.hole_positions = positions(i:i+1,:);
     end    
     
-    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,:),length_p(i,3),length_p(i,2),length_p(i,4)); 
+    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,:),length_p(i,3),length_p(i,2),length_p(i,4),length_p(i,5)); 
     if i == size(angle_p,1)   
         SG_ele_temp.hole_positions = positions(end,:);
     else
@@ -87,7 +87,7 @@ end
 %% Calculating number of elements && adding stops
 ele_num =[];
 for i=1:size(SG_elements,2)
-    ele_num = [ele_num floor(length_p(i,1)/(length_p(i,2)+1))];
+    ele_num = [ele_num floor(length_p(i,1)/(length_p(i,2)+(2*length_p(i,5))))];
     
     max_dim = max(sizeVL(CPL_out{i}))+1;
     middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets(i)]),rot(deg2rad(angle_p(i,1))));
@@ -109,28 +109,28 @@ for i=1:size(SG_elements,2)
         if dis_temp > dis_right dis_right = dis_temp; end
      end
     
-     phi_left_max = 2*atand(0.5/dis_left);
-     phi_right_max = 2*atand(0.5/dis_right);
+     phi_left_max = 2*atand(length_p(i,5)/dis_left);
+     phi_right_max = 2*atand(length_p(i,5)/dis_right);
      
      phi_left = angle_p(i,2)/ele_num(i);
      phi_right = angle_p(i,3)/ele_num(i);  
      
      phi_left = min(phi_left,phi_left_max);
      phi_right = min(phi_right,phi_right_max);
-     [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i));
+     [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i),length_p(i,5));
      SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
      dis_axis_pos = distPointLine(middle_axis,positions(i,:));
-     height_l = 0.5-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
-     height_r = 0.5-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
+     height_l = length_p(i,5)-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
+     height_r = length_p(i,5)-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
         
      ranges = [ranges;2*height_l*ele_num(i),2*height_r*ele_num(i)];
      
      SG_elements{i} = SGcat(SG_elements{i},SG_stops);     
      SG_elements{i} = SGcat(SG_elements{i},SGmirror(SG_stops,'xy'));   
      SG_elements{i}.phi =  [phi_left,phi_right];
-     SG_conns{i} = SGcat(SG_conns{i},SGtransrelSG(SG_stops,SG_conns{i},'ontop',-0.5-length_p(i,3)/2));
+     SG_conns{i} = SGcat(SG_conns{i},SGtransrelSG(SG_stops,SG_conns{i},'ontop',-length_p(i,5)-length_p(i,3)/2));
      SG_conns{i}.phi_t = [phi_left,phi_right];
-     SG_conns{i+1} = SGcat(SG_conns{i+1},SGtransrelSG(SGmirror(SG_stops,'xy'),SG_conns{i+1},'under',-0.5-length_p(i,3)/2));
+     SG_conns{i+1} = SGcat(SG_conns{i+1},SGtransrelSG(SGmirror(SG_stops,'xy'),SG_conns{i+1},'under',-length_p(i,5)-length_p(i,3)/2));
      SG_conns{i}.phi_b = [phi_left,phi_right];    
      updateProgress("Added Stops to Element "+ i);
 end
@@ -141,14 +141,18 @@ for j=1:size(SG_elements,2)
 end
 arm = [SG_conns(1) arm];
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},3,positions(1,:),1,sensor_channel);
+base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},3.5,positions(1,:),0,sensor_channel,1,1);
 SGs = [{base} arm arm];
 num = size(SGs,2);
 updateProgress("Created Base");
 %% Generating full manipulator with framechain
 framechain = SGTframeChain2(num);
 phis = [repmat(-0.095,1,6) zeros(1,27)];
-SGc = SGTchain(SGs,[0 0 phis phis],'',framechain);
+% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.095,1,ele_num(3))];
+% phis2 = [0 repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.2,1,ele_num(3))];
+phis = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
+phis2 = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
+SGc = SGTchain(SGs,[0 0 phis phis2],'',framechain);
 updateProgress("Created SGTchain");
 SG = SGcat(SGc);
 SGplot(SG);

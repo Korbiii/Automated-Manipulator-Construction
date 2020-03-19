@@ -20,6 +20,7 @@ axis_o = flip(axis_o);
 CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
 min_len = flip(min_len);
+CPL_no_go_areas = {};
 %% Generating CPL of area where no holes can go based on axis constraints
 for i=1:size(axis_o,1)
     if axis_o(i,2) == 0
@@ -59,6 +60,9 @@ for i=1:size(axis_o,1)
             CPL_axis_constraint = CPLbool('+',CPL_axis_constraint_p,CPL_axis_constraint_n);
         end
         CPL_no_go_area = CPLbool('+',CPL_no_go_area,CPL_axis_constraint);
+        CPL_no_go_areas{end+1} = CPL_no_go_area;
+    else 
+        CPL_no_go_areas{end+1} = [];
     end
 end
 CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
@@ -66,6 +70,7 @@ max_dim = 2*max(sizeVL(CPL_out{size(axis_o,1)}));
 
 %%Looping over each section
 for i=1:size(axis_o,1)
+% for i = size(axis_o,1):-1:1
     %% calculating general values
     CPL_opti_area = [];
     curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(axis_o(i,1))));
@@ -89,7 +94,7 @@ for i=1:size(axis_o,1)
         CPL_i_out = CPLgrow(CPL_in,+0.5+hole_r);
     end
     CPL_limit = CPLbool('-',CPL_o_in,CPL_i_out);
-    CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_area);
+    CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_areas{i});
     CPL_limit = CPLbool('-',CPL_limit,CPL_opti_area);
     if ~isempty(CPL_holes)
         CPL_limit = CPLbool('-',CPL_limit,CPLgrow(CPL_holes,+0.5+hole_r));

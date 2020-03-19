@@ -30,7 +30,7 @@ if hinge_opti ~= 0
         size_h = 0;
         PL_offsetline = PLtrans(PL_offsetline,e_dir_(2,:)*rot(pi/2)*res);
         offset = offset-res;
-        c_p = PLcrossCPLLine2(PL_offsetline,CPL);
+        c_p = PLcrossCPLLine3(PL_offsetline,CPL);
         if ~isempty(c_p)
             c_p = sortrows(c_p);
             ex_1 = c_p(1,:);
@@ -68,6 +68,7 @@ if hinge_opti ~= 0
     if offset>0
         offset = (offset-(hinge_width/2));
         SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
+        if hinge_opti > 0; offset = -offset; end
     else
         error("Not enough space for hinge");
     end
@@ -81,7 +82,7 @@ proj_points = {};
 %%  Generating all cross points between CPL and hingepoint projections
 for i=1:size(VL_hinge,1)
     PL_cross_line = [VL_hinge(i,1:2);VL_hinge(i,1:2)+(e_dir*50)];
-    c_p =  PLcrossCPLLine2(PL_cross_line,CPL);
+    c_p =  PLcrossCPLLine3(PL_cross_line,CPL);
     c_p(:,3) = pdist2(c_p,VL_hinge(i,1:2));
     c_p = sortrows(c_p,3);
     c_p = c_p(:,1:2);

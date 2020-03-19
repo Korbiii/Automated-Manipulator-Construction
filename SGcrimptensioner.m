@@ -21,7 +21,9 @@ SG_crimp = SGcat(SGontop(SG_crimp_2,SG_crimp),SG_crimp);
 SG_screw = SGcat(SGontop(SG_crimp,SG_screw),SG_screw);
 
 if which == 0
-SG = SGcat(SGontop(SG_stationary,SG_screw, 5),SG_screw);
+    SG_nut = SGscrewDIN(-10,5,'',PLcircle(8,6));
+    SG_screw = SGcat(SGunder(SG_nut,SG_screw,2),SG_screw);
+SG = SGcat(SGunder(SG_stationary,SG_screw, -20),SG_screw);
 elseif which == 1
     SG = SG_screw;
 elseif which == 2

@@ -3,9 +3,9 @@
 %   CPL:  CPL of element
 %	=== OUTPUT RESULTS ======
 %	SG: 	SGstops
-function [SG,left_height,right_height] =  SGelementstops(CPL,h_dir,left_angle,right_angle,hinge_width,offset)
+function [SG,left_height,right_height] =  SGelementstops(CPL,h_dir,left_angle,right_angle,hinge_width,offset,height)
 max_dim = max(sizeVL(CPL))+1;
-middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
+middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 -offset]),rot(deg2rad(h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
 e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
 left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
@@ -30,20 +30,16 @@ for k=1:size(CPL_out_right,1)
     end
 end
 
-PLsquare_left = PLsquare(max(hinge_width+1,max_distance_left-2),max_dim*2);
-PLsquare_right = PLsquare(max(hinge_width+1,max_distance_right-2),max_dim*2);
-PLsquare_left = PLtransR(PLtrans(PLsquare_left,[-offset+(max(hinge_width+1,max_distance_left-2)/2) 0]),rot(deg2rad(h_dir)-pi/2));
-PLsquare_right= PLtransR(PLtrans(PLsquare_right,[-offset-(max(hinge_width+1,max_distance_right-2)/2) 0]),rot(deg2rad(h_dir)-pi/2));
-
-PL_cut = CPLbool('+',PLsquare_left,PLsquare_right);
-CPL_cut = CPLbool('-',CPL,PL_cut);
+width = hinge_width+(2*height);
+PL_full = PLtransR(PLtrans( PLsquare(width+1,max_dim*2) ,[offset 0]),rot(deg2rad(h_dir)-pi/2));
+CPL_cut = CPLbool('-',CPL,PL_full);
 
 offset_p = floor((max_distance_right/(max_distance_right+max_distance_left))*500);
 
-right_height = max(0,0.5-(tand(left_angle)*max_distance_left));
-left_height = max(0,0.5-(tand(right_angle)*max_distance_right));
+right_height = max(0,height-(tand(left_angle)*max_distance_left));
+left_height = max(0,height-(tand(right_angle)*max_distance_right));
 
-PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(left_height,0.5,offset_p) linspace(0.5,right_height,500-offset_p)]';
+PLcontour = [(linspace(-max_distance_right,max_distance_left,500))+offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
 
 SG = SGofCPLz(CPL_cut,0.1);
 n=size(SG.VL,1);
