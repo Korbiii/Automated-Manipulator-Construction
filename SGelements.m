@@ -9,14 +9,14 @@
 %	SG:             SG of element
 function [SG,offset] = SGelements(CPL,section_p,varargin)
 %% Initializing
-height = 0.5; bottom_ele = 0;side_stabi = 0; 
+ bottom_ele = 0;side_stabi = 0; 
 hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
 ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargin{2};   end
 min_len = 1;        if nargin>=5 && ~isempty(varargin{3});  min_len = varargin{3}; end
 height = 0.5;       if nargin>=6 && ~isempty(varargin{4});  height = varargin{4}; end
 
 h_dir = section_p(1);
-h_opti = section_p(4);
+h_opti = section_p(2);
 
 
 for f=5:size(varargin,2)

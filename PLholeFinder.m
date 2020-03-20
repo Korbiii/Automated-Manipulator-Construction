@@ -11,6 +11,7 @@
 function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,axis_o,hinge_w,hole_r,min_len,varargin)
 single = 0; if nargin>=5 && ~isempty(varargin{1}); single=varargin{1}; end
 torsion = 0; if nargin>=6 && ~isempty(varargin{2}); torsion=varargin{2}; end
+bottom_up = 0; if nargin>=7 && ~isempty(varargin{3}); bottom_up=varargin{3}; end
 %% Initializing
 CPL_no_go_area = [];
 CPLs = {};
@@ -69,8 +70,17 @@ CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
 max_dim = 2*max(sizeVL(CPL_out{size(axis_o,1)}));
 
 %%Looping over each section
-for i=1:size(axis_o,1)
-% for i = size(axis_o,1):-1:1
+if bottom_up     
+    start_value = 1;
+    step = 1;
+    end_value = size(axis_o,1);
+else
+    start_value = size(axis_o,1);
+    step = -1;
+    end_value = 1;
+end
+
+for i=start_value:step:end_value
     %% calculating general values
     CPL_opti_area = [];
     curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(axis_o(i,1))));
@@ -100,8 +110,8 @@ for i=1:size(axis_o,1)
         CPL_limit = CPLbool('-',CPL_limit,CPLgrow(CPL_holes,+0.5+hole_r));
     end
     %% Searching point with furthest distant to axis that still can be mirrored to the other side
-    dis = 0;
     dis_pos=0;
+    dis = 0;
     for j=1:size(CPL_limit,1)
         new_dis = distPointLine(curr_axis,CPL_limit(j,:));
         if dis<new_dis
@@ -117,6 +127,7 @@ for i=1:size(axis_o,1)
             end
         end
     end
+    if dis == 0 error("CPL für Sektion " + i + " zu klein"); end
     if single == 1 || (single == 2 && i == size(axis_o,1))
         hole_positions = CPL_limit(dis_pos,:);
     else

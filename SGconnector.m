@@ -140,13 +140,13 @@ SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 
 SG_hinge = SGhingeround(0.5,hinge_width_b,height_b);
 SG_hinge_b = SGtransR(SG_hinge,rotz(section_p(1,1)));
-[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,4),hinge_width_b,min_len);
+[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,2),hinge_width_b,min_len);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 offset_t =0;
 if ~end_cap
     SG_hinge_t = SGhingeround(0.5,hinge_width_t,height_t);
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(section_p(2,1)));
-    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,4),hinge_width_t,min_len);
+    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,2),hinge_width_t,min_len);
     SG_hinge_b = SGunder(SG_hinge_b,SG);
     SG_hinge_t = SGontop(SG_hinge_t,SG);
     SG = SGcat(SG_hinge_b,SG_hinge_t,SG);

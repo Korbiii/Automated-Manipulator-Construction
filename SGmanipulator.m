@@ -9,7 +9,7 @@
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-single=0; sensor_channel=0; side_stabi = 0; 
+single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0;
 c_inputs = {};
 for f=1:size(varargin,2)
       switch varargin{f}
@@ -25,6 +25,24 @@ for f=1:size(varargin,2)
               single = 2;
               crimp = 1;
               c_inputs{end+1} = 'crimp';
+          case 'tip'
+              base_length = 1;
+          case 'optic_mid'
+              optic = 1;
+          case 'optic_top'
+              optic = 2;     
+          case 'optic_radius'
+              optic_radius = varargin{f+1};
+              f = f+1;
+          case 'length'
+              base_length = varargin{f+1};
+              f = f+1;
+          case 'seal'
+              seal = 1;
+          case 'torsion'
+              torsion = 1;
+          case 'bottom_up'
+              bottom_up = 1;
       end   
 end
 tool_r = tool_d/2;
@@ -54,26 +72,26 @@ offsets = [];
 ranges = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,1); 
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,torsion,bottom_up); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
-SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,:),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
+SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,[1,4]),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
 SG_conns = {SG_bottom};
 for i=1:size(angle_p,1)
     CPL_com{end+1} = CPLbool('-',CPLs{i},CPLs_holes{i});    
     if i == size(angle_p,1)   %% Top of arms
         if single == 1
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap' 'single'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,[1,4]);angle_p(end,[1,4])],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap' 'single'}); 
         else
-            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,:);angle_p(end,:)],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap'}); 
+            SG_conn_temp = SGconnector(CPLs(size(angle_p,1)),CPLs_holes(end),positions(end,:),[angle_p(end,[1,4]);angle_p(end,[1,4])],hole_r,tool_r,length_p(i,3),'',length_p(i,4),length_p(i,5),'',{'end_cap'}); 
         end  
          SG_conn_temp.hole_positions = positions(end,:);
     else
-        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,:),hole_r,tool_r,length_p(i,3),length_p(i+1,3),length_p(i,4),length_p(i,5),length_p(i+1,5),c_inputs); 
+        SG_conn_temp = SGconnector(CPLs(i:i+1),CPLs_holes(i:i+1),positions(i:i+1,:),angle_p(i:i+1,[1,4]),hole_r,tool_r,length_p(i,3),length_p(i+1,3),length_p(i,4),length_p(i,5),length_p(i+1,5),c_inputs); 
         SG_conn_temp.hole_positions = positions(i:i+1,:);
     end    
     
-    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,:),length_p(i,3),length_p(i,2),length_p(i,4),length_p(i,5)); 
+    [SG_ele_temp, offset] = SGelements(CPL_com{i},angle_p(i,[1,4]),length_p(i,3),length_p(i,2),length_p(i,4),length_p(i,5)); 
     if i == size(angle_p,1)   
         SG_ele_temp.hole_positions = positions(end,:);
     else
@@ -141,7 +159,7 @@ for j=1:size(SG_elements,2)
 end
 arm = [SG_conns(1) arm];
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},3.5,positions(1,:),0,sensor_channel,1,1);
+base = SGmanipulatorbase([CPLs_holes{1};NaN NaN;CPL_in],CPL_out{1},optic_radius,positions(1,:),sensor_channel,optic,single,base_length,seal);
 SGs = [{base} arm arm];
 num = size(SGs,2);
 updateProgress("Created Base");
