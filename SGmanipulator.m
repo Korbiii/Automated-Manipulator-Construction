@@ -64,7 +64,7 @@ for i=1:size(CPL_out,1)
     CPLs{end+1} = CPLbool('-',CPL_out{i},CPL_in);
 end                         
 %% Initializing arrays and variables
-hole_r = 0.6; % Radius of rope/pushrodtubes
+hole_r = 0.4; % Radius of rope/pushrodtubes
 arm = {};
 SG_elements = {};
 CPL_com ={};
@@ -72,7 +72,7 @@ offsets = [];
 ranges = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3),hole_r,length_p(:,4),single,torsion,bottom_up); 
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3)+(2*length_p(:,5)),hole_r,length_p(:,4),single,torsion,bottom_up); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,[1,4]),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
@@ -104,18 +104,20 @@ for i=1:size(angle_p,1)
 end
 %% Calculating number of elements && adding stops
 ele_num =[];
-for i=1:size(SG_elements,2)
+length_p = [0 0 0 0 0;length_p;0 0 0 0 0];
+angle_p = [0 0 0 0;angle_p;0 0 0 0];
+for i=2:size(SG_elements,2)+1
     ele_num = [ele_num floor(length_p(i,1)/(length_p(i,2)+(2*length_p(i,5))))];
     
-    max_dim = max(sizeVL(CPL_out{i}))+1;
-    middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets(i)]),rot(deg2rad(angle_p(i,1))));
+    max_dim = max(sizeVL(CPL_out{i-1}))+1;
+    middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets(i-1)]),rot(deg2rad(angle_p(i,1))));
     e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
     e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
     left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
     right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*-max_dim)];    
     
-    CPL_left = CPLbool('-',CPL_out{i},left_plane);
-    CPL_right = CPLbool('-',CPL_out{i},right_plane);
+    CPL_left = CPLbool('-',CPL_out{i-1},left_plane);
+    CPL_right = CPLbool('-',CPL_out{i-1},right_plane);
     dis_left = 0;
     dis_right = 0;
     for k = 1:size(CPL_left,1)
@@ -130,26 +132,31 @@ for i=1:size(SG_elements,2)
      phi_left_max = 2*atand(length_p(i,5)/dis_left);
      phi_right_max = 2*atand(length_p(i,5)/dis_right);
      
-     phi_left = angle_p(i,2)/ele_num(i);
-     phi_right = angle_p(i,3)/ele_num(i);  
+     phi_left = (angle_p(i,2)/ele_num(i-1))/2;
+     phi_right = (angle_p(i,3)/ele_num(i-1))/2;  
      
-     phi_left = min(phi_left,phi_left_max);
-     phi_right = min(phi_right,phi_right_max);
-     [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i),length_p(i,5));
-     SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
-     dis_axis_pos = distPointLine(middle_axis,positions(i,:));
-     height_l = length_p(i,5)-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
-     height_r = length_p(i,5)-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
-        
-     ranges = [ranges;2*height_l*ele_num(i),2*height_r*ele_num(i)];
-     
-     SG_elements{i} = SGcat(SG_elements{i},SG_stops);     
-     SG_elements{i} = SGcat(SG_elements{i},SGmirror(SG_stops,'xy'));   
-     SG_elements{i}.phi =  [phi_left,phi_right];
-     SG_conns{i} = SGcat(SG_conns{i},SGtransrelSG(SG_stops,SG_conns{i},'ontop',-length_p(i,5)-length_p(i,3)/2));
-     SG_conns{i}.phi_t = [phi_left,phi_right];
-     SG_conns{i+1} = SGcat(SG_conns{i+1},SGtransrelSG(SGmirror(SG_stops,'xy'),SG_conns{i+1},'under',-length_p(i,5)-length_p(i,3)/2));
-     SG_conns{i}.phi_b = [phi_left,phi_right];    
+%      phi_left = min(phi_left,phi_left_max);
+%      phi_right = min(phi_right,phi_right_max);
+%      [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i),length_p(i,5));
+     SG_el = SGelementstops2(SG_elements{i-1},angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i,[3,5]));
+     SG_elements{i-1} = SG_el;
+     [SG_con] = SGelementstops2(SG_conns(i-1:i),angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i-1:i+1,[3,5]));
+     SG_conns{i-1} = SG_con{1};
+     SG_conns{i} = SG_con{2};
+%      SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
+%      dis_axis_pos = distPointLine(middle_axis,positions(i,:));
+%      height_l = length_p(i,5)-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
+%      height_r = length_p(i,5)-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
+%         
+%      ranges = [ranges;2*height_l*ele_num(i),2*height_r*ele_num(i)];
+%      
+%      SG_elements{i} = SGcat(SG_elements{i},SG_stops);     
+%      SG_elements{i} = SGcat(SG_elements{i},SGmirror(SG_stops,'xy'));   
+%      SG_elements{i}.phi =  [phi_left,phi_right];
+%      SG_conns{i} = SGcat(SG_conns{i},SGtransrelSG(SG_stops,SG_conns{i},'ontop',-length_p(i,5)-length_p(i,3)/2));
+%      SG_conns{i}.phi_t = [phi_left,phi_right];
+%      SG_conns{i+1} = SGcat(SG_conns{i+1},SGtransrelSG(SGmirror(SG_stops,'xy'),SG_conns{i+1},'under',-length_p(i,5)-length_p(i,3)/2));
+%      SG_conns{i}.phi_b = [phi_left,phi_right];    
      updateProgress("Added Stops to Element "+ i);
 end
 %% Filling cell list with elements for a single arm
@@ -165,12 +172,14 @@ num = size(SGs,2);
 updateProgress("Created Base");
 %% Generating full manipulator with framechain
 framechain = SGTframeChain2(num);
-phis = [repmat(-0.095,1,6) zeros(1,27)];
-% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.095,1,ele_num(3))];
-% phis2 = [0 repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.2,1,ele_num(3))];
+phis = [0 repmat(-0.095,1,6) zeros(1,27)];
+% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.095,1,ele_num(3)+1)];
+% phis2 = [repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.14,1,ele_num(3)+1)];
+% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.1,1,ele_num(2)+1) repmat(0.095,1,ele_num(3)+1)];
+% phis2 = [repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.14,1,ele_num(3)+1)];
 phis = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
 phis2 = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
-SGc = SGTchain(SGs,[0 0 phis phis2],'',framechain);
+SGc = SGTchain(SGs,[0 phis 0 phis2],'',framechain);
 updateProgress("Created SGTchain");
 SG = SGcat(SGc);
 SGplot(SG);

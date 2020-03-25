@@ -7,7 +7,7 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of connector element
 %   offset:     Calculated offset in positive y direction
-function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width,min_len)
+function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width,min_len,h_height)
 %% Initializing and generating general values
 offset = 0;
 max_dim = max(sizeVL(CPL))+1;
@@ -18,6 +18,7 @@ e_dir_n = e_dir(2,:)/norm(e_dir(2,:));
 PL_offsetline = middle_axis;
 middle_axis = PLtransR(middle_axis,rot(pi/2));
 pos_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir_n*50)]; % Plane for finding points in positive area
+% hinge_width = hinge_width+(2*h_height);
 hinge_width = hinge_width+1;
 
 %% Calculating best offset
@@ -73,17 +74,19 @@ if hinge_opti ~= 0
         error("Not enough space for hinge");
     end
 end
+SG_hinge_zero = SG_hinge;
 SG_hinge = SGtrans(SG_hinge,[e_dir(2,:)*15 0]);
 VL_hinge = SG_hinge.VL;
 
 SG =[];
 proj_points = {};
-
+to_side = 1;
+if to_side
 %%  Generating all cross points between CPL and hingepoint projections
-for i=1:size(VL_hinge,1)
-    PL_cross_line = [VL_hinge(i,1:2);VL_hinge(i,1:2)+(e_dir*50)];
+for left=1:size(VL_hinge,1)
+    PL_cross_line = [VL_hinge(left,1:2);VL_hinge(left,1:2)+(e_dir*50)];
     c_p =  PLcrossCPLLine3(PL_cross_line,CPL);
-    c_p(:,3) = pdist2(c_p,VL_hinge(i,1:2));
+    c_p(:,3) = pdist2(c_p,VL_hinge(left,1:2));
     c_p = sortrows(c_p,3);
     c_p = c_p(:,1:2);
     proj_points{end+1} = c_p;
@@ -123,8 +126,8 @@ end
 %% Replacing values to minimize overlapping triangles
 max_axis = proj_points{max_index};
 plains = {};
-for i=1:2:size(max_axis,1)-2
-    axis_offset = [mean(max_axis(i+1:i+2,1)),mean(max_axis(i+1:i+2,2))];
+for left=1:2:size(max_axis,1)-2
+    axis_offset = [mean(max_axis(left+1:left+2,1)),mean(max_axis(left+1:left+2,2))];
     plains{end+1} = [axis_offset;axis_offset+(e_dir*rot(pi/2))];
 end
 e_dir = e_dir(1,:)/norm(e_dir(1,:));
@@ -156,5 +159,41 @@ for m=1:2:proj_points_size
         SG_hinge_new.VL(n,1:2) = proj_points{n}(m,1:2);
     end
     SG = SGcat(SG,SG_hinge_new);
+end
+else
+    torsion = 1;
+    if torsion 
+    res = 0.05;
+   CPL_out = CPLselectinout(CPL,0);
+   PL_hinge = PLtransR(PLsquare(min_len,hinge_width),rot(deg2rad(hinge_dir)));
+   PL_hinge_l = PLtrans(PL_hinge,e_dir_n*max_dim);
+   PL_hinge_r = PLtrans(PL_hinge,e_dir_p*max_dim); 
+   PL_comb = CPLbool('+',PL_hinge_l,PL_hinge_r);
+   inside = inside2C(CPL_out,PL_comb);
+   offsat = 0;
+   
+   CPLplot(PL_comb);
+   while  (inside(1)+inside(3)) ~= size(PL_comb,1)
+       offsat= offsat+1;
+       PL_hinge_l = PLtrans(PL_hinge_l,e_dir_p*res);
+       PL_hinge_r = PLtrans(PL_hinge_l,e_dir_n*res);
+       PL_comb = CPLbool('+',PL_hinge_l,PL_hinge_r);       
+        CPLplot(PL_comb);
+       inside = inside2C(CPL_out,PL_comb);     
+   end
+   
+    SG_hinge_l = SGtrans(SG_hinge_zero,[e_dir_p*(max_dim-((offsat-1)*res)) 0]);    
+    SG_hinge_r = SGtrans(SG_hinge_zero,[e_dir_n*(max_dim-((offsat-1)*res)) 0]);
+    else
+        offsat = 3.4+(min_len/2);
+     SG_hinge_l = SGtrans(SG_hinge_zero,[e_dir_p*offsat 0]);    
+    SG_hinge_r = SGtrans(SG_hinge_zero,[e_dir_n*offsat 0]);
+    end
+    
+    a = 2;
+%     SG = SGcat(SG,SG_hinge_new);
+    SG = SGcat(SG_hinge_l,SG_hinge_r);
+    
+    
 end
 end

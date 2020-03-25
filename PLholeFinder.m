@@ -61,7 +61,7 @@ for i=1:size(axis_o,1)
             CPL_axis_constraint = CPLbool('+',CPL_axis_constraint_p,CPL_axis_constraint_n);
         end
         CPL_no_go_area = CPLbool('+',CPL_no_go_area,CPL_axis_constraint);
-        CPL_no_go_areas{end+1} = CPL_no_go_area;
+        CPL_no_go_areas{end+1} = CPLgrow(CPL_no_go_area,-hole_r);
     else 
         CPL_no_go_areas{end+1} = [];
     end

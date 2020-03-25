@@ -66,7 +66,8 @@ if side_stabi == 1
     
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 else    
-    SG = SGofCPLz(CPL,ele_height);
+%     SG = SGofCPLz(CPL,ele_height);
+    SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
     SG = SGtrans(SG,[0 0 -height_SG/2]);
 end
@@ -74,9 +75,9 @@ end
 
 
 %% Add hinge to base
-SG_hinge = SGhingeround(0.5,hinge_width,height);
+SG_hinge = SGhingeround(min_len,hinge_width,height);
 SG_hinge = SGtransR(SG_hinge,rotz(h_dir));
-[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width,min_len);
+[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width,min_len,height);
 
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
@@ -96,10 +97,10 @@ else
 end
 
 %% Add frames to element
-H_f = TofR(rotx(90)*roty(90+h_dir),[-offset 0 height+(height_SG/2)]);
+H_f = TofR(rotx(90)*roty(90+h_dir),[offset 0 height+(height_SG/2)]);
 clf;
 if ~bottom_ele
-    H_b = TofR(rotx(90)*roty(-90+h_dir),[-offset 0 -(height_SG/2)-height]);
+    H_b = TofR(rotx(90)*roty(-90+h_dir),[offset 0 -(height_SG/2)-height]);
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(height_SG/2))]; 0 0 0 1];
 end

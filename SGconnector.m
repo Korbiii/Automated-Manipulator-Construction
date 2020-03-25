@@ -138,15 +138,15 @@ SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 
 %% add hinge
 
-SG_hinge = SGhingeround(0.5,hinge_width_b,height_b);
+SG_hinge = SGhingeround(min_len,hinge_width_b,height_b);
 SG_hinge_b = SGtransR(SG_hinge,rotz(section_p(1,1)));
-[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,2),hinge_width_b,min_len);
+[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,section_p(1,1),section_p(1,2),hinge_width_b,min_len,height_b);
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 offset_t =0;
 if ~end_cap
-    SG_hinge_t = SGhingeround(0.5,hinge_width_t,height_t);
+    SG_hinge_t = SGhingeround(min_len,hinge_width_t,height_t);
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(section_p(2,1)));
-    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,2),hinge_width_t,min_len);
+    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,section_p(2,1),section_p(2,2),hinge_width_t,min_len,height_t);
     SG_hinge_b = SGunder(SG_hinge_b,SG);
     SG_hinge_t = SGontop(SG_hinge_t,SG);
     SG = SGcat(SG_hinge_b,SG_hinge_t,SG);
@@ -166,8 +166,8 @@ end
 % end
 % SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
-H_f = [rotx(90)*roty(90+section_p(2,1)) [-offset_t;0;((height_SG/2)+height_t)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+section_p(1,1)) [-offset_b;0;(-(height_SG/2)-height_b)]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+section_p(2,1)) [offset_t;0;((height_SG/2)+height_t)]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+section_p(1,1)) [offset_b;0;(-(height_SG/2)-height_b)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);
