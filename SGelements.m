@@ -7,7 +7,7 @@
 %   flags:          'bottom_element';'side_stabi'
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of element
-function [SG,offset] = SGelements(CPL,section_p,varargin)
+function [SG,offset] = SGelements(CPL,angle_p,varargin)
 %% Initializing
  bottom_ele = 0;side_stabi = 0; 
 hinge_width = 1.2;  if nargin>=3 && ~isempty(varargin{1});  hinge_width = varargin{1};  end
@@ -15,8 +15,8 @@ ele_height = 2;     if nargin>=4 && ~isempty(varargin{2});  ele_height = varargi
 min_len = 1;        if nargin>=5 && ~isempty(varargin{3});  min_len = varargin{3}; end
 height = 0.5;       if nargin>=6 && ~isempty(varargin{4});  height = varargin{4}; end
 
-h_dir = section_p(1);
-h_opti = section_p(2);
+h_dir = angle_p(1);
+h_opti = angle_p(2);
 
 
 for f=5:size(varargin,2)
@@ -66,8 +66,8 @@ if side_stabi == 1
     
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 else    
-%     SG = SGofCPLz(CPL,ele_height);
-    SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
+    SG = SGofCPLz(CPL,ele_height);
+%     SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
     SG = SGtrans(SG,[0 0 -height_SG/2]);
 end

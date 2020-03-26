@@ -93,10 +93,43 @@ for left=1:size(VL_hinge,1)
 end
 %% Getting number of hinge elements below and above axis through [0 0]
 [proj_points_size, max_index] = max(cellfun('size', proj_points, 1));
-num_pos_neg = proj_points{max_index};
-num_pos_neg = (middle_axis(2,1)-middle_axis(1,1))*(num_pos_neg(:,2)-middle_axis(1,2))-(num_pos_neg(:,1)-middle_axis(1,1))*(middle_axis(2,2)-middle_axis(1,2));
-positive_gl = length(find(num_pos_neg<0));
-negative_gl = proj_points_size-positive_gl;
+proj_points_max_values = cellfun('size', proj_points, 1) == proj_points_size;
+
+max_axis = proj_points(proj_points_max_values);
+plains = {};
+plains_2 = [];
+for j=1:size(max_axis,2)
+    offset_distance = distPointLine(PL_offsetline,max_axis{j}(1,:));
+    for left=1:2:proj_points_size-2
+        axis_offset = [mean(max_axis{j}(left+1:left+2,1)),mean(max_axis{j}(left+1:left+2,2))];
+        plain_temp = [axis_offset;axis_offset+(e_dir*rot(pi/2))];
+        plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(pi/2)*offset_distance);
+        if ~isempty(plains_2)
+            if ~ismembertol(plain_temp(2,:),plains_2,1e-3,'ByRows',true)
+                plains_2 = [plains_2;NaN NaN;plain_temp];                
+                plains{end+1} = plain_temp;
+            end
+        else
+            plains_2 = [plains_2;NaN NaN;plain_temp];
+            plains{end+1} = plain_temp;
+        end
+    end
+end
+
+positive_gl = 1;
+negative_gl = 1;
+len = pdist2(PL_offsetline(1,:),PL_offsetline(2,:))/2;
+for o=1:size(plains,2)
+    dist = pdist2(PL_offsetline(2,:),plains{o}(2,:));
+    if round(dist,1) < round(len,1)
+        positive_gl = positive_gl+1;
+    elseif round(dist,1) > round(len,1)
+        negative_gl = negative_gl+1;
+    end
+end
+positive_gl = positive_gl*2;
+negative_gl = negative_gl*2;
+proj_points_size = (size(plains,2)+1)*2;
 %% Filling up points list in a way that it can be iterated through easily afterwards to generate hinge elements
 for k=1:size(proj_points,2)
     if size(proj_points{k},1) < proj_points_size
@@ -124,12 +157,7 @@ for k=1:size(proj_points,2)
     end
 end
 %% Replacing values to minimize overlapping triangles
-max_axis = proj_points{max_index};
-plains = {};
-for left=1:2:size(max_axis,1)-2
-    axis_offset = [mean(max_axis(left+1:left+2,1)),mean(max_axis(left+1:left+2,2))];
-    plains{end+1} = [axis_offset;axis_offset+(e_dir*rot(pi/2))];
-end
+
 e_dir = e_dir(1,:)/norm(e_dir(1,:));
 for u=1:size(proj_points,2)
     for j=1:size(plains,2)

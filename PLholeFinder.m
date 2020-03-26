@@ -8,37 +8,39 @@
 %	=== OUTPUT RESULTS ======
 %	CPLs:         SG of Manipulator
 %	positions:    2xn vector of positions of holes
-function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,axis_o,hinge_w,hole_r,min_len,varargin)
+function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,angle_p,length_p,hole_r,varargin)
 single = 0; if nargin>=5 && ~isempty(varargin{1}); single=varargin{1}; end
 torsion = 0; if nargin>=6 && ~isempty(varargin{2}); torsion=varargin{2}; end
 bottom_up = 0; if nargin>=7 && ~isempty(varargin{3}); bottom_up=varargin{3}; end
 %% Initializing
+hinge_w = length_p(:,1)+(2*length_p(:,3));
+min_len= length_p(:,2);
 CPL_no_go_area = [];
 CPLs = {};
 CPL_holes = [];
 positions = [];
-axis_o = flip(axis_o);
+angle_p = flip(angle_p);
 CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
 min_len = flip(min_len);
 CPL_no_go_areas = {};
 %% Generating CPL of area where no holes can go based on axis constraints
-for i=1:size(axis_o,1)
-    if axis_o(i,2) == 0
+for i=1:size(angle_p,1)
+    if angle_p(i,2) == 0
         if torsion == 0
             CPL_axis_constraint = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) hinge_w(i)/2];
-            CPL_axis_constraint = PLtransR(CPL_axis_constraint,rot(deg2rad(axis_o(i,1))));
+            CPL_axis_constraint = PLtransR(CPL_axis_constraint,rot(deg2rad(angle_p(i,1))));
             inside = inside2C(CPL_out{i},CPL_axis_constraint);
             if (inside(2) ~= 0 || inside(4) ~= 0  || inside(5) ~= 0)
                 error("Not enough room for hinge in section " + i);
             end
         else
-            curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(axis_o(i,1))));
+            curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(angle_p(i,1))));
             e_dir = curr_axis/norm(curr_axis);
             CPL_axis_constraint_n = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;tool_r -hinge_w(i)/2;tool_r hinge_w(i)/2];
-            CPL_axis_constraint_n = PLtransR(CPL_axis_constraint_n,rot(deg2rad(axis_o(i,1))));
+            CPL_axis_constraint_n = PLtransR(CPL_axis_constraint_n,rot(deg2rad(angle_p(i,1))));
             CPL_axis_constraint_p = [-tool_r-min_len(i) hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r -hinge_w(i)/2;-tool_r hinge_w(i)/2];
-            CPL_axis_constraint_p = PLtransR(CPL_axis_constraint_p,rot(deg2rad(axis_o(i,1))));            
+            CPL_axis_constraint_p = PLtransR(CPL_axis_constraint_p,rot(deg2rad(angle_p(i,1))));            
             hit = 0;
             while ~hit
                 inside_n = inside2C(CPL_out{i},CPL_axis_constraint_n);
@@ -67,15 +69,15 @@ for i=1:size(axis_o,1)
     end
 end
 CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
-max_dim = 2*max(sizeVL(CPL_out{size(axis_o,1)}));
+max_dim = 2*max(sizeVL(CPL_out{size(angle_p,1)}));
 
 %%Looping over each section
 if bottom_up     
     start_value = 1;
     step = 1;
-    end_value = size(axis_o,1);
+    end_value = size(angle_p,1);
 else
-    start_value = size(axis_o,1);
+    start_value = size(angle_p,1);
     step = -1;
     end_value = 1;
 end
@@ -83,13 +85,13 @@ end
 for i=start_value:step:end_value
     %% calculating general values
     CPL_opti_area = [];
-    curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(axis_o(i,1))));
+    curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(angle_p(i,1))));
     curr_mid_point = [0 0];
     %% Generating CPL half for hinge optimization
-    if axis_o(i,2) ~= 0
+    if angle_p(i,2) ~= 0
         CPL_opti_area = [max_dim 0;-max_dim 0;-max_dim max_dim;max_dim max_dim];
-        CPL_opti_area = PLtransC(CPL_opti_area,[0 0],rot(deg2rad(axis_o(i,1))));
-        if axis_o(i,2) == 1
+        CPL_opti_area = PLtransC(CPL_opti_area,[0 0],rot(deg2rad(angle_p(i,1))));
+        if angle_p(i,2) == 1
             CPL_opti_area = PLtransC(CPL_opti_area,[0 0],pi);
         end
     end
@@ -115,7 +117,7 @@ for i=start_value:step:end_value
     for j=1:size(CPL_limit,1)
         new_dis = distPointLine(curr_axis,CPL_limit(j,:));
         if dis<new_dis
-            if single == 1 || (single == 2 && i == size(axis_o,1))
+            if single == 1 || (single == 2 && i == size(angle_p,1))
                 dis = new_dis;
                 dis_pos = j;
             else
@@ -128,20 +130,20 @@ for i=start_value:step:end_value
         end
     end
     if dis == 0 error("CPL für Sektion " + i + " zu klein"); end
-    if single == 1 || (single == 2 && i == size(axis_o,1))
+    if single == 1 || (single == 2 && i == size(angle_p,1))
         hole_positions = CPL_limit(dis_pos,:);
     else
         hole_positions = [CPL_limit(dis_pos,:);PLtransC(CPL_limit(dis_pos,:),curr_mid_point,pi)];
     end
     
     if isempty(CPL_holes)
-        if single == 1 || (single == 2 && i == size(axis_o,1))
+        if single == 1 || (single == 2 && i == size(angle_p,1))
             CPL_holes = PLtrans(PLcircle(hole_r),hole_positions(1,:));
         else
             CPL_holes = [PLtrans(PLcircle(hole_r),hole_positions(1,:));NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(2,:))];
         end
     else
-        if single == 1 || (single == 2 && i == size(axis_o,1))
+        if single == 1 || (single == 2 && i == size(angle_p,1))
             CPL_holes = [CPL_holes;NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(1,:))];
         else
             CPL_holes = [CPL_holes;NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(1,:));NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(2,:))];

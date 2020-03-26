@@ -9,7 +9,7 @@
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0;
+single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0; hole_r = 0.4;
 c_inputs = {};
 for f=1:size(varargin,2)
       switch varargin{f}
@@ -43,6 +43,9 @@ for f=1:size(varargin,2)
               torsion = 1;
           case 'bottom_up'
               bottom_up = 1;
+          case 'hole_radius'
+              hole_r = varargin{f+1};
+              f = f+1;
       end   
 end
 tool_r = tool_d/2;
@@ -64,7 +67,6 @@ for i=1:size(CPL_out,1)
     CPLs{end+1} = CPLbool('-',CPL_out{i},CPL_in);
 end                         
 %% Initializing arrays and variables
-hole_r = 0.4; % Radius of rope/pushrodtubes
 arm = {};
 SG_elements = {};
 CPL_com ={};
@@ -72,7 +74,7 @@ offsets = [];
 ranges = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3)+(2*length_p(:,5)),hole_r,length_p(:,4),single,torsion,bottom_up); 
+[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3:5),hole_r,single,torsion,bottom_up); 
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,[1,4]),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
@@ -128,19 +130,19 @@ for i=2:size(SG_elements,2)+1
         dis_temp = distPointLine(middle_axis,CPL_right(k,:));
         if dis_temp > dis_right dis_right = dis_temp; end
      end
-    
+     
      phi_left_max = 2*atand(length_p(i,5)/dis_left);
      phi_right_max = 2*atand(length_p(i,5)/dis_right);
      
      phi_left = (angle_p(i,2)/ele_num(i-1))/2;
-     phi_right = (angle_p(i,3)/ele_num(i-1))/2;  
+     phi_right = (angle_p(i,3)/ele_num(i-1))/2;
      
 %      phi_left = min(phi_left,phi_left_max);
 %      phi_right = min(phi_right,phi_right_max);
 %      [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i),length_p(i,5));
-     SG_el = SGelementstops2(SG_elements{i-1},angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i,[3,5]));
+     SG_el = SGstops(SG_elements{i-1},angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i,[3,5]));
      SG_elements{i-1} = SG_el;
-     [SG_con] = SGelementstops2(SG_conns(i-1:i),angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i-1:i+1,[3,5]));
+     [SG_con] = SGstops(SG_conns(i-1:i),angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i-1:i+1,[3,5]));
      SG_conns{i-1} = SG_con{1};
      SG_conns{i} = SG_con{2};
 %      SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
