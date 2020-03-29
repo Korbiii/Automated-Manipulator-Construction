@@ -10,9 +10,9 @@ CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
 CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 
 %% Kidneys small
-CPL = PLtrans(PLkidney(9.5,14.5,pi/5.5),[-12.5 0]);
-CPL2 = PLtrans(PLkidney(7,11,pi/4.5),[-9 0]);
-CPL3 = PLtrans(PLkidney(7,11,pi/7),[-9 0]);
+% CPL = PLtrans(PLkidney(9.5,14.5,pi/5.5),[-12.5 0]);
+% CPL2 = PLtrans(PLkidney(7,11,pi/4.5),[-9 0]);
+% CPL3 = PLtrans(PLkidney(7,11,pi/7),[-9 0]);
 
 
 %% Ovals
@@ -28,9 +28,11 @@ CPL3 = PLtrans(PLkidney(7,11,pi/7),[-9 0]);
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','seal','length',70); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 0.5 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','seal','length',20); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','length',60,'bottom_up'); %% Aktuellen Manipulator ausgeben
-[SGm,SGc,ranges] = SGmanipulator({CPL CPL2 CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion'); %% MiniPushpull
+% [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','seal'); %% Aktuellen Manipulator ausgeben
+[SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','angles',[-1,1,1;0,0,0],'seal'); %% Aktuellen Manipulator ausgeben
+% [SGm,SGc,ranges] = SGmanipulator({CPL CPL2 CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_r',0.4); %% MiniPushpull
 
-
+% 
 SGwriteSTL(SGm,"SGmanipulator",'','y');
 % 
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
@@ -64,11 +66,11 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGwriteSTL(SGmotormountSM120BL(25),"MotormountSM120BL",'','y');
 % Motormount_SM40CL(25); 
 % SGplot(SGtoolmanipulator(CPL_servo,SG_starhorn_conn));
-% SGplot(SGtoolmanipulatorSM40([1,1,1],3));
+% SGplot(SGtoolmanipulatorSM40());
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGplot(SGmanipulatorBoxSimple([20]));
+% SGplot(SGmanipulatorBoxSimple([20 20 20]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 

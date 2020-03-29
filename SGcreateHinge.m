@@ -98,14 +98,24 @@ proj_points_max_values = cellfun('size', proj_points, 1) == proj_points_size;
 max_axis = proj_points(proj_points_max_values);
 plains = {};
 plains_2 = [];
+if offset == 0
+    pos_plane_2 = PLtrans(pos_plane,TofR(rot(pi/2)));
+else
+    pos_plane_2 = PLtrans(PLtrans(pos_plane,(e_dir(1,:)/norm(e_dir(1,:)))*(offset-(hinge_width/2))),TofR(rot(pi/2)));
+end
 for j=1:size(max_axis,2)
     offset_distance = distPointLine(PL_offsetline,max_axis{j}(1,:));
     for left=1:2:proj_points_size-2
         axis_offset = [mean(max_axis{j}(left+1:left+2,1)),mean(max_axis{j}(left+1:left+2,2))];
         plain_temp = [axis_offset;axis_offset+(e_dir*rot(pi/2))];
-        plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(pi/2)*offset_distance);
+        inside = insideCPS(pos_plane_2,plain_temp(1,:));
+        if inside == 1
+            plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(-pi/2)*offset_distance);
+        elseif inside == -1
+            plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(pi/2)*offset_distance);
+        end
         if ~isempty(plains_2)
-            if ~ismembertol(plain_temp(2,:),plains_2,1e-3,'ByRows',true)
+            if ~ismembertol(plain_temp(1,:),plains_2,1e-1,'ByRows',true)
                 plains_2 = [plains_2;NaN NaN;plain_temp];                
                 plains{end+1} = plain_temp;
             end

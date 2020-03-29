@@ -151,7 +151,7 @@ if seal
     SG_seal_cup = SGofCPLz(CPL_seal_cup,8);
     SG_seal_cup_bottom = SGofCPLz(CPL_seal_cup_bottom,3);
     SG_seal_cup = SGstack('z',SG_seal_cup_bottom,SG_seal_cup);
-    SG_seal_cup = SGtransrelSG(SG_seal_cup,SG,'alignbottom',20);
+    SG_seal_cup = SGtransrelSG(SG_seal_cup,SG,'alignbottom',2);
 
 
 end

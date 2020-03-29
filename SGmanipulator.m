@@ -9,9 +9,10 @@
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0; hole_r = 0.4;
-c_inputs = {};
+single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0; hole_r = 0.4; angles = [];
+c_inputs = {}; skip_next = 0;
 for f=1:size(varargin,2)
+    if skip_next skip_next = 0; continue; end
       switch varargin{f}
           case 'single'
               c_inputs{end+1} = 'single';
@@ -33,21 +34,24 @@ for f=1:size(varargin,2)
               optic = 2;     
           case 'optic_radius'
               optic_radius = varargin{f+1};
-              f = f+1;
+              skip_next = 1;  
           case 'length'
               base_length = varargin{f+1};
-              f = f+1;
+             skip_next = 1;  
           case 'seal'
               seal = 1;
           case 'torsion'
               torsion = 1;
           case 'bottom_up'
-              bottom_up = 1;
+              bottom_up = 1;    
+          case 'angles'
+              angles = varargin{f+1};
+              skip_next = 1;  
           case 'hole_radius'
               hole_r = varargin{f+1};
-              f = f+1;
+              skip_next = 1;      
       end   
-end
+end   
 tool_r = tool_d/2;
 %% Setting up variables
 CPLs = {};
@@ -109,57 +113,28 @@ ele_num =[];
 length_p = [0 0 0 0 0;length_p;0 0 0 0 0];
 angle_p = [0 0 0 0;angle_p;0 0 0 0];
 for i=2:size(SG_elements,2)+1
-    ele_num = [ele_num floor(length_p(i,1)/(length_p(i,2)+(2*length_p(i,5))))];
-    
+    ele_num = [ele_num floor(length_p(i,1)/(length_p(i,2)+(2*length_p(i,5))))];    
     max_dim = max(sizeVL(CPL_out{i-1}))+1;
-    middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets(i-1)]),rot(deg2rad(angle_p(i,1))));
-    e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
-    e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
-    left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
-    right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*-max_dim)];    
+    middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets(i-1)]),rot(-deg2rad(angle_p(i,1))));
     
-    CPL_left = CPLbool('-',CPL_out{i-1},left_plane);
-    CPL_right = CPLbool('-',CPL_out{i-1},right_plane);
-    dis_left = 0;
-    dis_right = 0;
-    for k = 1:size(CPL_left,1)
-        dis_temp = distPointLine(middle_axis,CPL_left(k,:));
-        if dis_temp > dis_left dis_left = dis_temp; end
-    end
-     for k = 1:size(CPL_right,1)
-        dis_temp = distPointLine(middle_axis,CPL_right(k,:));
-        if dis_temp > dis_right dis_right = dis_temp; end
-     end
-     
-     phi_left_max = 2*atand(length_p(i,5)/dis_left);
-     phi_right_max = 2*atand(length_p(i,5)/dis_right);
-     
-     phi_left = (angle_p(i,2)/ele_num(i-1))/2;
-     phi_right = (angle_p(i,3)/ele_num(i-1))/2;
-     
-%      phi_left = min(phi_left,phi_left_max);
-%      phi_right = min(phi_right,phi_right_max);
-%      [SG_stop,right_h,left_h] =SGelementstops(CPL_com{i},angle_p(i,1),phi_left,phi_right,1.2,offsets(i),length_p(i,5));
-     SG_el = SGstops(SG_elements{i-1},angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i,[3,5]));
-     SG_elements{i-1} = SG_el;
-     [SG_con] = SGstops(SG_conns(i-1:i),angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i-1:i+1,[3,5]));
-     SG_conns{i-1} = SG_con{1};
-     SG_conns{i} = SG_con{2};
-%      SG_stops = SGtrans(SG_stop,[0 0 length_p(i,2)/2]);
-%      dis_axis_pos = distPointLine(middle_axis,positions(i,:));
-%      height_l = length_p(i,5)-(tand(phi_right)*(dis_left-dis_axis_pos))+left_h;
-%      height_r = length_p(i,5)-(tand(phi_left)*(dis_right-dis_axis_pos))+right_h;
-%         
-%      ranges = [ranges;2*height_l*ele_num(i),2*height_r*ele_num(i)];
-%      
-%      SG_elements{i} = SGcat(SG_elements{i},SG_stops);     
-%      SG_elements{i} = SGcat(SG_elements{i},SGmirror(SG_stops,'xy'));   
-%      SG_elements{i}.phi =  [phi_left,phi_right];
-%      SG_conns{i} = SGcat(SG_conns{i},SGtransrelSG(SG_stops,SG_conns{i},'ontop',-length_p(i,5)-length_p(i,3)/2));
-%      SG_conns{i}.phi_t = [phi_left,phi_right];
-%      SG_conns{i+1} = SGcat(SG_conns{i+1},SGtransrelSG(SGmirror(SG_stops,'xy'),SG_conns{i+1},'under',-length_p(i,5)-length_p(i,3)/2));
-%      SG_conns{i}.phi_b = [phi_left,phi_right];    
-     updateProgress("Added Stops to Element "+ i);
+    phi_left = max(1,(angle_p(i,2)/ele_num(i-1)-1)/2);
+    phi_right = max(1,(angle_p(i,3)/ele_num(i-1)-1)/2);
+    
+    SG_el = SGstops(SG_elements{i-1},angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i,[3,5]));
+    SG_elements{i-1} = SG_el;
+    [SG_con] = SGstops(SG_conns(i-1:i),angle_p(i,1),offsets(i-1),phi_left,phi_right,length_p(i-1:i+1,[3,5]));
+    SG_conns{i-1} = SG_con{1};
+    SG_conns{i} = SG_con{2};
+    
+    dis_axis_pos = distPointLine(middle_axis,positions(i-1,:));
+    height_l = 2*(tand(phi_right)*dis_axis_pos);
+    height_r = 2*(tand(phi_left)*dis_axis_pos);
+    
+    ranges = [ranges;max(0,height_l*ele_num(i-1)),max(0,height_r*ele_num(i-1))];
+    SG_elements{i-1}.phi =  [phi_left*2,phi_right*2];
+    SG_conns{i-1}.phi_t = [phi_left*2,phi_right*2];
+    SG_conns{i}.phi_b = [phi_left*2,phi_right*2];
+    updateProgress("Added Stops to Element "+ i);
 end
 %% Filling cell list with elements for a single arm
 for j=1:size(SG_elements,2)
@@ -174,13 +149,30 @@ num = size(SGs,2);
 updateProgress("Created Base");
 %% Generating full manipulator with framechain
 framechain = SGTframeChain2(num);
-phis = [0 repmat(-0.095,1,6) zeros(1,27)];
-% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.095,1,ele_num(3)+1)];
-% phis2 = [repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.14,1,ele_num(3)+1)];
-% phis = [0 repmat(-0.2,1,ele_num(1)+1) repmat(-0.1,1,ele_num(2)+1) repmat(0.095,1,ele_num(3)+1)];
-% phis2 = [repmat(-0.095,1,ele_num(1)+1) repmat(-0.2,1,ele_num(2)+1) repmat(0.14,1,ele_num(3)+1)];
-phis = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
-phis2 = [0 repmat(0,1,ele_num(1)+1) repmat(0,1,ele_num(2)+1) repmat(0,1,ele_num(3))];
+phis2 = 0;
+phis = 0;
+if isempty(angles)
+    for i=1:size(ele_num,1)
+        phis = [phis zeros(1,ele_num(i)+1)];
+        phis2 = [phis2 zeros(1,ele_num(i)+1)];
+    end
+else
+    for i=1:size(ele_num,2)
+        if angles(1,i)>=0
+            phis = [phis repmat(SG_elements{i}.phi(2)*angles(1,i),1,ele_num(i)+1)];
+        else            
+            phis = [phis repmat(SG_elements{i}.phi(1)*angles(1,i),1,ele_num(i)+1)];
+        end
+        if angles(2,i)>=0
+            phis2 = [phis2 repmat(SG_elements{i}.phi(2)*angles(2,i),1,ele_num(i)+1)];
+        else            
+            phis2 = [phis2 repmat(SG_elements{i}.phi(1)*angles(2,i),1,ele_num(i)+1)];
+        end
+        
+    end
+end
+phis = deg2rad(phis);
+phis2 = deg2rad(phis2);
 SGc = SGTchain(SGs,[0 phis 0 phis2],'',framechain);
 updateProgress("Created SGTchain");
 SG = SGcat(SGc);
