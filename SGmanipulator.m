@@ -9,17 +9,21 @@
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-single=0; sensor_channel=0; side_stabi = 0; base_length = 7; optic = 0;optic_radius = 3; seal = 0; torsion = 0; bottom_up = 0; hole_r = 0.7; angles = [];
-c_inputs = {}; skip_next = 0;
+base_length = 7;optic_radius = 3;hole_r = 0.7; num_arms = 2;
+angle_defaults = [90 90 0];
+length_defaults = [2 1 1 0.5];
+angles = []; c_inputs = {}; CPLs = {};
+if ~iscell(CPL_out)
+    CPL_out = {CPL_out};
+end
+[single,side_stabi,sensor_channel,optic,seal,symmetric,torsion,bottom_up] = deal(0);
 for f=1:size(varargin,2)
-    if skip_next skip_next = 0; continue; end
+if ~ischar(varargin{f}) continue; end
       switch varargin{f}
           case 'single'
               c_inputs{end+1} = 'single';
               single = 1;
               crimp = 0;
-          case 'sensor_channel'
-              sensor_channel = 1;
           case 'side_stabi'
               side_stabi = 1;
           case 'first_single'
@@ -34,10 +38,8 @@ for f=1:size(varargin,2)
               optic = 2;     
           case 'optic_radius'
               optic_radius = varargin{f+1};
-              skip_next = 1;  
           case 'length'
               base_length = varargin{f+1};
-             skip_next = 1;  
           case 'seal'
               seal = 1;
           case 'torsion'
@@ -46,29 +48,50 @@ for f=1:size(varargin,2)
               bottom_up = 1;    
           case 'angles'
               angles = varargin{f+1};
-              skip_next = 1;  
           case 'hole_radius'
               hole_r = varargin{f+1};
-              skip_next = 1;      
+          case 'num_arms'
+              num_arms = varargin{f+1};
+          case 'symmetric'
+              symmetric = 1;
+              num_arms = 2;
       end   
-end   
-tool_r = tool_d/2;
+end
+
 %% Setting up variables
-CPLs = {};
-if ~iscell(CPL_out)
-    CPL_out = {CPL_out};
-end
-while size(CPL_out,2)<size(angle_p,1)
-    CPL_out{end+1} = CPL_out{end};
-end
-CPL_out = CPL_out';
-CPL_in = PLcircle(tool_r,tool_r*20);
-for i=1:size(CPL_out,1)
-    if sensor_channel          
-        CPL_in = CPLbool('-',CPL_in,PLtrans(PLcircle(tool_r),[0 tool_r+1.75]));
-        CPL_in = [CPL_in;NaN NaN;PLtrans(PLcircle(1.4),[0 tool_r])];
+tool_r = tool_d/2;
+angle_p = [angle_p repelem(angle_defaults(1,size(angle_p,2):end),size(angle_p,1),1)];
+length_p = [length_p repelem(length_defaults(1,size(length_p,2):end),size(length_p,1),1)];
+
+if symmetric || num_arms == 1
+    CPL_out = {[CPL_out;repmat(CPL_out(end),size(angle_p,1)-size(CPL_out,1),1)]};
+    CPL_in = {PLcircle(tool_r,tool_r*20)};
+    if num_arms == 2
+        CPL_out{end+1} = CPL_out{end};
+        CPL_in{end+1} = CPL_in{end};
+        length_p = [length_p;length_p];
+        angle_p = [angle_p;angle_p];
+        tool_r = [tool_r;tool_r];
     end
-    CPLs{end+1} = CPLbool('-',CPL_out{i},CPL_in);
+else
+    CPL_in = {};
+    for i = 1:num_arms
+        CPL_out{i} = [CPL_out{i};repmat(CPL_out{1,i}(end),size(angle_p,1)/num_arms-size(CPL_out{1,i},1),1)];
+        CPL_in{end+1} =  PLcircle(tool_r(i),tool_r(i)*20);
+    end
+end
+
+num_sections = size(angle_p,1)/num_arms;
+for i=1:num_arms
+    if symmetric && i > 1 
+         CPLs{end+1} = CPLs{end};
+        continue; 
+    end
+    CPLs_temp = {};
+    for j=1:size(CPL_out{1,i},1)
+        CPLs_temp{end+1,1} = CPLbool('-',CPL_out{1,i}{j},CPL_in{i});
+    end
+    CPLs{end+1} = CPLs_temp;
 end                         
 %% Initializing arrays and variables
 arm = {};
@@ -76,11 +99,18 @@ SG_elements = {};
 CPL_com ={};
 offsets = [];
 ranges = [];
+CPLs_holes = {};
+positions = [];
 s_n = 0;
 %% Finding Positions of holes and creating CPLs
-[CPLs_holes,positions] = PLholeFinder(CPL_out,tool_r,angle_p(:,[1,4]),length_p(:,3:5),hole_r,single,torsion,bottom_up); 
+for i=1:num_arms
+    [CPLs_holes{end+1},positions_temp] = PLholeFinder(CPL_out{i},tool_r(i),angle_p(((i-1)*num_sections)+1:i*num_sections,[1,4]),length_p(((i-1)*num_sections)+1:i*num_sections,3:5),hole_r,single,torsion,bottom_up); 
+    positions = [positions; positions_temp];
+end
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
+
+
 SG_bottom = SGelements(CPLbool('-',CPLs{1},CPLs_holes{1}),angle_p(1,[1,4]),length_p(1,3),length_p(1,3),length_p(1,4),length_p(1,5),'bottom_element');
 SG_conns = {SG_bottom};
 for i=1:size(angle_p,1)
@@ -108,6 +138,9 @@ for i=1:size(angle_p,1)
     offsets = [offsets offset];
     updateProgress("Element "+ i + " and Connector " + i + " created!");
 end
+
+
+
 %% Calculating number of elements && adding stops
 ele_num =[];
 length_p = [0 0 0 0 0;length_p;0 0 0 0 0];
