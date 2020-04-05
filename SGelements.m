@@ -1,4 +1,4 @@
-%%  [SG]=SGelements(CPL,parameters,[hinge_width,ele_height])
+%%  [SG] = SGelements(CPL,parameters,[hinge_width,ele_height])
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of element with tool hole
 %   parameters:     nx4

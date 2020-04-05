@@ -29,7 +29,7 @@ CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 0.5 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','seal','length',20); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','length',60,'bottom_up'); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','seal'); %% Aktuellen Manipulator ausgeben
-[SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','angles',[-1,1,1;0,0,0],'seal'); %% Aktuellen Manipulator ausgeben
+[SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'length',140,'optic_top','bottom_up','angles',[0,0,0;0,0,0],'seal'); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL CPL2 CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_r',0.4); %% MiniPushpull
 
 % 
@@ -37,8 +37,8 @@ SGwriteSTL(SGm,"SGmanipulator",'','y');
 % 
 % CPL = PLtrans(PLkidney(7,16,pi/5.5),[-11.5 0]);
 
-CPL_servo = PLtrans0([PLsquare(20.3,40.3);NaN NaN;PLtrans(PLcircle(2.25),[5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[5.1 -24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 -24.5])]);
-%CPL_SM40 = []
+% CPL_servo = PLtrans0([PLsquare(20.3,40.3);NaN NaN;PLtrans(PLcircle(2.25),[5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 24.5]);NaN NaN;PLtrans(PLcircle(2.25),[5.1 -24.5]);NaN NaN;PLtrans(PLcircle(2.25),[-5.1 -24.5])]);
+% %CPL_SM40 = []
 
 %StarHornConnector
 SG_starhorn_conn = SGofCPLcommand('c 5.6 8 3,move 13 0,enter,c 30,c 35,-,enter,c 16.5,-,h 2,dupr 6,col y');
@@ -70,7 +70,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGplot(SGmanipulatorBoxSimple([20 20 20]));
+% SGplot(SGmanipulatorBoxSimple([60]));
 % SGplot(SGpushpullmountSM85BL);
 % SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
 

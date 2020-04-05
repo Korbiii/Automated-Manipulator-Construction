@@ -283,7 +283,7 @@ SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
 %
 SG_electric = SGtransrelSG(SGcat(SG_electic_bot),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
 % SG = SGcat(SG_electric,SG);
-SG = SGcat([{SG} SG_rotors]);
+% SG = SGcat([{SG} SG_rotors]);
 
 SGplot(SG,'w');
 SGwriteSTL(SG,"Box",'','y');

@@ -142,7 +142,7 @@ if seal
     
     SG_bayonett = SGcat(SG_bayo_grip,SG_bayo_bottom,SG_bayo_middle,SG_bayo_top_ring);
     
-    SG = SGcat(SG,SG_add_on_stack,SG_bayonett);   
+    SG = SGcat(SG,SG_add_on_stack);   
     
     
     
