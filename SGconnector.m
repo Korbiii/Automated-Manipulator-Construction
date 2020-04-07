@@ -42,7 +42,7 @@ for f=1:size(flags,2)
    end
 end
 CPL_b = CPL{1};
-if size(CPL,2) == 2
+if size(CPL,1) == 2
     CPL_f = CPL{2};
 else
     CPL_f = CPL{1};
@@ -64,8 +64,8 @@ end
 CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
 CPL_f_baseholes = CPLbool('-',CPL_f,CPL_holes_b);
 CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
-PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -2*h_r])]);
-PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -2])]);
+PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -10*h_r])]);
+PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -10*h_r])]);
 angle = atan2(positions(1,1),positions(1,2));  %double angle  pi-angle2 -angle2 Angle between centerpoint and holeposition
 [sizey,sizex,~,~,~,~] = sizeVL(CPL_b);
 CPL_b_wireescape = CPLbool('-',CPL_b,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));

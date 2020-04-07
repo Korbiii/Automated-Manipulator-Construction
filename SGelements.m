@@ -66,8 +66,8 @@ if side_stabi == 1
     
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 else    
-    SG = SGofCPLz(CPL,ele_height);
-%     SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
+%     SG = SGofCPLz(CPL,ele_height);
+    SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
     height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
     SG = SGtrans(SG,[0 0 -height_SG/2]);
 end

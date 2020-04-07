@@ -13,6 +13,9 @@ else
     SG = SGs;
 end
 
+if h_dir <= 0 
+%     offset = -offset;
+end
 hinge_width = length_p(:,1);
 height = length_p(:,2);
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
@@ -33,8 +36,8 @@ max_dim = max(sizeVL(CPL))+1;
 middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 -offset]),rot(deg2rad(h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
 e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
-left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*max_dim)]; % Plane for finding points in positive area
-right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*-max_dim)];
+left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*max_dim)]; % Plane for finding points in positive area
+right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*-max_dim)];
 
 CPL_out =  CPLselectinout(CPL,0);
 CPL_out_left = CPLbool('-',CPL_out,left_plane);
@@ -64,8 +67,14 @@ left_height = height-(tand(right_angle)*max_distance_right);
 PLcontour = [(linspace(-max_distance_right,max_distance_left,500))+offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
 
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
-VLcontour = VLtrans(VLcontour,TofR(rotz(90-h_dir)));
-
+if max_distance_left <= max_distance_right
+    VLcontour = VLtrans(VLcontour,TofR(rotz(90-h_dir)));
+else    
+    VLcontour = VLtrans(VLcontour,TofR(rotz(-90-h_dir)));
+end
+clf;
+SGplot(SG);
+VLplot(VLcontour);
 if is_connector
     VLcontour_up = VLtrans(VLcontour,[0 0 ele_height(1)]);
     VLcontour_down = VLtrans(VLswapZ(VLcontour),[0 0 -ele_height(2)]);

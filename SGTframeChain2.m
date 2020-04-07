@@ -1,9 +1,8 @@
 function [LFrm]=SGTframeChain2(nums,varargin)
+split = ((nums-1)/2)+2; if nargin>=2 && ~isempty(varargin{1}); split=varargin{1}+2; end
 
-
-n = nums;
-SGt = cell(n,5);
-for i=1:n
+SGt = cell(nums,5);
+for i=1:nums
     SGt{i,1} = i;
     SGt{i,2} = 'F';
     SGt{i,3} = 'B';
@@ -12,9 +11,8 @@ for i=1:n
 end
 SGt{1,2} = '_';
 
-sp = ((n-1)/2)+2;
-SGt(sp,2) ={'F1'};
-SGt(sp,4) = {[1]};
+SGt(split,2) ={'F1'};
+SGt(split,4) = {[1]};
 
 LFrm = SGt;
 end

@@ -22,9 +22,9 @@ pos_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir_n*50)]; % Plane for fin
 hinge_width = hinge_width+1;
 
 %% Calculating best offset
-if hinge_opti ~= 0
+if abs(hinge_opti) == 1
     e_dir_ = [e_dir_p;e_dir_n];
-    if hinge_opti < 0; e_dir_ =  flip(e_dir_); end
+    if hinge_opti <= 0; e_dir_ =  flip(e_dir_); end
     PL_offsetline = PLtrans(PL_offsetline,e_dir_(1,:)*rot(pi/2)*max_dim);
     size_h = 0; res = 0.3; offset = max_dim;
     while size_h < min_len && offset > 0
@@ -97,7 +97,8 @@ proj_points_max_values = cellfun('size', proj_points, 1) == proj_points_size;
 
 max_axis = proj_points(proj_points_max_values);
 plains = {};
-plains_2 = [];
+plain_offsets = [];
+
 if offset == 0
     pos_plane_2 = PLtrans(pos_plane,TofR(rot(pi/2)));
 else
@@ -114,14 +115,15 @@ for j=1:size(max_axis,2)
         elseif inside == -1
             plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(pi/2)*offset_distance);
         end
-        if ~isempty(plains_2)
-            if ~ismembertol(plain_temp(1,:),plains_2,1e-1,'ByRows',true)
-                plains_2 = [plains_2;NaN NaN;plain_temp];                
-                plains{end+1} = plain_temp;
-            end
-        else
-            plains_2 = [plains_2;NaN NaN;plain_temp];
+        if isempty(plain_offsets)
             plains{end+1} = plain_temp;
+            plain_offsets = distPointLine(middle_axis,plain_temp(1,:));
+        else
+            dis_temp =  distPointLine(middle_axis,plain_temp(1,:));
+            if ~ismembertol(dis_temp,plain_offsets,1e-1)
+                 plains{end+1} = plain_temp;
+                 plain_offsets = [plain_offsets dis_temp];
+            end
         end
     end
 end

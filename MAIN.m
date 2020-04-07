@@ -29,8 +29,12 @@ CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 75 75 1;0 90 90 0;90 10 270 0],[27 4 1.2 0.5 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','seal','length',20); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','length',60,'bottom_up'); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','seal'); %% Aktuellen Manipulator ausgeben
-[SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'length',140,'optic_top','bottom_up','angles',[0,0,0;0,0,0],'seal'); %% Aktuellen Manipulator ausgeben
-% [SGm,SGc,ranges] = SGmanipulator({CPL CPL2 CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_r',0.4); %% MiniPushpull
+% [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'length',140,'optic_top','bottom_up','angles',[0,0,0;0,0,0],'seal'); %% Aktuellen Manipulator ausgeben
+% [SGm,SGc,ranges] = SGmanipulator({CPL;CPL2;CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_r',0.4); %% MiniPushpull
+% [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90;0;90],[27;30;55],'symmetric');
+
+% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3}},[6;4],{[90 75 75 -1;0 90 90 0;90 90 180 0],[0 20 20 1;90 90 90 0;0 50 50 0]},{[27;30;55],[10;10;10]},'num_arms',2,'bottom_up','first_single','angles',[-0.5,-0.5,0.5;-0.9,-0.5,0.5]);
+[SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3}},[6;4],{[90 75 75 -1;0 90 90 0;90 90 90 2],[0 20 20 1;90 90 90 0;0 50 50 0]},{[27;30;55],[10;10;10]},'num_arms',2,'bottom_up','first_single');
 
 % 
 SGwriteSTL(SGm,"SGmanipulator",'','y');
