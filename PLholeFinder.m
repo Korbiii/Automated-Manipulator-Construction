@@ -24,6 +24,7 @@ CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
 min_len = flip(min_len);
 CPL_no_go_areas = {};
+PL_hole = PLcircle(hole_r,40);
 %% Generating CPL of area where no holes can go based on axis constraints
 for i=1:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
@@ -144,15 +145,15 @@ for i=start_value:step:end_value
         
         if isempty(CPL_holes)
             if single == 1 || (single == 2 && i == size(angle_p,1))
-                CPL_holes = PLtrans(PLcircle(hole_r),hole_positions(1,:));
+                CPL_holes = PLtrans(PL_hole,hole_positions(1,:));
             else
-                CPL_holes = [PLtrans(PLcircle(hole_r),hole_positions(1,:));NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(2,:))];
+                CPL_holes = [PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
             end
         else
             if single == 1 || (single == 2 && i == size(angle_p,1))
-                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(1,:))];
+                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:))];
             else
-                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(1,:));NaN NaN;PLtrans(PLcircle(hole_r),hole_positions(2,:))];
+                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
             end
         end
         CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];

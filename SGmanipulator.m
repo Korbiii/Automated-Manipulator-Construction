@@ -145,10 +145,12 @@ for k=1:num_arms
         end
         
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,3),length_p{k}(i,2),length_p{k}(i,4),length_p{k}(i,5));
-        if i == num_sections
-            SG_ele_temp.hole_positions = positions{k}(end);
-        else
-            SG_ele_temp.hole_positions = positions{k}(i:i+1);
+        if size(SG_ele_temp,2) == 1
+            if i == num_sections
+                SG_ele_temp.hole_positions = positions{k}(end);
+            else
+                SG_ele_temp.hole_positions = positions{k}(i:i+1);
+            end
         end
         if ~isempty(SG_conn_temp) SG_conns_temp{end+1} = SG_conn_temp;   SG_conn_temp = []; end
         SG_elements_temp{end+1} = SG_ele_temp;
@@ -167,8 +169,10 @@ for k = 1:num_arms
     length_p{k} = [0 0 0 0 0;length_p{k};0 0 0 0 0];
     angle_p{k} = [0 0 0 0;angle_p{k};0 0 0 0];
 end
+angles_sections = {};
 for k = 1:num_arms
     ele_num_temp = [];
+    angles_sections_temp = [];
     for i=2:num_sections+1
         ele_num_temp = [ele_num_temp floor(length_p{k}(i,1)/(length_p{k}(i,2)+(2*length_p{k}(i,5))))];
         max_dim = max(sizeVL(CPL_out{k}{i-1}))+1;
@@ -176,30 +180,48 @@ for k = 1:num_arms
         
         phi_left = max(1,(angle_p{k}(i,2)/ele_num_temp(i-1)-1)/2);
         phi_right = max(1,(angle_p{k}(i,3)/ele_num_temp(i-1)-1)/2);
-        
-        SG_el = SGstops(SG_elements{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
-        SG_elements{k}{i-1} = SG_el;
+        if angle_p{k}(i,4) == 2
+            SG_el = SGstops(flip(SG_elements{k}{i-1}),angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
+            SG_el = SGstops(flip(SG_el'),angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
+            SG_elements{k}{i-1} = SG_el;            
+        else
+            SG_el = SGstops(SG_elements{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
+            SG_elements{k}{i-1} = SG_el;
+        end
         [SG_con] = SGstops(SG_conns{k}(i-1:i),angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
         SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
-        
-        dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
-        height_l = 2*(tand(phi_right)*dis_axis_pos);
-        height_r = 2*(tand(phi_left)*dis_axis_pos);
-        
-        ranges = [ranges;max(0,height_l*ele_num_temp(i-1)),max(0,height_r*ele_num_temp(i-1))];
-        SG_elements{k}{i-1}.phi =  [phi_left*2,phi_right*2];
-        SG_conns{k}{i-1}.phi_t = [phi_left*2,phi_right*2];
-        SG_conns{k}{i}.phi_b = [phi_left*2,phi_right*2];
+        if angle_p{k}(i,4) == 2
+            
+            %ranges = [ranges; []]
+             SG_elements{k}{i-1}{1}.phi =  [phi_left*2,phi_right*2];
+             SG_elements{k}{i-1}{2}.phi =  [phi_left*2,phi_right*2];
+            
+        else
+            dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
+            height_l = 2*(tand(phi_right)*dis_axis_pos);
+            height_r = 2*(tand(phi_left)*dis_axis_pos);
+            
+            ranges = [ranges;max(0,height_l*ele_num_temp(i-1)),max(0,height_r*ele_num_temp(i-1))];
+            SG_elements{k}{i-1}.phi =  [phi_left*2,phi_right*2];
+        end        
+            SG_conns{k}{i-1}.phi_t = [phi_left*2,phi_right*2];
+            SG_conns{k}{i}.phi_b = [phi_left*2,phi_right*2];
+            angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];
         updateProgress("Added Stops to Element "+ i);
     end
+    angles_sections{end+1} = angles_sections_temp;
     ele_num{end+1} = ele_num_temp;
 end
 %% Filling cell list with elements for a single arm
 for k=1:num_arms
     arm_temp = [];
     for j=1:num_sections
-        arm_temp = [arm_temp repelem(SG_elements{k}(j),ele_num{k}(j))];
+        if angle_p{k}(j+1,4) == 2
+            arm_temp = [arm_temp repmat(SG_elements{k}{j}',1,floor(ele_num{k}(j)/2))];
+        else
+            arm_temp = [arm_temp repelem(SG_elements{k}(j),ele_num{k}(j))];
+        end
         arm_temp = [arm_temp  SG_conns{k}(j+1)];
     end    
     arms{end+1} = [SG_conns{k}(1) arm_temp];
@@ -221,17 +243,17 @@ if isempty(angles)
 else
     for i=1:num_sections
         if angles(1,i)>=0
-            phis = [phis repmat(SG_elements{1}{i}.phi(2)*angles(1,i),1,ele_num{1}(i)+1)];
+            phis = [phis repmat(angles_sections{1}(i,2)*angles(1,i),1,ele_num{1}(i)+1)];
         else
-            phis = [phis repmat(SG_elements{1}{i}.phi(1)*angles(1,i),1,ele_num{1}(i)+1)];
+            phis = [phis repmat(angles_sections{1}(i,1)*angles(1,i),1,ele_num{1}(i)+1)];
         end
         if angles(2,i)>=0
-            phis2 = [phis2 repmat(SG_elements{2}{i}.phi(2)*angles(2,i),1,ele_num{2}(i)+1)];
+            phis2 = [phis2 repmat(angles_sections{2}(i,2)*angles(2,i),1,ele_num{2}(i)+1)];
         else
-            phis2 = [phis2 repmat(SG_elements{2}{i}.phi(1)*angles(2,i),1,ele_num{2}(i)+1)];
+            phis2 = [phis2 repmat(angles_sections{2}(i,1)*angles(2,i),1,ele_num{2}(i)+1)];
         end
     end
-    end
+end
 phis = deg2rad(phis);
 phis2 = deg2rad(phis2);
 SGc = SGTchain(SGs,[0 phis phis2],'',framechain);

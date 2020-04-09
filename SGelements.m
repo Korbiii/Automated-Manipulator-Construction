@@ -22,96 +22,71 @@ h_opti = angle_p(2);
 for f=5:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
-           bottom_ele = 1;
-       case 'side_stabi'
-           side_stabi = 1;           
+           bottom_ele = 1;        
    end
 end
 
 
 
 %% Creating base and zeroing it in z
-if side_stabi == 1
-    maxY = max(CPL(:,2));
-    maxX = max(CPL(:,1));  
-    cut_x = 2.5;
-    cut_y = 4;
-    
-    PL_stabi_cut = PLsquare(cut_x,cut_y);
-    PL_stabilisator = PLtrans(PLsquare(cut_x-0.4,cut_y-0.4),[0 0.2]);
-        
-    PL_stabi_cut = PLtrans(PL_stabi_cut,[maxX-1.5 maxY-1]);  
-    PL_stabilisator = PLtrans(PL_stabilisator,[-maxX+1.5 maxY-1]);
-    
-    PL_stabi_cut = CPLbool('+',PL_stabi_cut,VLswapY(VLswapX(PL_stabi_cut)));    
-    PL_stabilisator =  CPLbool('+',PL_stabilisator,VLswapY(VLswapX(PL_stabilisator)));
-    
-    % Need two elements for this setup
-    PL_stabi_stabi_1 = CPLbool('x',PL_stabilisator,CPL);
-    PL_stabi_stabi_2 = CPLbool('x',VLswapY(PL_stabilisator),CPL);      
-    
-    CPL_1 = CPLbool('-',CPL,PL_stabi_cut);
-    CPL_2 = CPLbool('-',CPL,VLswapY(PL_stabi_cut));    
-    
-    SG_stabi_1 = SGtrans(SGofCPLz(PL_stabi_stabi_1,6),[0 0 1]);
-    SG_stabi_2 = SGtrans(SGofCPLz(PL_stabi_stabi_2,6),[0 0 1]); 
-    
-    SG = SGofCPLz(CPL_1,ele_height/2);
-    CPL_1 = CPLbool('-',CPL_1,VLswapX(PL_stabi_cut)); 
-    SG = SGcat(SG,SGunder(SGofCPLz(CPL_1,ele_height/2),SG));  
-        
-    SG_2 = SGofCPLz(CPL_2,ele_height/2);    
-    CPL_2 = CPLbool('-',CPL_2,PL_stabi_cut); 
-    SG_2 = SGcat(SG_2,SGunder(SGofCPLz(CPL_2,ele_height/2),SG_2));  
-    
-    height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
-else    
-%     SG = SGofCPLz(CPL,ele_height);
-    SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
-    height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
-    SG = SGtrans(SG,[0 0 -height_SG/2]);
-end
 
+%     SG = SGofCPLz(CPL,ele_height);
+SG = SGofCPLzdelaunayGrid(CPL,ele_height,0.5,0.5);
+height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
+SG = SGtrans(SG,[0 0 -height_SG/2]);
 
 
 %% Add hinge to base
 SG_hinge = SGhingeround(min_len,hinge_width,height);
 SG_hinge = SGtransR(SG_hinge,rotz(h_dir));
+SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
 [SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,h_dir,h_opti,hinge_width,min_len,height);
-
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
 
-if ~bottom_ele
-    if side_stabi == 1        
-        SG = SGcat(SG,SG_hinge_top,SG_hinge_bottom,SG_stabi_1);
-        SG_2 = SGcat(SG_2,SG_hinge_top,SG_hinge_bottom,SG_stabi_2);
+if h_opti == 2
+    [SG_hinge_2,offset_2]= SGcreateHinge(CPL,SG_hinge_2,h_dir-90,h_opti,hinge_width,min_len,height);
+    SG_hinge_2_top = SGontop(SG_hinge_2,SG);
+    SG_hinge_2_bottom = SGmirror(SG_hinge_2_top,'xy');
+end
+
+
+if ~bottom_ele    
+    if h_opti == 2
+        SG_base_ = SG;
+        SG = SGcat(SG_base_,SG_hinge_bottom,SG_hinge_2_top);
+        SG_2 = SGcat(SG_base_,SG_hinge_2_bottom,SG_hinge_top);
         
-        SG_stabi_g_1 = SGtrans(SGgrow(SG_stabi_1,0.2),TofR(rotz(2),[0 0 -4]));
-        SG_stabi_g_2 = SGtrans(SGgrow(SG_stabi_2,0.2),[0 0 -4]);        
     else
         SG = SGcat(SG,SG_hinge_top,SG_hinge_bottom);
-    end
+    end    
 else
     SG = SGcat(SG,SG_hinge_top);
 end
 
 %% Add frames to element
 H_f = TofR(rotx(90)*roty(90+h_dir),[offset 0 height+(height_SG/2)]);
-clf;
+H_f_2 = TofR(rotx(90)*roty(180+h_dir),[offset 0 height+(height_SG/2)]);
 if ~bottom_ele
     H_b = TofR(rotx(90)*roty(-90+h_dir),[offset 0 -(height_SG/2)-height]);
+    H_b_2 = TofR(rotx(90)*roty(h_dir),[offset 0 -(height_SG/2)-height]);
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(height_SG/2))]; 0 0 0 1];
 end
-
-SG = SGTset(SG,'F',H_f);
-SG = SGTset(SG,'B',H_b);
-if side_stabi ==1
-    SG_2 = SGcolor(SG_2);
+if h_opti == 2    
+    SG = SGTset(SG,'F',H_f_2);
+    SG = SGTset(SG,'B',H_b);
     SG_2 = SGTset(SG_2,'F',H_f);
-    SG_2 = SGTset(SG_2,'B',H_b);
-    SG = [SG SG_2];
+    SG_2 = SGTset(SG_2,'B',H_b_2);
+    SG.offest = offset;
+    SG_2.offset = offset_2;
+    SG = {SG SG_2};
+else
+    SG = SGTset(SG,'F',H_f);
+    SG = SGTset(SG,'B',H_b);
+    SG.offest = offset;
+    SG = SG;
 end
-SG.offest = offset;
+
+
 end

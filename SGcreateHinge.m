@@ -104,6 +104,7 @@ if offset == 0
 else
     pos_plane_2 = PLtrans(PLtrans(pos_plane,(e_dir(1,:)/norm(e_dir(1,:)))*(offset-(hinge_width/2))),TofR(rot(pi/2)));
 end
+origin_axis = PLtrans(middle_axis,e_dir(1,:)*100*max_dim);
 for j=1:size(max_axis,2)
     offset_distance = distPointLine(PL_offsetline,max_axis{j}(1,:));
     for left=1:2:proj_points_size-2
@@ -117,10 +118,10 @@ for j=1:size(max_axis,2)
         end
         if isempty(plain_offsets)
             plains{end+1} = plain_temp;
-            plain_offsets = distPointLine(middle_axis,plain_temp(1,:));
+            plain_offsets = distPointLine(origin_axis,plain_temp(1,:));
         else
-            dis_temp =  distPointLine(middle_axis,plain_temp(1,:));
-            if ~ismembertol(dis_temp,plain_offsets,1e-1)
+            dis_temp =  distPointLine(origin_axis,plain_temp(1,:));
+            if min(abs(plain_offsets-dis_temp))>0.1
                  plains{end+1} = plain_temp;
                  plain_offsets = [plain_offsets dis_temp];
             end
