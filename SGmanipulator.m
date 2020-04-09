@@ -91,6 +91,7 @@ else
 end
 
 num_sections = size(angle_p,1)/num_arms;
+offset = 0;
 for i=1:num_arms
     if symmetric && i > 1 
          CPLs{end+1} = CPLs{end};
@@ -109,7 +110,7 @@ offsets = {};
 
 ranges = [];
 CPLs_holes = {};
-positions = [];
+positions = {};
 SG_arms = {};
 SG_conns = {};
 s_n = 0;
@@ -119,9 +120,8 @@ angle_p = mat2cell(angle_p,repmat(num_sections,1,num_arms));
 %% Finding Positions of holes and creating CPLs
 for i=1:num_arms
     [CPLs_holes{end+1},positions_temp] = PLholeFinder(CPL_out{i},tool_r(i),angle_p{i}(:,[1,4]),length_p{i}(:,3:5),hole_r,single,torsion,bottom_up); 
-    positions = [positions; positions_temp];
+    positions{end+1} = positions_temp;
 end
-positions = mat2cell(positions,repmat(num_sections,1,num_arms));
 updateProgress("Rope channels created");
 %%  Creating elements and connectors
 
@@ -134,21 +134,21 @@ for k=1:num_arms
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
         if i == num_sections   %% Top of arms
             if single == 1
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end,:),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
             else
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end,:),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap'});
             end
             SG_conn_temp.hole_positions = positions(end,:);
         else
-            SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1,:),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
-            SG_conn_temp.hole_positions = positions{k}(i:i+1,:);
+            SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
+            SG_conn_temp.hole_positions = positions{k}(i:i+1);
         end
         
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,3),length_p{k}(i,2),length_p{k}(i,4),length_p{k}(i,5));
         if i == num_sections
-            SG_ele_temp.hole_positions = positions{k}(end,:);
+            SG_ele_temp.hole_positions = positions{k}(end);
         else
-            SG_ele_temp.hole_positions = positions{k}(i:i+1,:);
+            SG_ele_temp.hole_positions = positions{k}(i:i+1);
         end
         if ~isempty(SG_conn_temp) SG_conns_temp{end+1} = SG_conn_temp;   SG_conn_temp = []; end
         SG_elements_temp{end+1} = SG_ele_temp;
@@ -183,7 +183,7 @@ for k = 1:num_arms
         SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
         
-        dis_axis_pos = distPointLine(middle_axis,positions{k}(i-1,:));
+        dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
         height_l = 2*(tand(phi_right)*dis_axis_pos);
         height_r = 2*(tand(phi_left)*dis_axis_pos);
         
@@ -205,7 +205,7 @@ for k=1:num_arms
     arms{end+1} = [SG_conns{k}(1) arm_temp];
 end
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs_holes{1}{1};NaN NaN;CPL_in{1}],CPL_out{1}{1},optic_radius,positions{1}(1,:),sensor_channel,optic,single,base_length,seal);
+base = SGmanipulatorbase([CPLs_holes{1}{1};NaN NaN;CPL_in{1}],CPL_out{1}{1},optic_radius,positions{1}{1},sensor_channel,optic,single,base_length,seal);
 SGs = [{base} arms{1} arms{2}];
 num = size(SGs,2);
 updateProgress("Created Base");

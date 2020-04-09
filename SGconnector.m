@@ -23,9 +23,6 @@ height_t = 0.5;         if nargin>=11 && ~isempty(varargin{5}); height_t = varar
 flags = {};             if nargin>=12 && ~isempty(varargin{6}); flags = varargin{6}; end
 
 cut_orientation = 'y'; single = 0; end_cap = 0; crimp = 1;
-% if size(positions,1)>1
-%     positions = flip(positions);
-% end
 for f=1:size(flags,2)
    switch flags{f}
        case 'end_cap'
@@ -41,6 +38,7 @@ for f=1:size(flags,2)
            crimp = 1;
    end
 end
+angles = {};
 CPL_b = CPL{1};
 if size(CPL,1) == 2
     CPL_f = CPL{2};
@@ -55,10 +53,8 @@ else
 end
 
 %% Shifting all holes to positive x_values
-for i=1:size(positions,1)
-    if positions(i,1) < 0  && ~single
-        positions(i,:) = -positions(i,:);
-    end
+for k = 1:size(positions,2)
+    positions{k}(positions{k}(:,1)<0,:) = -positions{k}(positions{k}(:,1)<0,:);
 end
 
 CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
@@ -66,25 +62,36 @@ CPL_f_baseholes = CPLbool('-',CPL_f,CPL_holes_b);
 CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
 PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -10*h_r])]);
 PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -10*h_r])]);
-angle = atan2(positions(1,1),positions(1,2));  %double angle  pi-angle2 -angle2 Angle between centerpoint and holeposition
 [sizey,sizex,~,~,~,~] = sizeVL(CPL_b);
-CPL_b_wireescape = CPLbool('-',CPL_b,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
-CPL_f_wireescape = CPLbool('-',CPL_f_baseholes,PLtrans(PLtransR(PL_wireescape,rot(pi-angle)),positions(1,:)));
 SG_bottom = SGofCPLz(CPL_b,2);
+CPL_b_wireescape = CPL_b;
+CPL_f_wireescape = CPL_f;
+for k=1:size(positions{1},1)
+    angles{end+1} = atan2(positions{1}(k,1),positions{1}(k,2));  %double angle  pi-angle2 -angle2 Angle between centerpoint and holeposition
+    CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(pi-angles{k})),positions{1}(k,:)));
+    CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(pi-angles{k})),positions{1}(k,:)));
+end
+
 
 if crimp
-    if size(positions,1) == 2
-        angle2 = atan2(positions(2,1),positions(2,2));
-        CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions(2,:)));
-        CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions(2,:)));
-        CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions(2,:)));
-        CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions(2,:)));
-        
+   
+    if size(positions,2) == 2
+        for k=1:size(positions{2},1)
+            angle2 = atan2(positions{2}(k,1),positions{2}(k,2));
+            CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions{2}(k,:)));
+            CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions{2}(k,:)));
+            CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(pi-angle2)),positions{2}(k,:)));
+            CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_crimp_hole,rot(-angle2)),-positions{2}(k,:)));
+        end
     end
+    
     if ~single
-        CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-        CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
+        for k=1:size(positions{1},1)
+            CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angles{k})),-positions{1}(k,:)));
+            CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angles{k})),-positions{1}(k,:)));
+        end
     end
+  
     SG_middle = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,10.5);
     SG_top = SGofCPLz(CPL_f,2);
     SG = SGstack('z',SG_bottom,SG_middle,SG_top);
@@ -115,19 +122,6 @@ else
         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[sizey -positions(1,2)]));
     end    
     CPL_b_wirechannels = CPLbool('+',CPL_b_wirechannels,PL_tool_guard);
-    
-%     if ~single
-%         CPL_b_wireescape = CPLbool('-',CPL_b_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-%         CPL_f_wireescape = CPLbool('-',CPL_f_wireescape,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-%         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLtransR(PL_wireescape,rot(-angle)),-positions(1,:)));
-%         if cut_orientation == 'x'
-%             CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(3,sizey),[-sizex/2 0]));    %% TODO
-%         else
-%             CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2,3),[sizex/4 -sizey/2]));    %% TODO
-%         end
-%         CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizex/2+2,0.8),[(sizex/2+2)/2 -positions(1,2)]));
-%     end    
-    
     SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.6);
     SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2);
     SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);

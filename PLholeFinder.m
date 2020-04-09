@@ -18,7 +18,7 @@ min_len= length_p(:,2);
 CPL_no_go_area = [];
 CPLs = {};
 CPL_holes = [];
-positions = [];
+positions = {};
 angle_p = flip(angle_p);
 CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
@@ -158,7 +158,7 @@ for i=start_value:step:end_value
         CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
     end
     CPLs{end+1} = CPL_holes;
-    positions = [positions;CPL_hole_positions_temp];
+    positions{end+1} = CPL_hole_positions_temp;
 end
 CPLs = flip(CPLs);
 positions = flip(positions);
