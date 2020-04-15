@@ -91,7 +91,6 @@ else
 end
 
 num_sections = size(angle_p,1)/num_arms;
-offset = 0;
 for i=1:num_arms
     if symmetric && i > 1 
          CPLs{end+1} = CPLs{end};
@@ -111,7 +110,6 @@ offsets = {};
 ranges = [];
 CPLs_holes = {};
 positions = {};
-SG_arms = {};
 SG_conns = {};
 s_n = 0;
 length_p = mat2cell(length_p,repmat(num_sections,1,num_arms));
@@ -122,7 +120,7 @@ for i=1:num_arms
     [CPLs_holes{end+1},positions_temp] = PLholeFinder(CPL_out{i},tool_r(i),angle_p{i}(:,[1,4]),length_p{i}(:,3:5),hole_r,single,torsion,bottom_up); 
     positions{end+1} = positions_temp;
 end
-updateProgress("Rope channels created");
+disp("Bowden cable channels created");
 %%  Creating elements and connectors
 
 for k=1:num_arms
@@ -155,7 +153,7 @@ for k=1:num_arms
         if ~isempty(SG_conn_temp) SG_conns_temp{end+1} = SG_conn_temp;   SG_conn_temp = []; end
         SG_elements_temp{end+1} = SG_ele_temp;
         offsets_temp = [offsets_temp offset];
-        updateProgress("Element "+ i + " and Connector " + i + " created!");
+        disp("Element "+ i + " and Connector " + i + " for arm "+k+" created!");
     end
     SG_elements{end+1} = SG_elements_temp;
     SG_conns{end+1} = SG_conns_temp;
@@ -208,7 +206,7 @@ for k = 1:num_arms
             SG_conns{k}{i-1}.phi_t = [phi_left*2,phi_right*2];
             SG_conns{k}{i}.phi_b = [phi_left*2,phi_right*2];
             angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];
-        updateProgress("Added Stops to Element "+ i);
+        disp("Added Stops to Element "+ i+" at arm " + k);
     end
     angles_sections{end+1} = angles_sections_temp;
     ele_num{end+1} = ele_num_temp;
@@ -228,42 +226,35 @@ for k=1:num_arms
 end
 %% Adding base to arms in a cell list
 base = SGmanipulatorbase([CPLs_holes{1}{1};NaN NaN;CPL_in{1}],CPL_out{1}{1},optic_radius,positions{1}{1},sensor_channel,optic,single,base_length,seal);
-SGs = [{base} arms{1} arms{2}];
+SGs = [{base} arms{:}];
 num = size(SGs,2);
-updateProgress("Created Base");
+disp("Created Base");
 %% Generating full manipulator with framechain
-framechain = SGTframeChain2(num,sum(ele_num{1})+size(ele_num{1},2)+1);
-phis2 = 0;
-phis = 0;
+phis = {};
 if isempty(angles)
-    for i=1:num_sections
-        phis = [phis zeros(1,ele_num{1}(i)+1)];
-        phis2 = [phis2 zeros(1,ele_num{2}(i)+1)];
+    for i=1:num_arms
+        phis{end+1} = zeros(1,size(arms{i},2));
     end
 else
-    for i=1:num_sections
-        if angles(1,i)>=0
-            phis = [phis repmat(angles_sections{1}(i,2)*angles(1,i),1,ele_num{1}(i)+1)];
-        else
-            phis = [phis repmat(angles_sections{1}(i,1)*angles(1,i),1,ele_num{1}(i)+1)];
-        end
-        if angles(2,i)>=0
-            phis2 = [phis2 repmat(angles_sections{2}(i,2)*angles(2,i),1,ele_num{2}(i)+1)];
-        else
-            phis2 = [phis2 repmat(angles_sections{2}(i,1)*angles(2,i),1,ele_num{2}(i)+1)];
+    for k=1:num_arms
+        for i=1:num_sections 
+            if angles(1,i)>=0
+                phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);
+            else
+                phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);
+            end
         end
     end
 end
-phis = deg2rad(phis);
-phis2 = deg2rad(phis2);
-SGc = SGTchain(SGs,[0 phis phis2],'',framechain);
-updateProgress("Created SGTchain");
+ele_num_sections = sum(cat(3,ele_num{:}),2);
+ele_num_sections = ele_num_sections(1,:)+num_sections;
+framechain = SGTframeChain2(num,ele_num_sections(1:end-1)+1);
+
+phis = deg2rad(cell2mat(phis));
+SGc = SGTchain(SGs,[0 phis],'',framechain);
+disp("Created SGTchain");
 SG = SGcat(SGc);
 SGplot(SG);
 
-    function updateProgress(message)
-        s_n = s_n+1;
-        disp((floor(s_n/(3+size(angle_p,1)*2)*100)) +"% "+message);
-    end
 
 end

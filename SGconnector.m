@@ -92,7 +92,7 @@ if crimp
         end
     end
   
-    SG_middle = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,10.5);
+    SG_middle = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,10.5,'','miny');
     SG_top = SGofCPLz(CPL_f,2);
     SG = SGstack('z',SG_bottom,SG_middle,SG_top);
     

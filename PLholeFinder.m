@@ -119,28 +119,29 @@ for i=start_value:step:end_value
         if k > 1
             curr_axis = PLtransR(curr_axis,rot(pi/2));
         end
-        dis_pos=0;
-        dis = 0;
-        for j=1:size(CPL_limit,1)
-            new_dis = distPointLine(curr_axis,CPL_limit(j,:));
-            if dis<new_dis
+               
+        ordered_limit_points = [CPL_limit distLinePoint(curr_axis,CPL_limit)];
+        ordered_limit_points = sortrows(ordered_limit_points,3,'descend');
+        hole_position = [];
+        while isempty(hole_position) && size(CPL_limit,2) > 0
+            if ~isnan(ordered_limit_points(1,1))
                 if single == 1 || (single == 2 && i == size(angle_p,1))
-                    dis = new_dis;
-                    dis_pos = j;
+                    hole_position = ordered_limit_points(1,[1,2]);
                 else
-                    is_inside = insideCPS(CPL_limit,PLtransC(CPL_limit(j,:),curr_mid_point,pi));
+                    is_inside = insideCPS(CPL_limit,PLtransC(ordered_limit_points(1,[1,2]),curr_mid_point,pi));
                     if is_inside >= 0
-                        dis = new_dis;
-                        dis_pos = j;
+                        hole_position = ordered_limit_points(1,[1,2]);
                     end
                 end
             end
+            ordered_limit_points(1,:) = [];
         end
-        if dis == 0 error("CPL für Sektion " + i + " zu klein"); end
+       
+        if isempty(hole_position) error("CPL für Sektion " + i + " zu klein"); end
         if single == 1 || (single == 2 && i == size(angle_p,1))
-            hole_positions = CPL_limit(dis_pos,:);
+            hole_positions = hole_position;
         else
-            hole_positions = [CPL_limit(dis_pos,:);PLtransC(CPL_limit(dis_pos,:),curr_mid_point,pi)];
+            hole_positions = [hole_position;PLtransC(hole_position,curr_mid_point,pi)];
         end
         
         if isempty(CPL_holes)

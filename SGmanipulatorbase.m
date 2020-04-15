@@ -35,7 +35,9 @@ CPL = [CPL;NaN NaN;PLtransR(CPL,rot(pi))];
 if optic_channel == 1
     CPL = [CPL;NaN NaN;PLcircle(optic_radius)];
 elseif optic_channel == 2
-    CPL = [CPL;NaN NaN;PLtrans(PLcircle(optic_radius),[0 sizey/2+optic_radius-2])];
+    
+    optic_distance_y = sizey/2+(2*optic_radius)-2;
+    CPL = [CPL;NaN NaN;PLtrans(PLcircle(optic_radius),[0 optic_distance_y])];
 end
 
 size = sizeVL(CPL);
@@ -164,10 +166,15 @@ height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 H_b_b = [rotx(0) [0;0;0]; 0 0 0 1];
 H_f_b = [rotx(90) [arm_midpoint;0;height_SG]; 0 0 0 1];
 H_f1_b = [rotx(90)*roty(180) [-arm_midpoint;0;height_SG]; 0 0 0 1];
+H_f2_b = [rotx(90)*roty(90) [0;optic_distance_y;height_SG]; 0 0 0 1];
  
 SG = SGTset(SG,'B',H_b_b);
 SG = SGTset(SG,'F',H_f_b);
 SG = SGTset(SG,'F1',H_f1_b);
+if optic_channel
+    SG = SGTset(SG,'F2',H_f2_b);
+end
+
 if seal
     SG = SGcat(SG,SG_seal_cup);
 end
