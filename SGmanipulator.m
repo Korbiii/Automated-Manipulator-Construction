@@ -8,7 +8,6 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
-
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 base_length = 7;optic_radius = 3;hole_r = 0.7; num_arms = 2;
 angle_defaults = [90 90 0];
@@ -238,6 +237,7 @@ if isempty(angles)
     end
 else
     for k=1:num_arms
+        phis{end+1} = 0;
         for i=1:num_sections 
             if angles(1,i)>=0
                 phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);

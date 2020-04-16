@@ -53,8 +53,10 @@ else
 end
 
 %% Shifting all holes to positive x_values
-for k = 1:size(positions,2)
-    positions{k}(positions{k}(:,1)<0,:) = -positions{k}(positions{k}(:,1)<0,:);
+if ~single
+    for k = 1:size(positions,2)
+        positions{k}(positions{k}(:,1)<0,:) = -positions{k}(positions{k}(:,1)<0,:);
+    end
 end
 
 CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
@@ -100,30 +102,30 @@ else
     PL_tool_guard = [PLcircle(tool_radius);NaN NaN;PLcircle(tool_radius+0.5)]; 
     if cut_orientation == 'x'
         width = (sizey/2)-abs(positions(1,1))+(h_r)+5;
-        if positions(1,1)>0
-            offset = positions(1,1)+width/2-h_r;
+        if positions{1}(1)>0
+            offset = positions{1}(1)+width/2-h_r;
         else
-            offset = positions(1,1)-width/2+h_r;
+            offset = positions{1}(1)-width/2+h_r;
         end
         CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(width,sizex*2),[offset 0]));
     else
-        width = (sizex/2)-abs(positions(1,2))+(h_r)+5;
-        if positions(1,2)>0
-            offset = positions(1,2)+width/2-h_r;
+        width = (sizex/2)-abs(positions{1}(2))+(h_r)+5;
+        if positions{1}(2)>0
+            offset = positions{1}(2)+width/2-h_r;
         else
-            offset = positions(1,2)-width/2+h_r;
+            offset = positions{1}(2)-width/2+h_r;
         end
         CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizey*2,width),[0 offset]));
     end
     
-    if positions(1,1)>0
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[-sizey -positions(1,2)]));
+    if positions{1}(1)>0
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[-sizey -positions{1}(2)]));
     else
-        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[sizey -positions(1,2)]));
+        CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,0.8),[sizey -positions{1}(2)]));
     end    
     CPL_b_wirechannels = CPLbool('+',CPL_b_wirechannels,PL_tool_guard);
     SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.6);
-    SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2);
+    SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2,'','miny');
     SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);
     SG = SGstack('z',SG_bottom,SG_wire_layer,SG_top_connector,SG_top_layer);    
 end
@@ -148,23 +150,14 @@ else
     SG = SGcat(SGunder(SG_hinge_b,SG),SG);
 end
 
-%% add stops
-% 
-% SG_stop_b = SGelementstops(CPL_b,section_p(1,1),angles(1,1),angles(2,1),hinge_width_b,offset_b);
-% SG_stop_b = SGmirror(SG_stop_b,'xy');
-% SG_stop_b = SGtrans(SG_stop_b,[0 0 -height_SG/2]);
-% if ~end_cap
-%     SG_stop_t = SGelementstops(CPL_f,section_p(2,1),angles(2,1),angles(2,2),hinge_width_t,offset_t);
-%     SG_stop_t = SGtrans(SG_stop_t,[0 0 height_SG/2]);    
-%     SG_stop_b = SGcat(SG_stop_b,SG_stop_t);
-% end
-% SG = SGcat(SG,SG_stop_b);
 %% Setting Frames
-H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t;0;((height_SG/2)+height_t)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b;0;(-(height_SG/2)-height_b)]; 0 0 0 1];
+e_dir_f = -[sind(angle_p(2,1)) cosd(angle_p(2,1))];
+e_dir_b = -[sind(angle_p(1,1)) cosd(angle_p(1,1))];
+
+H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t*e_dir_f';((height_SG/2)+height_t)]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b*e_dir_b';(-(height_SG/2)-height_b)]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);
 SG.offset = [offset_b,offset_t];
-% SGwriteSTL(SG,rand+"");
 end
