@@ -152,7 +152,7 @@ end
 
 %% Setting Frames
 e_dir_f = -[sind(angle_p(2,1)) cosd(angle_p(2,1))];
-e_dir_b = -[sind(angle_p(1,1)) cosd(angle_p(1,1))];
+e_dir_b = [sind(angle_p(1,1)) cosd(angle_p(1,1))];
 
 H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t*e_dir_f';((height_SG/2)+height_t)]; 0 0 0 1];
 H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b*e_dir_b';(-(height_SG/2)-height_b)]; 0 0 0 1];

@@ -67,6 +67,13 @@ end
 
 %% Setting up variables
 tool_r = tool_d/2;
+if ~symmetric
+    num_arms = size(angle_p,2);
+end
+num_sections = [];
+for i=1:num_arms
+    num_sections = [num_sections size(angle_p{i},1)];
+end
 angle_p = cell2mat(angle_p');
 length_p = cell2mat(length_p');
 angle_p = [angle_p repelem(angle_defaults(1,size(angle_p,2):end),size(angle_p,1),1)];
@@ -85,13 +92,14 @@ if symmetric || num_arms == 1
 else
     CPL_in = {};
     for i = 1:num_arms
-        CPL_out{i} = [CPL_out{i};repmat(CPL_out{1,i}(end),size(angle_p,1)/num_arms-size(CPL_out{1,i},1),1)];
+        CPL_out{i} = [CPL_out{i};repmat(CPL_out{1,i}(end),num_sections(i)-size(CPL_out{1,i},1),1)];
         CPL_in{end+1} =  PLcircle(tool_r(i),tool_r(i)*20);
     end
 end
 
-num_sections = size(angle_p,1)/num_arms;
+% num_sections = size(angle_p,1)/num_arms;
 for i=1:num_arms
+    
     if symmetric && i > 1 
          CPLs{end+1} = CPLs{end};
         continue; 
@@ -111,10 +119,15 @@ ranges = [];
 CPLs_holes = {};
 positions = {};
 SG_conns = {};
-s_n = 0;
-length_p = mat2cell(length_p,repmat(num_sections,1,num_arms));
-angle_p = mat2cell(angle_p,repmat(num_sections,1,num_arms));
-
+length_p_temp = length_p; length_p = {};
+angle_p_temp = angle_p; angle_p = {};
+start =1; ende = num_sections(1);
+for i=1:num_arms          
+    length_p{end+1} = length_p_temp(start:ende,:);    
+    angle_p{end+1} = angle_p_temp(start:ende,:);
+    start = ende+1;
+    if i < num_arms ende = ende+num_sections(i+1); end
+end
 %% Finding Positions of holes and creating CPLs
 for i=1:num_arms
     [CPLs_holes{end+1},positions_temp] = PLholeFinder(CPL_out{i},tool_r(i),angle_p{i}(:,[1,4]),length_p{i}(:,3:5),hole_r,single,torsion,bottom_up); 
@@ -127,14 +140,14 @@ for k=1:num_arms
     offsets_temp = [];
     SG_bottom = SGelements(CPLbool('-',CPLs{k}{1},CPLs_holes{k}{1}),angle_p{k}(1,[1,4]),length_p{k}(1,3),length_p{k}(1,3),length_p{k}(1,4),length_p{k}(1,5),'bottom_element');
     SG_conns_temp = {SG_bottom};
-    for i=1:num_sections
+    for i=1:num_sections(k)
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
         if i==1 CPL_combis{end+1} = CPL_combined; end
-        if i == num_sections   %% Top of arms
+        if i == num_sections(k)   %% Top of arms
             if single == 1
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
             else
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap'});
             end
             SG_conn_temp.hole_positions = positions(end,:);
         else
@@ -144,7 +157,7 @@ for k=1:num_arms
         
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,3),length_p{k}(i,2),length_p{k}(i,4),length_p{k}(i,5));
         if size(SG_ele_temp,2) == 1
-            if i == num_sections
+            if i == num_sections(k)
                 SG_ele_temp.hole_positions = positions{k}(end);
             else
                 SG_ele_temp.hole_positions = positions{k}(i:i+1);
@@ -171,7 +184,7 @@ angles_sections = {};
 for k = 1:num_arms
     ele_num_temp = [];
     angles_sections_temp = [];
-    for i=2:num_sections+1
+    for i=2:num_sections(k)+1
         ele_num_temp = [ele_num_temp floor(length_p{k}(i,1)/(length_p{k}(i,2)+(2*length_p{k}(i,5))))];
         max_dim = max(sizeVL(CPL_out{k}{i-1}))+1;
         middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets{k}(i-1)]),rot(-deg2rad(angle_p{k}(i,1))));
@@ -214,7 +227,7 @@ end
 %% Filling cell list with elements for a single arm
 for k=1:num_arms
     arm_temp = [];
-    for j=1:num_sections
+    for j=1:num_sections(k)
         if angle_p{k}(j+1,4) == 2
             arm_temp = [arm_temp repmat(SG_elements{k}{j}',1,floor(ele_num{k}(j)/2))];
         else
@@ -238,7 +251,7 @@ if isempty(angles)
 else
     for k=1:num_arms
         phis{end+1} = 0;
-        for i=1:num_sections 
+        for i=1:num_sections(k)
             if angles(1,i)>=0
                 phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);
             else
@@ -247,9 +260,15 @@ else
         end
     end
 end
-ele_num_sections = sum(cat(3,ele_num{:}),2);
-ele_num_sections = ele_num_sections(1,:)+num_sections;
-framechain = SGTframeChain2(num,ele_num_sections(1:end-1)+1);
+ele_num_sections = [];
+for k=1:num_arms
+    ele_num_sections = [ele_num_sections sum(ele_num{k})+num_sections(k)];
+end
+if num_arms > 1
+    framechain = SGTframeChain2(num,ele_num_sections(1:end-1)+1);
+else
+    framechain = SGTframeChain(num);
+end
 
 phis = deg2rad(cell2mat(phis));
 SGc = SGTchain(SGs,[0 phis],'',framechain);

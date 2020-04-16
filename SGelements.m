@@ -22,7 +22,8 @@ h_opti = angle_p(2);
 for f=5:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
-           bottom_ele = 1;        
+           bottom_ele = 1;     
+           if h_opti == 2, h_opti = 0; end
    end
 end
 
@@ -65,7 +66,7 @@ else
 end
 
 %% Add frames to element
-e_dir = -[sind(h_dir) cosd(h_dir)];
+e_dir = [sind(h_dir) cosd(h_dir)];
 H_f = TofR(rotx(90)*roty(90+h_dir),[offset*e_dir  height+(height_SG/2)]);
 H_f_2 = TofR(rotx(90)*roty(180+h_dir),[offset*e_dir height+(height_SG/2)]);
 if ~bottom_ele
