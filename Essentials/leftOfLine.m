@@ -8,5 +8,5 @@ function [index] = leftOfLine(PL_line,points)
 
 d = (points(:,1)-PL_line(1,1))*(PL_line(2,2)-PL_line(1,2))-(points(:,2)-PL_line(1,2))*(PL_line(2,1)-PL_line(1,1));
 d= d./abs(d);
-
+index = d;
 end

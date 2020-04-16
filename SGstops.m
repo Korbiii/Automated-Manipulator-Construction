@@ -3,7 +3,7 @@
 %   CPL:  CPL of element
 %	=== OUTPUT RESULTS ======
 %	SG: 	SGstops
-function [SG,left_height,right_height] =  SGstops(SGs,h_dir,offset,left_angle,right_angle,length_p)
+function [SG,left_height,right_height] =  SGstops(SGs,CPL_out,h_dir,offset,left_angle,right_angle,length_p)
 if size(SGs,2) == 2 
     is_connector = 1; 
     SG = SGs{1};
@@ -31,15 +31,14 @@ else
     ele_height = (height_SG - (2*height) -(hinge_width))/2;
 end
 
-CPL = CPLofSGslice(SG,0);
-max_dim = max(sizeVL(CPL))+1;
+
+max_dim = max(sizeVL(CPL_out))+1;
 middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 -offset]),rot(deg2rad(h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
 e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
 left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*max_dim)]; % Plane for finding points in positive area
 right_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*-max_dim)];
 
-CPL_out =  CPLselectinout(CPL,0);
 CPL_out_left = CPLbool('-',CPL_out,left_plane);
 CPL_out_right = CPLbool('-',CPL_out,right_plane);
 

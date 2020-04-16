@@ -8,6 +8,7 @@
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Manipulator
 %   SGc:        SGTchain of Manipulator
+
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 base_length = 7;optic_radius = 3;hole_r = 0.7; num_arms = 2;
 angle_defaults = [90 90 0];
@@ -106,7 +107,7 @@ end
 arms = {};
 SG_elements = {};
 offsets = {};
-
+CPL_combis = {};
 ranges = [];
 CPLs_holes = {};
 positions = {};
@@ -122,7 +123,6 @@ for i=1:num_arms
 end
 disp("Bowden cable channels created");
 %%  Creating elements and connectors
-
 for k=1:num_arms
     SG_elements_temp = {}; 
     offsets_temp = [];
@@ -130,6 +130,7 @@ for k=1:num_arms
     SG_conns_temp = {SG_bottom};
     for i=1:num_sections
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
+        if i==1 CPL_combis{end+1} = CPL_combined; end
         if i == num_sections   %% Top of arms
             if single == 1
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
@@ -179,14 +180,14 @@ for k = 1:num_arms
         phi_left = max(1,(angle_p{k}(i,2)/ele_num_temp(i-1)-1)/2);
         phi_right = max(1,(angle_p{k}(i,3)/ele_num_temp(i-1)-1)/2);
         if angle_p{k}(i,4) == 2
-            SG_el = SGstops(flip(SG_elements{k}{i-1}),angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
-            SG_el = SGstops(flip(SG_el'),angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
+            SG_el = SGstops(flip(SG_elements{k}{i-1}),CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
+            SG_el = SGstops(flip(SG_el'),CPL_out{k}{i-1},angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
             SG_elements{k}{i-1} = SG_el;            
         else
-            SG_el = SGstops(SG_elements{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
+            SG_el = SGstops(SG_elements{k}{i-1},CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
             SG_elements{k}{i-1} = SG_el;
         end
-        [SG_con] = SGstops(SG_conns{k}(i-1:i),angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
+        [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
         SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
         if angle_p{k}(i,4) == 2
@@ -205,9 +206,9 @@ for k = 1:num_arms
         end        
             SG_conns{k}{i-1}.phi_t = [phi_left*2,phi_right*2];
             SG_conns{k}{i}.phi_b = [phi_left*2,phi_right*2];
-            angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];
-        disp("Added Stops to Element "+ i+" at arm " + k);
+            angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];        
     end
+    disp("Added Stops to arm " + k);
     angles_sections{end+1} = angles_sections_temp;
     ele_num{end+1} = ele_num_temp;
 end
@@ -225,7 +226,7 @@ for k=1:num_arms
     arms{end+1} = [SG_conns{k}(1) arm_temp];
 end
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase([CPLs_holes{1}{1};NaN NaN;CPL_in{1}],CPL_out{1}{1},optic_radius,positions{1}{1},sensor_channel,optic,single,base_length,seal);
+base = SGmanipulatorbase(CPL_combis,optic_radius,positions{1}{1},sensor_channel,optic,single,base_length,seal);
 SGs = [{base} arms{:}];
 num = size(SGs,2);
 disp("Created Base");
@@ -253,8 +254,8 @@ framechain = SGTframeChain2(num,ele_num_sections(1:end-1)+1);
 phis = deg2rad(cell2mat(phis));
 SGc = SGTchain(SGs,[0 phis],'',framechain);
 disp("Created SGTchain");
-SG = SGcat(SGc);
-SGplot(SG);
+SG = SGc;
+% SGplot(SG);
 
 
 end

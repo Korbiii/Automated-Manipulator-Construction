@@ -8,6 +8,24 @@
 %	SG:         SG of connector element
 %   offset:     Calculated offset in positive y direction
 function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_width,min_len,h_height)
+%% Check if same hinge was already created once
+
+global hinges;
+already_existing = 0;
+for i=1:size(hinges,2)
+    if isequalwithequalnans(hinges{i}{3},CPL) && isequal(hinges{i}{4},[hinge_dir,hinge_opti,hinge_width,min_len])
+        SG =  hinges{i}{1};
+        offset = hinges{i}{2};
+        already_existing = 1;
+        break;
+    end
+end
+
+
+
+
+if ~already_existing
+
 %% Initializing and generating general values
 offset = 0;
 max_dim = max(sizeVL(CPL))+1;
@@ -83,14 +101,31 @@ proj_points = {};
 to_side = 1;
 if to_side
 %%  Generating all cross points between CPL and hingepoint projections
-for left=1:size(VL_hinge,1)
-    PL_cross_line = [VL_hinge(left,1:2);VL_hinge(left,1:2)+(e_dir*50)];
+
+unique_points = unique(VL_hinge(:,1:2),'rows');
+unique_cp = {};
+for o=1:size(unique_points,1)
+    PL_cross_line = [unique_points(o,1:2);unique_points(o,1:2)+(e_dir*50)];
     c_p =  PLcrossCPLLine3(PL_cross_line,CPL);
-    c_p(:,3) = pdist2(c_p,VL_hinge(left,1:2));
+    c_p(:,3) = pdist2(c_p,unique_points(o,1:2));
     c_p = sortrows(c_p,3);
     c_p = c_p(:,1:2);
-    proj_points{end+1} = c_p;
+    unique_cp{end+1} = c_p;
 end
+for o=1:size(VL_hinge,1)  
+    [~,index] = ismember(VL_hinge(o,1:2),unique_points,'rows');
+    proj_points{end+1} = unique_cp{index};
+end
+
+% proj_points = {};
+% for o=1:size(VL_hinge,1)  
+%     PL_cross_line = [VL_hinge(o,1:2);VL_hinge(o,1:2)+(e_dir*50)];
+%     c_p =  PLcrossCPLLine3(PL_cross_line,CPL);
+%     c_p(:,3) = pdist2(c_p,VL_hinge(o,1:2));
+%     c_p = sortrows(c_p,3);
+%     c_p = c_p(:,1:2);
+%     proj_points{end+1} = c_p;
+% end
 %% Getting number of hinge elements below and above axis through [0 0]
 [proj_points_size, max_index] = max(cellfun('size', proj_points, 1));
 proj_points_max_values = cellfun('size', proj_points, 1) == proj_points_size;
@@ -110,10 +145,10 @@ for j=1:size(max_axis,2)
     for left=1:2:proj_points_size-2
         axis_offset = [mean(max_axis{j}(left+1:left+2,1)),mean(max_axis{j}(left+1:left+2,2))];
         plain_temp = [axis_offset;axis_offset+(e_dir*rot(pi/2))];
-        inside = insideCPS(pos_plane_2,plain_temp(1,:));
-        if inside == 1
+        inside = leftOfLine(middle_axis,plain_temp(1,:));
+        if inside == -1
             plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(-pi/2)*offset_distance);
-        elseif inside == -1
+        elseif inside == 1
             plain_temp = PLtrans(plain_temp,(e_dir(1,:)/norm(e_dir(1,:)))*rot(pi/2)*offset_distance);
         end
         if isempty(plain_offsets)
@@ -150,7 +185,7 @@ for k=1:size(proj_points,2)
             proj_points{k}=[proj_points{k};repmat(proj_points{k}(end-1:end,:),(proj_points_size-size(proj_points{k},1))/2,1)];
         else
             num_pos_neg = proj_points{k};
-            in_out = insideCPS(pos_plane,num_pos_neg);
+            in_out = leftOfLine(middle_axis,num_pos_neg);
             positive = length(find(in_out>0));
             negative = length(find(in_out<0));
             positive_v = proj_points{k}(1:positive,:);
@@ -201,6 +236,7 @@ for m=1:2:proj_points_size
     end
     SG = SGcat(SG,SG_hinge_new);
 end
+hinges{end+1} = {SG;offset;CPL;[hinge_dir,hinge_opti,hinge_width-1,min_len]};
 else
     torsion = 1;
     if torsion 
@@ -235,6 +271,6 @@ else
 %     SG = SGcat(SG,SG_hinge_new);
     SG = SGcat(SG_hinge_l,SG_hinge_r);
     
-    
+end
 end
 end
