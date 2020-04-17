@@ -66,7 +66,7 @@ left_height = height-(tand(right_angle)*max_distance_right);
 PLcontour = [(linspace(-max_distance_right,max_distance_left,500))+offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
 
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
-VLcontour = VLtrans(VLcontour,TofR(rotz(90-h_dir)));
+VLcontour = VLtrans(VLcontour,TofR(rotz(-90+h_dir)));
 [~,max_row] = max(VLcontour);
 dist_hinge = distPointLine(middle_axis,VLcontour(max_row(3),1:2));
 if dist_hinge>0.1 

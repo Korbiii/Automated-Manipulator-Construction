@@ -19,7 +19,7 @@ CPL_no_go_area = [];
 CPLs = {};
 CPL_holes = [];
 positions = {};
-angle_p = flip(angle_p,2);
+angle_p = flip(angle_p,1);
 CPL_out = flip(CPL_out);
 CPL_in = PLcircle(tool_r);
 min_len = flip(min_len);
@@ -69,7 +69,9 @@ for i=1:size(angle_p,1)
         CPL_no_go_areas{end+1} = [];
     end
 end
-CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
+if ~isempty(CPL_no_go_area)
+    CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
+end
 max_dim = 2*max(sizeVL(CPL_out{size(angle_p,1)}));
 
 %%Looping over each section
@@ -116,19 +118,21 @@ for i=start_value:step:end_value
     if angle_p(i,2) == 2 num_iterations = 2; else num_iterations = 1; end
     CPL_hole_positions_temp =[];
     for k=1:num_iterations
-        if k > 1
+        
+        if k == 2 && angle_p(i,2) == 2
             curr_axis = PLtransR(curr_axis,rot(pi/2));
         end
-               
+        %% Searching points    
         ordered_limit_points = [CPL_limit distLinePoint(curr_axis,CPL_limit)];
         ordered_limit_points = sortrows(ordered_limit_points,3,'descend');
         hole_position = [];
+        CPL_limit_tol = CPLgrow(CPL_limit,-0.1);
         while isempty(hole_position) && size(CPL_limit,2) > 0
             if ~isnan(ordered_limit_points(1,1))
                 if single == 1 || (single == 2 && i == size(angle_p,1))
                     hole_position = ordered_limit_points(1,[1,2]);
                 else
-                    is_inside = insideCPS(CPL_limit,PLtransC(ordered_limit_points(1,[1,2]),curr_mid_point,pi));
+                    is_inside = insideCPS(CPL_limit_tol,PLtransC(ordered_limit_points(1,[1,2]),curr_mid_point,pi));
                     if is_inside >= 0
                         hole_position = ordered_limit_points(1,[1,2]);
                     end
@@ -136,8 +140,11 @@ for i=start_value:step:end_value
             end
             ordered_limit_points(1,:) = [];
         end
-       
+        
+        
         if isempty(hole_position) error("CPL für Sektion " + i + " zu klein"); end
+        
+        %% Adding Points
         if single == 1 || (single == 2 && i == size(angle_p,1))
             hole_positions = hole_position;
         else

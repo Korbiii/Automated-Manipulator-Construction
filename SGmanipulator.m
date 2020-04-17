@@ -23,7 +23,7 @@ if ~iscell(length_p)
     length_p = {length_p};
 end
 
-[single,side_stabi,sensor_channel,optic,seal,symmetric,torsion,bottom_up] = deal(0);
+[single,side_stabi,sensor_channel,optic,seal,symmetric,torsion,bottom_up,radial] = deal(0);
 for f=1:size(varargin,2)
 if ~ischar(varargin{f}) continue; end
       switch varargin{f}
@@ -62,6 +62,8 @@ if ~ischar(varargin{f}) continue; end
           case 'symmetric'
               symmetric = 1;
               num_arms = 2;
+          case 'radial'
+              radial = 1;
       end   
 end
 
@@ -238,7 +240,11 @@ for k=1:num_arms
     arms{end+1} = [SG_conns{k}(1) arm_temp];
 end
 %% Adding base to arms in a cell list
-base = SGmanipulatorbase(CPL_combis,optic_radius,positions{1}{1},sensor_channel,optic,single,base_length,seal);
+first_positions = [];
+for i=1:num_arms
+    first_positions = [first_positions;positions{i}{1}];
+end
+base = SGmanipulatorbase(CPL_combis,optic_radius,first_positions,sensor_channel,optic,single,base_length,seal,radial);
 SGs = [{base} arms{:}];
 num = size(SGs,2);
 disp("Created Base");
