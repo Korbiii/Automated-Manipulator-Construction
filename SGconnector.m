@@ -1,32 +1,28 @@
-%%   [SG] = SGconnector(CPL,positions,axis,h_r,push_rod)
+%%   [SG] = SGconnector(CPL,CPL_holes,positions,angle_p,length_p,h_r,tool_radius,flags)
 %	=== INPUT PARAMETERS ===
-%	CPL:                CPL for connector
-%   CPL_following:      CPL of following elements
+%	CPL:                CPL of sections to connect
+%   CPL_holes:          CPL of holes of sections to connect
 %	positions:          2xn vector of hole positions
-%	axis:               2xn vector of axis
-%	h_r:                radius of hole for actuator rope
-%   end_cap:            Set 1 to generate a end cap
-%   hinge_width_b:      hinge width bottom
-%   hinge_width_t:      hinge width top
-%   single:             single actuator
-%   side_stabi:         0 = No stabi 1 = bot; 2 = top
-%   cut_orientation:    'x' or 'y' default 'x'
-%	=== OUTPUT RESULTS ======
+%	angle_p:            2x2 Vector cotaining orientation of sections to connect [xy-Angle, optimization]
+%	length_p:           3x2 Vector containing hinge parameters of sections to connect [Hinge_width, Mininum length of hinge, hinge_height]
+%   h_r:                Radius of Bowdencable
+%   tool_radius:        Radius of tool
+%   === FLAGS ==============              
+%   'end_cap':          Creates Connector with only bottom hinge;
+%   'single':           Create Connector with only one Bowdencable per section; 
+%   'crimp':            Creates slots for crimp connections; 
+%   'x'/'y':            Orientation of slots for non crimp connection;   
+%	=== OUTPUT RESULTS =====
 %	SG:         SG of connector element
-function [SG] = SGconnector(CPL,CPL_holes,positions,angle_p,h_r,tool_radius,varargin)
-%%
-hinge_width_b = 1.2;    if nargin>=7 && ~isempty(varargin{1}); hinge_width_b = varargin{1}; end
-hinge_width_t = 1.2;    if nargin>=8 && ~isempty(varargin{2}); hinge_width_t = varargin{2}; end
-min_len = [1,1];        if nargin>=9 && ~isempty(varargin{3}); min_len = varargin{3}; end
-height_b = 0.5;         if nargin>=10 && ~isempty(varargin{4}); height_b = varargin{4}; end
-height_t = 0.5;         if nargin>=11 && ~isempty(varargin{5}); height_t = varargin{5}; end
-flags = {};             if nargin>=12 && ~isempty(varargin{6}); flags = varargin{6}; end
-
+function [SG] = SGconnector(CPL,CPL_holes,positions,angle_p,length_p,h_r,tool_radius,varargin)
+flags = {}; if nargin>=8 && ~isempty(varargin{1}); flags = varargin{1}; end
 cut_orientation = 'y'; single = 0; end_cap = 0; crimp = 1;
+
 for f=1:size(flags,2)
    switch flags{f}
        case 'end_cap'
            end_cap = 1;
+           length_p(2,3) = 0;
        case 'single'
            single = 1;
            crimp = 0;
@@ -75,8 +71,7 @@ for k=1:size(positions{1},1)
 end
 
 
-if crimp
-   
+if crimp   
     if size(positions,2) == 2
         for k=1:size(positions{2},1)
             angle2 = atan2(positions{2}(k,1),positions{2}(k,2));
@@ -134,15 +129,15 @@ SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 
 %% add hinge
 
-SG_hinge = SGhingeround(min_len,hinge_width_b,height_b);
+SG_hinge = SGhingeround(length_p(1,2),length_p(1,1),length_p(1,3));
 SG_hinge_b = SGtransR(SG_hinge,rotz(angle_p(1,1)));
-[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,angle_p(1,1),angle_p(1,2),hinge_width_b,min_len,height_b);
+[SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,angle_p(1,1),angle_p(1,2),length_p(1,1),length_p(1,2),length_p(1,3));
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
 offset_t =0;
 if ~end_cap
-    SG_hinge_t = SGhingeround(min_len,hinge_width_t,height_t);
+    SG_hinge_t = SGhingeround(length_p(1,2),length_p(2,1),length_p(2,3));
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(angle_p(2,1)));
-    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,angle_p(2,1),angle_p(2,2),hinge_width_t,min_len,height_t);
+    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,angle_p(2,1),angle_p(2,2),length_p(2,1),length_p(1,2),length_p(2,3));
     SG_hinge_b = SGunder(SG_hinge_b,SG);
     SG_hinge_t = SGontop(SG_hinge_t,SG);
     SG = SGcat(SG_hinge_b,SG_hinge_t,SG);
@@ -154,8 +149,8 @@ end
 e_dir_f = -[sind(angle_p(2,1)) cosd(angle_p(2,1))];
 e_dir_b = [sind(angle_p(1,1)) cosd(angle_p(1,1))];
 
-H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t*e_dir_f';((height_SG/2)+height_t)]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b*e_dir_b';(-(height_SG/2)-height_b)]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t*e_dir_f';((height_SG/2)+length_p(2,3))]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b*e_dir_b';(-(height_SG/2)-length_p(1,3))]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);

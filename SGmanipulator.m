@@ -1,13 +1,30 @@
-%%   [SG]=SGmanipulator(CPL,tool_r,M_paras)
+%%   [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,flags) 
 %	=== INPUT PARAMETERS ===
-%	CPL_out:        CPL of outer contour of elements
-%   tool_r:         tool hole at [0 0] with radius tool_r
-%	M_paras:        3xn Vector of DoFs [direction_angle total_angle offset]
-%   length_p:       2xn Vector section length [section_length element_height]
-%   flags:          'single';'sensor_channel','side_stabi','first_single'
-%	=== OUTPUT RESULTS ======
-%	SG:         SG of Manipulator
-%   SGc:        SGTchain of Manipulator
+%	CPL_out:            Nested Cell list with CPLs of every Section
+%   tool_d:             1xn Array of diameters of tools used per arm
+%	angle_p:            Nested cell list with nx4 matrices containing angle information per section [xy-angle,positive_angle,negative_angle,optimization_p]
+%                       optimization_p: 1/-1 moving hinge to edges; 2 Creating 2 axis section
+%   length_p:           Nested celllist with nx5 matrices containing length information per section [section_length element_height,hinge_width,hinge_length,hinge_height]
+%   === FLAGS ==============
+%   'single'            Creates Manipulator with push-pull Configuration
+%   'first_single'      Creates Manipulator with double-pull COnfiguration and first section as single pull
+%   'optic_mid'         Creates a channel for a rigid optic in the middle
+%   'optic_top'         Creates a channel for a rigid optic on top
+%   'optic_radius'      Following value defines radius for optic channel
+%   'length'            Sets the length of the rigid base
+%   'seal'              Adds a seal 
+%   'torsion'           Optimizes channels for torsion
+%   'bottom_up'         Starts channel optimization at the bottom of the arms
+%   'angles'            Following matrix sets angles of SGTchain in percent
+%   'hole_radius'       Sets Bowdencable radius
+%   'symmetric'         Creates symmetric two armed manipulator based on one arm definition
+%   'radial'            Radial placement of arms
+%   'sensor_channel':   Creates a sesor channel for EMT
+%   'side_stabi':       Creating side stabilizing elements
+%   'tip':              Creates only arms with minimal base
+%	=== OUTPUT RESULTS =====
+%	SG:                 SG of Manipulator
+%   SGc:                SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 base_length = 7;optic_radius = 3;hole_r = 0.7; num_arms = 2;
 angle_defaults = [90 90 0];
@@ -98,8 +115,6 @@ else
         CPL_in{end+1} =  PLcircle(tool_r(i),tool_r(i)*20);
     end
 end
-
-% num_sections = size(angle_p,1)/num_arms;
 for i=1:num_arms
     
     if symmetric && i > 1 
@@ -113,16 +128,9 @@ for i=1:num_arms
     CPLs{end+1} = CPLs_temp;
 end                         
 %% Initializing arrays and variables
-arms = {};
-SG_elements = {};
-offsets = {};
-CPL_combis = {};
-ranges = [];
-CPLs_holes = {};
-positions = {};
-SG_conns = {};
-length_p_temp = length_p; length_p = {};
-angle_p_temp = angle_p; angle_p = {};
+length_p_temp = length_p;
+angle_p_temp = angle_p; 
+[arms,SG_elements,CPL_combis,CPLs_holes,offsets,positions,SG_conns,angle_p,length_p] = deal({});
 start =1; ende = num_sections(1);
 for i=1:num_arms          
     length_p{end+1} = length_p_temp(start:ende,:);    
@@ -140,24 +148,25 @@ disp("Bowden cable channels created");
 for k=1:num_arms
     SG_elements_temp = {}; 
     offsets_temp = [];
-    SG_bottom = SGelements(CPLbool('-',CPLs{k}{1},CPLs_holes{k}{1}),angle_p{k}(1,[1,4]),length_p{k}(1,3),length_p{k}(1,3),length_p{k}(1,4),length_p{k}(1,5),'bottom_element');
+    SG_bottom = SGelements(CPLbool('-',CPLs{k}{1},CPLs_holes{k}{1}),angle_p{k}(1,[1,4]),length_p{k}(1,2:5),'bottom_element');
     SG_conns_temp = {SG_bottom};
     for i=1:num_sections(k)
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
         if i==1 CPL_combis{end+1} = CPL_combined; end
         if i == num_sections(k)   %% Top of arms
             if single == 1
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap' 'single'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap' 'single'});
             else
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],hole_r,tool_r(k),length_p{k}(i,3),'',length_p{k}(i,4),length_p{k}(i,5),'',{'end_cap'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap'});
             end
             SG_conn_temp.hole_positions = positions(end,:);
         else
-            SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
+            SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),length_p{k}(i:i+1,3:5),hole_r,tool_r(k),c_inputs);
+%             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
             SG_conn_temp.hole_positions = positions{k}(i:i+1);
         end
         
-        [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,3),length_p{k}(i,2),length_p{k}(i,4),length_p{k}(i,5));
+        [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,2:5));
         if size(SG_ele_temp,2) == 1
             if i == num_sections(k)
                 SG_ele_temp.hole_positions = positions{k}(end);
@@ -177,12 +186,12 @@ end
 
 
 %% Calculating number of elements && adding stops
-ele_num = {};
+[ele_num,angles_sections] = deal({});
+ranges = [];
 for k = 1:num_arms
     length_p{k} = [0 0 0 0 0;length_p{k};0 0 0 0 0];
     angle_p{k} = [0 0 0 0;angle_p{k};0 0 0 0];
 end
-angles_sections = {};
 for k = 1:num_arms
     ele_num_temp = [];
     angles_sections_temp = [];
