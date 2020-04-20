@@ -99,16 +99,16 @@ CPL_only_holes = CPLselectinout(CPL_base,1);
 CPL_holes = CPLbool('+',CPL_only_holes,CPL_optic);
 CPL_out = CPLconvexhull(CPL_base);
 CPL = CPLbool('-',CPL_out,CPL_holes);
-
-for i=1:num_arms
-    PL_crimp_holes = PLtrans(PLcircle(1.2),-first_positions(i,:));
-    if ~single
-        PL_crimp_holes = [PL_crimp_holes;NaN NaN;PLtransR(PL_crimp_holes,rot(pi))];
-    end
-    PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(1,:));
-    PL_crimp_holes = PLtransR( PL_crimp_holes,rot((i-1)*(2*pi)/size(edges,1)));    
-    CPL = CPLbool('-',CPL,PL_crimp_holes);
-end
+% 
+% for i=1:num_arms
+%     PL_crimp_holes = PLtrans(PLcircle(1.2),-first_positions(i,:));
+%     if ~single
+%         PL_crimp_holes = [PL_crimp_holes;NaN NaN;PLtransR(PL_crimp_holes,rot(pi))];
+%     end
+%     PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(1,:));
+%     PL_crimp_holes = PLtransR( PL_crimp_holes,rot((i-1)*(2*pi)/size(edges,1)));    
+%     CPL = CPLbool('-',CPL,PL_crimp_holes);
+% end
 
 
 

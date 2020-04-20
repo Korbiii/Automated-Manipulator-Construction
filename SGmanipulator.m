@@ -26,7 +26,7 @@
 %	SG:                 SG of Manipulator
 %   SGc:                SGTchain of Manipulator
 function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-base_length = 7;optic_radius = 3;hole_r = 0.7; num_arms = 2;
+base_length = 7;optic_radius = 2.2;hole_r = 0.7; num_arms = 2;
 angle_defaults = [90 90 0];
 length_defaults = [2 1 0.25 0.5];
 angles = []; c_inputs = {}; CPLs = {};
