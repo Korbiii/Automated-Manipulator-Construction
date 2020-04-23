@@ -1,7 +1,7 @@
 %%   [SG] = SGmanipulatorbase(CPL,middle_tool_r,tool_pos)
 %	=== INPUT PARAMETERS ===
 %	CPL:            CPL of bottomelements
-%   CPL_out:        CPL of outer contour of elements 
+%   CPL_out:        CPL of outer contour of elements
 %   tool_radius:    Radius for tool
 %   tool_pos:       0: middle 1: top
 %	=== OUTPUT RESULTS ======
@@ -23,53 +23,55 @@ CPL_optic = [];
 if optic_channel ~= 0
     CPL_optic = PLcircle(optic_radius,optic_radius*20);
     if optic_channel == 1
-        offset = [optic_radius 0];  
+        offset = [optic_radius 0];
     elseif optic_channel == 2
         offset = [0 optic_radius];
     end
 end
 
+
 num_arms = size(CPL,2);
 if ~radial
-    [x1,y1,~,~,~,~] = sizeVL(CPL{1});    
-    CPL{1} = PLtransR(CPL{1},rot(pi));  
-    mid_points = [-x1/2-offset(1)-0.5 offset(2)];
+    [x1,y1,~,~,~,~] = sizeVL(CPL{1});
+    CPL{1} = PLtransR(CPL{1},rot(pi));
+    mid_points = [-x1/2-offset(1) offset(2)];
     CPL{1} = PLtrans(CPL{1},mid_points);
-    if optic_channel == 2  
+    if optic_channel == 2
         CPL{1} = PLtrans(CPL{1},[0 y1/2]);
         mid_points = mid_points + [0 y1/2];
     end
     if size(CPL,2)>1
         [x2,y2,~,~,~,~] = sizeVL(CPL{2});
-        mid_points = [mid_points;x2/2+offset(1)+0.5 offset(2)];
-        CPL{2} = PLtrans(CPL{2},mid_points(2,:));          
-        if optic_channel == 2   
+        mid_points = [mid_points;x2/2+offset(1) offset(2)];
+        CPL{2} = PLtrans(CPL{2},mid_points(2,:));
+        if optic_channel == 2
             CPL{2} = PLtrans(CPL{2},[0 y2/2]);
             mid_points(2,:) = mid_points(2,:)+[0 y2/2];
         end
         if y2<y1
-            CPL{2} = PLtrans(CPL{2},[0 abs(y2-y1)/2]);             
+            CPL{2} = PLtrans(CPL{2},[0 abs(y2-y1)/2]);
             mid_points(2,:) = mid_points(2,:)+[0 abs(y2-y1)/2];
         elseif y2>y1
-            CPL{1} = PLtrans(CPL{1},[0 abs(y2-y1)/2]); 
+            CPL{1} = PLtrans(CPL{1},[0 abs(y2-y1)/2]);
             mid_points(1,:) = mid_points(1,:)+[0 abs(y2-y1)/2];
         end
     end
     if size(CPL,2)>2
-        CPL{3} = PLtransR(CPL{3},rot(pi/2));   
+        CPL{3} = PLtransR(CPL{3},rot(0));
         [~,y3,~,~,~,~] = sizeVL(CPL{3});
-        mid_points = [mid_points;0 max(y1/2,y2/2)+y3/2];
-        CPL{3} = PLtrans(CPL{3},mid_points(3,:)); 
-        if optic_channel == 2   
-            CPL{3} = PLtrans(CPL{3},[0 +offset(2)+0.5+max(y1/2,y2/2)]); 
+        mid_points = [mid_points;0 max(y1/2,y2/2)+y3/4];
+        %         mid_points = [mid_points;0 max(y1/2,y2/2)];
+        CPL{3} = PLtrans(CPL{3},mid_points(3,:));
+        if optic_channel == 2
+            CPL{3} = PLtrans(CPL{3},[0 +offset(2)+0.5+max(y1/2,y2/2)]);
             mid_points(3,:) = mid_points(3,:)+[0 +offset(2)+0.5+max(y1/2,y2/2)];
         end
     end
     if size(CPL,2)>3
         CPL{4} = PLtransR(CPL{4},rot(-pi/2));
-        [~,y4,~,~,~,~] = sizeVL(CPL{4});       
+        [~,y4,~,~,~,~] = sizeVL(CPL{4});
         mid_points = [mid_points;0 -max(y1/2,y2/2)-y4/2];
-        CPL{4} = PLtrans(CPL{4},mid_points(4,:));  
+        CPL{4} = PLtrans(CPL{4},mid_points(4,:));
     end
 else
     edges = []; edges_x = [];
@@ -77,19 +79,19 @@ else
         [~,y_size,~,~,~,~] = sizeVL(CPL{i});
         edges = [edges; y_size];
         edges_x = [edges_x; 0];
-    end 
+    end
     max_size = max(edges);
     radius_poly = max_size/(2*sind(180/size(edges,1)));
     for i=1:num_arms
         CPL{i} = PLtrans(CPL{i},[radius_poly+edges_x(i)/2 0]);
-        CPL{i} = PLtransC(CPL{i},[0 0],rot((i-1)*(2*pi)/size(edges,1)));        
-        mid_points =[mid_points; PLtransC([+radius_poly+edges_x(i)/2 0],[0 0],rot((i-1)*(2*pi)/size(edges,1)))];  
+        CPL{i} = PLtransC(CPL{i},[0 0],rot((i-1)*(2*pi)/size(edges,1)));
+        mid_points =[mid_points; PLtransC([+radius_poly+edges_x(i)/2 0],[0 0],rot((i-1)*(2*pi)/size(edges,1)))];
     end
     
     
 end
 if ~isempty(CPL_optic)
-CPL{end+1} = PLgrow(CPL_optic,0.5);
+    CPL{end+1} = PLgrow(CPL_optic,0.5);
 end
 CPL_base =[];
 for i=1:size(CPL,2)
@@ -99,16 +101,32 @@ CPL_only_holes = CPLselectinout(CPL_base,1);
 CPL_holes = CPLbool('+',CPL_only_holes,CPL_optic);
 CPL_out = CPLconvexhull(CPL_base);
 CPL = CPLbool('-',CPL_out,CPL_holes);
-% 
-% for i=1:num_arms
-%     PL_crimp_holes = PLtrans(PLcircle(1.2),-first_positions(i,:));
-%     if ~single
-%         PL_crimp_holes = [PL_crimp_holes;NaN NaN;PLtransR(PL_crimp_holes,rot(pi))];
-%     end
-%     PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(1,:));
-%     PL_crimp_holes = PLtransR( PL_crimp_holes,rot((i-1)*(2*pi)/size(edges,1)));    
-%     CPL = CPLbool('-',CPL,PL_crimp_holes);
-% end
+
+
+for i=1:num_arms
+    PL_crimp_holes = PLtrans(PLcircle(1.2),-first_positions(i,:));
+    if ~single
+        PL_crimp_holes = [PL_crimp_holes;NaN NaN;PLtransR(PL_crimp_holes,rot(pi))];
+    end
+    
+    if radial
+        PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(1,:));
+        PL_crimp_holes = PLtransR( PL_crimp_holes,rot((i-1)*(2*pi)/size(edges,1)));
+    else
+        if i==1
+            PL_crimp_holes = PLtransC( PL_crimp_holes,[0 0],rot(pi));
+        elseif i==2
+            PL_crimp_holes = PLtransC( PL_crimp_holes,[0 0],rot(2*pi));
+        elseif i==3
+            PL_crimp_holes = PLtransC( PL_crimp_holes,[0 0],rot(2*pi));
+        elseif i ==4
+            PL_crimp_holes = PLtransC( PL_crimp_holes,[0 0],rot(-pi/2));
+        end
+        PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(i,:));
+    end
+    
+    CPL = CPLbool('-',CPL,PL_crimp_holes);
+end
 
 
 
@@ -183,7 +201,7 @@ if seal
     
     SG_bayonett = SGcat(SG_bayo_grip,SG_bayo_bottom,SG_bayo_middle,SG_bayo_top_ring);
     
-    SG = SGcat(SG,SG_add_on_stack);   
+    SG = SGcat(SG,SG_add_on_stack);
     
     
     
@@ -193,8 +211,8 @@ if seal
     SG_seal_cup_bottom = SGofCPLz(CPL_seal_cup_bottom,3);
     SG_seal_cup = SGstack('z',SG_seal_cup_bottom,SG_seal_cup);
     SG_seal_cup = SGtransrelSG(SG_seal_cup,SG,'alignbottom',2);
-
-
+    
+    
 end
 
 
@@ -207,18 +225,18 @@ SG = SGTset(SG,'B',H_b_b);
 H_f_b = [rotx(90)*roty(180) [mid_points(1,:)';height_SG]; 0 0 0 1];
 SG = SGTset(SG,'F',H_f_b);
 if ~radial
-if size(mid_points,1)>1
-    H_f1_b = [rotx(90) [mid_points(2,:)';height_SG]; 0 0 0 1];
-    SG = SGTset(SG,'F1',H_f1_b);
-end
-if size(mid_points,1)>2    
-    H_f2_b = [rotx(90) [mid_points(3,:)';height_SG]; 0 0 0 1];
-    SG = SGTset(SG,'F2',H_f2_b);
-end
-if size(mid_points,1)>3
-    H_f3_b = [rotx(90)*roty(-90) [mid_points(4,:)';height_SG]; 0 0 0 1];
-    SG = SGTset(SG,'F3',H_f3_b);
-end
+    if size(mid_points,1)>1
+        H_f1_b = [rotx(90) [mid_points(2,:)';height_SG]; 0 0 0 1];
+        SG = SGTset(SG,'F1',H_f1_b);
+    end
+    if size(mid_points,1)>2
+        H_f2_b = [rotx(90) [mid_points(3,:)';height_SG]; 0 0 0 1];
+        SG = SGTset(SG,'F2',H_f2_b);
+    end
+    if size(mid_points,1)>3
+        H_f3_b = [rotx(90)*roty(-90) [mid_points(4,:)';height_SG]; 0 0 0 1];
+        SG = SGTset(SG,'F3',H_f3_b);
+    end
 else
     for i=2:num_arms
         H_f_b = [rotx(90)*roty(180)*roty((i-1)*(360/num_arms)) [mid_points(i,:)';height_SG]; 0 0 0 1];
@@ -226,7 +244,7 @@ else
     end
 end
 
- 
+
 if seal
     SG = SGcat(SG,SG_seal_cup);
 end

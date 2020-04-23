@@ -18,6 +18,7 @@ min_len= length_p(:,2);
 CPL_no_go_area = [];
 CPLs = {};
 CPL_holes = [];
+CPL_holes_2 = [];
 positions = {};
 angle_p = flip(angle_p,1);
 CPL_out = flip(CPL_out);
@@ -25,13 +26,15 @@ CPL_in = PLcircle(tool_r);
 min_len = flip(min_len);
 CPL_no_go_areas = {};
 PL_hole = PLcircle(hole_r,40);
+PL_hole_small = PLcircle(0.4);
 %% Generating CPL of area where no holes can go based on axis constraints
 for i=1:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
         if torsion == 0
             CPL_axis_constraint = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) hinge_w(i)/2];
             CPL_axis_constraint = PLtransR(CPL_axis_constraint,rot(deg2rad(angle_p(i,1))));
-            inside = inside2C(CPL_out{i},CPL_axis_constraint);
+            CPL_only_out = CPLselectinout(CPL_out{i},0);
+            inside = inside2C(CPL_only_out,CPL_axis_constraint);
             if (inside(2) ~= 0 || inside(4) ~= 0  || inside(5) ~= 0)
                 error("Not enough room for hinge in section " + i);
             end
@@ -106,16 +109,22 @@ for i=start_value:step:end_value
         CPL_2 = CPLgrow(CPL_in(pos(2)+1:end,:),+0.5+hole_r);
         CPL_i_out = CPLbool('+',CPL_1,CPL_2);
     else
-        CPL_i_out = CPLgrow(CPL_in,+0.5+hole_r);
+        CPL_i_out = CPLgrow(CPL_in,+0.3+hole_r);
     end
     CPL_limit = CPLbool('-',CPL_o_in,CPL_i_out);
     CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_areas{i});
     CPL_limit = CPLbool('-',CPL_limit,CPL_opti_area);
     if ~isempty(CPL_holes)
-        CPL_limit = CPLbool('-',CPL_limit,CPLgrow(CPL_holes,+0.5+hole_r));
+        for u=1:separateNaN(CPL_holes)
+            CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+0.5+hole_r));
+        end
     end
     %% Searching point with furthest distant to axis that still can be mirrored to the other side
-    if angle_p(i,2) == 2 num_iterations = 2; else num_iterations = 1; end
+    if angle_p(i,2) == 2 
+        num_iterations = 2; 
+    else
+        num_iterations = 1;
+    end
     CPL_hole_positions_temp =[];
     for k=1:num_iterations
         
@@ -153,20 +162,32 @@ for i=start_value:step:end_value
         
         if isempty(CPL_holes)
             if single == 1 || (single == 2 && i == size(angle_p,1))
-                CPL_holes = PLtrans(PL_hole,hole_positions(1,:));
+                CPL_holes = PLtrans(PL_hole,hole_positions(1,:));                
+                CPL_holes_2 = PLtrans(PL_hole_small,hole_positions(1,:));
             else
-                CPL_holes = [PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
+                CPL_holes = [PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];                
+                CPL_holes_2 = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
             end
         else
-            if single == 1 || (single == 2 && i == size(angle_p,1))
-                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:))];
+            if single == 1 || (single == 2 && i == size(angle_p,1)) 
+                if k>1                    
+                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))]
+                else
+                    CPL_holes_2 = [CPL_holes;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))];
+                end
+                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:))];           
             else
+                if k>1
+                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                else
+                    CPL_holes_2 = [CPL_holes;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                end
                 CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
             end
         end
         CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
     end
-    CPLs{end+1} = CPL_holes;
+    CPLs{end+1} = CPL_holes_2;
     positions{end+1} = CPL_hole_positions_temp;
 end
 CPLs = flip(CPLs);

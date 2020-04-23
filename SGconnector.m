@@ -103,6 +103,9 @@ else
             offset = positions{1}(1)-width/2+h_r;
         end
         CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(width,sizex*2),[offset 0]));
+        if angle_p(1,2) == 2
+            CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(width,sizex*2),[-offset 0]));
+        end
     else
         width = (sizex/2)-abs(positions{1}(2))+(h_r)+5;
         if positions{1}(2)>0
@@ -111,6 +114,9 @@ else
             offset = positions{1}(2)-width/2+h_r;
         end
         CPL_b_wirechannels = CPLbool('-',CPL_b_wireescape,PLtrans(PLsquare(sizey*2,width),[0 offset]));
+         if angle_p(1,2) == 2
+            CPL_b_wirechannels = CPLbool('-',CPL_b_wirechannels,PLtrans(PLsquare(sizey*2,width),[0 -offset]));
+        end
     end
     
     if positions{1}(1)>0

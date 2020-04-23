@@ -33,7 +33,7 @@ end
 
 
 max_dim = max(sizeVL(CPL_out))+1;
-middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 -offset]),rot(deg2rad(h_dir)));
+middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
 e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
 left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*max_dim)]; % Plane for finding points in positive area
@@ -63,7 +63,7 @@ offset_p = floor((max_distance_right/(max_distance_right+max_distance_left))*500
 right_height = height-(tand(left_angle)*max_distance_left);
 left_height = height-(tand(right_angle)*max_distance_right);
 
-PLcontour = [(linspace(-max_distance_right,max_distance_left,500))+offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
+PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
 
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
 VLcontour = VLtrans(VLcontour,TofR(rotz(-90+h_dir)));
@@ -89,7 +89,7 @@ end
 
 for i=1:size(index_up,1)
     [~,idx] = min(pdist2(SG.VL(index_up(i),1:2),VLcontour_up(:,[1,2])));
-    if distPointLine(middle_axis, SG.VL(index_up(i),1:2))>(hinge_width+0.5)
+    if distPointLine(middle_axis, SG.VL(index_up(i),1:2))>(hinge_width+1)
         SG.VL(index_up(i),3) = VLcontour_up(idx,3);
     end
 end
@@ -98,7 +98,7 @@ end
 if is_connector    
     for i=1:size(index_down,1)
         [~,idx] = min(pdist2(SG_2.VL(index_down(i),1:2),VLcontour_down(:,[1,2])));
-        if distPointLine(middle_axis,SG_2.VL(index_down(i),1:2))>(hinge_width+0.5)
+        if distPointLine(middle_axis,SG_2.VL(index_down(i),1:2))>(hinge_width+1)
             SG_2.VL(index_down(i),3) = VLcontour_down(idx,3);
         end
     end
@@ -106,7 +106,7 @@ if is_connector
 else    
     for i=1:size(index_down,1)
         [~,idx] = min(pdist2(SG.VL(index_down(i),1:2),VLcontour_down(:,[1,2])));
-        if distPointLine(middle_axis,SG.VL(index_down(i),1:2))>(hinge_width+0.5)
+        if distPointLine(middle_axis,SG.VL(index_down(i),1:2))>(hinge_width+1)
             SG.VL(index_down(i),3) = VLcontour_down(idx,3);
         end
     end

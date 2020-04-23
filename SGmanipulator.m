@@ -42,7 +42,7 @@ end
 
 [single,side_stabi,sensor_channel,optic,seal,symmetric,torsion,bottom_up,radial] = deal(0);
 for f=1:size(varargin,2)
-if ~ischar(varargin{f}) continue; end
+if ~ischar(varargin{f}), continue; end
       switch varargin{f}
           case 'single'
               c_inputs{end+1} = 'single';
@@ -203,15 +203,18 @@ for k = 1:num_arms
         phi_left = max(1,(angle_p{k}(i,2)/ele_num_temp(i-1)-1)/2);
         phi_right = max(1,(angle_p{k}(i,3)/ele_num_temp(i-1)-1)/2);
         if angle_p{k}(i,4) == 2
-            SG_el = SGstops(flip(SG_elements{k}{i-1}),CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
-            SG_el = SGstops(flip(SG_el'),CPL_out{k}{i-1},angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i-1,[3,5]),3,1));
-            SG_elements{k}{i-1} = SG_el;            
-        else
-            SG_el = SGstops(SG_elements{k}{i-1},CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
+            SG_el = SGstops(flip(SG_elements{k}{i-1}),CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
+            SG_el = SGstops(flip(SG_el'),CPL_out{k}{i-1},angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
             SG_elements{k}{i-1} = SG_el;
+             [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
+      
+        else
+            SG_el = SGstops(SG_elements{k}{i-1},CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
+            SG_elements{k}{i-1} = SG_el;
+             [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
+      
         end
-        [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
-        SG_conns{k}{i-1} = SG_con{1};
+         SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
         if angle_p{k}(i,4) == 2
             

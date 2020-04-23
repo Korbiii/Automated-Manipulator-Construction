@@ -1,4 +1,4 @@
-clear; clf;
+clear all; clf;
 addpath('Essentials');
 path = prefdir; path = strsplit(path, '\');path{7} = 'MATLAB Add-Ons\Toolboxes\SolidGeometry 4.7'; path = strjoin(path(1:7),'\'); addpath(path);
 axis equal; hold on;
@@ -41,9 +41,24 @@ CPL_o = PLtrans0(PLtransR(PLcircleoval(4,'',5),rot(pi/2)));
 
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3},{PLcircle(5)},{CPL_o}},[6;4;4.5;3],{[90 75 75 1;0 90 90 0;90 80 80 0],[90 20 20 0;0 60 60 0;90 50 50 0],[0 20 20 -1;0 50 50 2],[90 20 20 0;0 90 90 0;90 50 50 0]},{[27;30;55],[10;10;10],[10;20],[10;20;25]},'angles',[-0.5 0 1;-0.5 0 0;0.5 0.8 0;-0.5 0 0.5],'num_arms',4,'bottom_up','optic_mid','single');
 % [SGm,SGc,ranges] = SGmanipulator({CPL;CPL2},[6],{[45 75 75 1;-50 90 90 0;33 80 80 0]},{[27;30;55]},'angles',[-0.5 0 1],'bottom_up','single','optic_mid');
-% [SGm,SGc,ranges] = SGmanipulator({PLcircle(10)},[0],{[90 75 75 2]},{[27]},'angles',[-0.5],'bottom_up','crimp');
-% [SGm,SGc,ranges] = SGmanipulator({CPL3},[1],{[90 75 75 0;90 75 75 0]},{[27;27]},'angles',[-0.5 0],'bottom_up','crimp');
-[SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(4.4)}},[6;4;3.5],{[90 75 75 1;0 90 90 0;90 80 80 0],[90 20 20 0;0 60 60 0;90 50 50 0],[0 20 20 -1;0 50 50 2]},{[27;30;55],[27;30;55],[20;40]},'optic_mid','angles',[-0.5 0 1;-0.5 0 0;0.5 0.8 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.7);
+
+[SGm,SGc,ranges] = SGmanipulator({CPL3},[1],{[90 75 75 0;90 75 75 0]},{[27;27]},'angles',[-0.5 0],'bottom_up','crimp','optic_mid');
+% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(4.2)}},[6;6;3.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[20 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.5 0 0;-0.5 0 0;0 0 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.7,'optic_radius',2.2);
+% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(3.75)}},[6;6;1.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[20 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.3 0 0;-0.3 0 0;0 0 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.7,'optic_radius',2.2);
+% 
+% CPL_endoskop = [PLcircle(6);NaN NaN;PLtrans(PLcircle(1.4),[-4 0]);NaN NaN;PLtrans(PLcircle(1.4),[4 0])];
+% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[7.5/2],{[45 180 180 2]},{[60]},'angles',[0],'bottom_up','single','tip');
+
+%  CPL_endoskop = [PLcircle(3.5);NaN NaN;PLtrans(PLcircle(0.75),[-2 0])];
+% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[1.5],{[45 180 180 2]},{[40 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
+% 
+
+% [SGm,SGc,ranges] = SGmanipulator({PLcircle(3.3)},[3],{[45 180 180 2]},{[30 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
+
+% [SGm,SGc,ranges] = SGmanipulator({PLcircle(35)},[6],{[45 180 180 0]},{[250 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
+
+
+
 % n=104;[SGm,SGc,ranges] = SGmanipulator(repmat({{PLcircle(5)},{PLcircle(5)}},1,n/2),repelem(4.5,n,1),repmat({[90 20 20 1;0 50 50 2]},1,n),repmat({[10;20],[12;20],[15;20],[12;20]},1,n/4),'angles',repmat([-0.9 0],n,1),'radial','num_arms',4,'bottom_up','single');
 SGwriteSTL(SGm,"SGmanipulator",'','y');
 % 

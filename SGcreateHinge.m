@@ -85,9 +85,13 @@ if abs(hinge_opti) == 1
         end
     end
     if offset>0
-        offset = (offset-(hinge_width/2));
+        PL_offsetline_mid_hinge = PLtrans(PL_offsetline,e_dir_(2,:)*rot(pi/2)*((hinge_width/2)));
+        offset = (offset-(hinge_width/2));        
         SG_hinge = SGtrans(SG_hinge,[e_dir_(1,:)*rot(pi/2)*offset 0]);
-        if hinge_opti > 0; offset = -offset; end
+        leftOf = leftOfLine(PL_offsetline_mid_hinge,[0 0]);
+        if leftOf
+            offset = -offset; 
+        end
     else
         error("Not enough space for hinge");
     end
