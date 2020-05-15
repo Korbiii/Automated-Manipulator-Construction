@@ -215,14 +215,12 @@ if seal
     
 end
 
-
-
+SG = SGofCPLz(PLcircle(0.1),0.1);
 %% Add Frames
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
-
 H_b_b = [rotx(0) [0;0;0]; 0 0 0 1];
 SG = SGTset(SG,'B',H_b_b);
-H_f_b = [rotx(90)*roty(180) [mid_points(1,:)';height_SG]; 0 0 0 1];
+H_f_b = [rotx(90)*roty(0) [mid_points(1,:)';height_SG]; 0 0 0 1];
 SG = SGTset(SG,'F',H_f_b);
 if ~radial
     if size(mid_points,1)>1

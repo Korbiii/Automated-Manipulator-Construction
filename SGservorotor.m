@@ -7,6 +7,7 @@
 %   SG:            	SG of rotordisk with servomount
 function [SG] = SGservorotor(rotor_radius,SG_connector,screw_h,varargin)
 name = 0; if nargin>=4 && ~isempty(varargin{1}); name=varargin{1}; end
+click = 0; if nargin>=5 && ~isempty(varargin{2}); click=varargin{2}; end
 CPL_screw_circle= [];
 if ~isempty(screw_h) 
     CPL_screw_circle = PLholePattern(screw_h(1),screw_h(2),screw_h(3)); 
@@ -15,6 +16,7 @@ else
     screw_head_s = 10;
 end
 
+PL_click = PLtransR(PLsquare(click+0.2),rot(pi/4));
 
 SG_text = {SGoftext("SM40BL",[10 4 1]),SGoftext("SM85CL",[10 4 1]),SGoftext("SM120BL",[10 4 1])};
 
@@ -31,14 +33,14 @@ endp = pi;
 if ~isempty(CPL_screw_circle)
     PL_base_layer = [PLcircle(1.75);NaN NaN;PLcircle(base_r);NaN NaN;CPL_screw_circle];    
     PL_base_layer = CPLbool('-',PL_base_layer,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
-    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest));
-    SG_base_layer = SGofCPLz(PL_base_layer,1.5);
+    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest))
 else
     PL_base_layer = PLcircle(base_r);
     PL_base_layer = CPLbool('-',PL_base_layer,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
-    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest));
-    SG_base_layer = SGofCPLz(PL_base_layer,1.5);
+    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest));    
 end
+ PL_base_layer = CPLbool('-',PL_base_layer,PL_click);
+SG_base_layer = SGofCPLz(PL_base_layer,1.5);
 if ~isempty(SG_connector)
 SG_base_layer = SGcat(SGunder(SG_connector,SG_base_layer),SG_base_layer);
 end
@@ -46,6 +48,7 @@ end
 
 
 PL_rope_layer = [PLcircseg(rotor_radius,'',startp,endp);flip(PLcircseg(screw_head_s,'',startp,endp))];
+
 
 PL_rope_ramp_cutout = [-r_mid_pos+0.5 0;-r_mid_pos+1 r_mid;-r_mid_pos-1 r_mid;-r_mid_pos-0.5 0];
 PL_rope_ramp_cutout = CPLbool('+',PL_rope_ramp_cutout,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
@@ -60,6 +63,7 @@ PL_rope_layer = CPLbool('-',PL_rope_layer,PLcircle(screw_h(3)));
 PL_rope_layer = CPLbool('-',PL_rope_layer,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
 PL_rope_layer = CPLbool('-',PL_rope_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest));
 
+PL_rope_layer = CPLbool('-',PL_rope_layer,PL_click);
 SG_rope_layer = SGofCPLz(PL_rope_layer,2);
 SG = SGcat(SG_base_layer,SGontop(SG_rope_layer,SG_base_layer));
 
@@ -73,6 +77,7 @@ PL_top_layer = [PLcircle(screw_head_s);NaN NaN;PLcircle(rotor_radius+2);NaN NaN;
 PL_top_layer = CPLbool('+',PL_top_layer,PLcircle(screw_head_s));
 PL_top_layer = CPLbool('-',PL_top_layer,PLholePattern(screw_h(1),screw_h(2),screw_h(3)+1));
 PL_top_layer = CPLbool('-',PL_top_layer,PLcircle(screw_h(3)+1));
+PL_top_layer = CPLbool('-',PL_top_layer,PL_click);
 SG_top_layer = SGofCPLz(PL_top_layer,1.5);
 SG = SGcat(SG,SGontop(SG_top_layer,SG),SG_rope_ramp);
 

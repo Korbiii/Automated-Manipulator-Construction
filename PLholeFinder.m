@@ -9,9 +9,9 @@
 %	CPLs:         SG of Manipulator
 %	positions:    2xn vector of positions of holes
 function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,angle_p,length_p,hole_r,varargin)
-single = 0; if nargin>=5 && ~isempty(varargin{1}); single=varargin{1}; end
-torsion = 0; if nargin>=6 && ~isempty(varargin{2}); torsion=varargin{2}; end
-bottom_up = 0; if nargin>=7 && ~isempty(varargin{3}); bottom_up=varargin{3}; end
+single = 0; if nargin>=6 && ~isempty(varargin{1}); single=varargin{1}; end
+torsion = 0; if nargin>=7 && ~isempty(varargin{2}); torsion=varargin{2}; end
+bottom_up = 0; if nargin>=8 && ~isempty(varargin{3}); bottom_up=varargin{3}; end
 %% Initializing
 hinge_w = length_p(:,1)+(2*length_p(:,3));
 min_len= length_p(:,2);
@@ -102,19 +102,26 @@ for i=start_value:step:end_value
         end
     end
     %% Generating CPL of points where holes currently can go
-    CPL_o_in = CPLgrow(CPL_out{i},-0.7-hole_r);
-    [~,pos]=separateNaN(CPL_in);
-    if size(pos,1) > 2
-        CPL_1 = CPLgrow(CPL_in(1:pos(2)-1,:),-0.5-hole_r);
-        CPL_2 = CPLgrow(CPL_in(pos(2)+1:end,:),+0.5+hole_r);
-        CPL_i_out = CPLbool('+',CPL_1,CPL_2);
-    else
-        CPL_i_out = CPLgrow(CPL_in,+0.3+hole_r);
-    end
-    CPL_limit = CPLbool('-',CPL_o_in,CPL_i_out);
+    CPL_hull = flip(CPLconvexhull(CPL_out{i}));
+    CPL_hull_stamp = CPLgrow(CPL_hull,-0.2);
+    CPL_inner_CPLs = CPLbool('-',CPL_hull_stamp,CPL_out{i});
+    CPL_o_in = CPLgrow(CPL_hull,-0.7-hole_r);
+    CPL_all_in = [CPL_in;NaN NaN;flip(CPL_inner_CPLs)];
+%     [~,pos]=separateNaN(CPL_all_in);
+%     if size(pos,1) > 2
+%         CPL_1 = CPLgrow(CPL_all_in(1:pos(2)-1,:),-0.5-hole_r);
+%         CPL_2 = CPLgrow(CPL_all_in(pos(2)+1:end,:),+0.5+hole_r);
+%         CPL_i_out = CPLbool('+',CPL_1,CPL_2);
+%     else
+%         CPL_i_out = CPLgrow(CPL_all_in,+0.3+hole_r);
+%     end
+    CPL_limit = CPL_o_in;
     CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_areas{i});
     CPL_limit = CPLbool('-',CPL_limit,CPL_opti_area);
-    if ~isempty(CPL_holes)
+     for u=1:separateNaN(CPL_all_in)
+            CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_all_in,u),+0.5+hole_r));
+     end
+        if ~isempty(CPL_holes)
         for u=1:separateNaN(CPL_holes)
             CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+0.5+hole_r));
         end
@@ -171,7 +178,7 @@ for i=start_value:step:end_value
         else
             if single == 1 || (single == 2 && i == size(angle_p,1)) 
                 if k>1                    
-                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))]
+                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))];
                 else
                     CPL_holes_2 = [CPL_holes;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))];
                 end

@@ -34,6 +34,11 @@ SG_act = SGcat(SGbox([25,60,18]),SGtrans(SGbox([17,24,12]),[0 42 0]));
 SG_act = SGtransrelSG(SG_act,SG_fork,'alignbottom','alignback',-5);
 SG_servo = SGbox(servo_d);
 SG_servo = SGtransrelSG(SG_servo,SG_gear,'centerx',16,'centery','under',2);
+
+SGwriteSTL(SG_sledge,"SG_sledge",'','y');
+SGwriteSTL(SG_gear,"SG_gear",'','y');
+SGwriteSTL(SG_sledge,"SG_sledge",'','y');
+
 SG = SGcat(SG_sledge,SG_base,SG_fork,SG_act,SG_sledge_gear_rack,SG_gear,SG_servo);
 
 

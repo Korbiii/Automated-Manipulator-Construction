@@ -12,6 +12,7 @@ else
     is_connector = 0;
     SG = SGs;
 end
+offset = -offset;
 
 if h_dir <= 0 
 %     offset = -offset;
@@ -33,7 +34,7 @@ end
 
 
 max_dim = max(sizeVL(CPL_out))+1;
-middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(h_dir)));
+middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offset]),rot(deg2rad(180-h_dir)));
 e_dir = (middle_axis/norm(middle_axis))*rot(pi/2);
 e_dir = (e_dir(1,:)-e_dir(2,:))/norm(e_dir(1,:)-e_dir(2,:));
 left_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*10*max_dim)]; % Plane for finding points in positive area
@@ -66,7 +67,7 @@ left_height = height-(tand(right_angle)*max_distance_right);
 PLcontour = [(linspace(-max_distance_right,max_distance_left,500))-offset;linspace(left_height,height,offset_p) linspace(height,right_height,500-offset_p)]';
 
 VLcontour = [PLcontour(:,1) zeros(size(PLcontour,1),1) PLcontour(:,2) ]; %create  VLcontour to plot it in vertical plane (x-z-plane)
-VLcontour = VLtrans(VLcontour,TofR(rotz(-90+h_dir)));
+VLcontour = VLtrans(VLcontour,TofR(rotz(90-h_dir)));
 [~,max_row] = max(VLcontour);
 dist_hinge = distPointLine(middle_axis,VLcontour(max_row(3),1:2));
 if dist_hinge>0.1 

@@ -13,6 +13,11 @@ CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
 % CPL = PLtrans(PLkidney(9.5,14.5,pi/5.5),[-12.5 0]);
 % CPL2 = PLtrans(PLkidney(7,11,pi/4.5),[-9 0]);
 % CPL3 = PLtrans(PLkidney(7,11,pi/7),[-9 0]);
+% 
+% CPL_m = PLmirror0(CPL,'x',0.25);
+% CPL2_m = PLmirror0(CPL2,'x',0.1);
+% CPL3_m = PLmirror0(CPL3,'x',0.05);
+
 
 
 %% Ovals
@@ -30,8 +35,10 @@ CPL_o = PLtrans0(PLtransR(PLcircleoval(4,'',5),rot(pi/2)));
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'single','optic_radius',3,'optic_top','length',60,'bottom_up'); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 60 0 1;0 90 90 0;90 10 270 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'first_single','optic_radius',3,'optic_top','length',100,'bottom_up','seal'); %% Aktuellen Manipulator ausgeben
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 50 0 1;0 90 90 0;90 100 180 0],[27 4 1.2 2 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],'symmetric','first_single','optic_radius',3,'length',140,'optic_top','bottom_up','angles',[-0.6,0,0;-0.6,0,0]); %% Aktuellen Manipulator ausgeben
-% [SGm,SGc,ranges] = SGmanipulator({CPL;CPL2;CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_r',0.4); %% MiniPushpull
+% [SGm,SGc,ranges] = SGmanipulator({CPL;CPL2;CPL3},3,[90 75 75 -1;0 90 90 0;90 90 180 -1],[10 1 0.8 0.25 1;14 1 0.8 0.25 0.5;20 1 0.8 0.25 0.5],'single','tip','optic_mid','optic_radius',5,'bottom_up','hole_r',0.4); %% MiniPushpull
 % [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90;0;90],[27;30;55],'symmetric');
+
+% [SGm,SGc,ranges] = SGmanipulator({{CPL_m;CPL2_m;CPL3_m},{CPL;CPL2;CPL3}},[3;3],{[90 75 75 1;0 90 90 0;90 90 180 1],[90 75 75 -1;0 90 90 0;90 90 180 -1]},{[10 1 0.8 0.1 1;14 1 0.8 0.1 0.5;20 1 0.8 0.1 0.5],[10 1 0.8 0.1 1;14 1 0.8 0.1 0.5;20 1 0.8 0.1 0.5]},'single','tip','optic_mid','optic_radius',5,'bottom_up','torsion','hole_radius',0.4); %% MiniPushpull
 
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3}},[6;4],{[90 75 75 -1;0 90 90 0;90 90 180 0],[0 20 20 1;90 90 90 0;0 50 50 0]},{[27;30;55],[10;10;10]},'num_arms',2,'bottom_up','first_single','angles',[-0.5,-0.5,0.5;-0.9,-0.5,0.5]);
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3}},[6;4],{[90 75 75 1;0 90 90 0;90 120 120 2],[0 20 20 0;90 90 90 0;0 50 50 0]},{[27;30;55],[10;10;10]},'num_arms',2,'bottom_up','first_single','angles',[0 0 1;0 0 0 ],'optic_top');
@@ -42,21 +49,28 @@ CPL_o = PLtrans0(PLtransR(PLcircleoval(4,'',5),rot(pi/2)));
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3},{PLcircle(5)},{CPL_o}},[6;4;4.5;3],{[90 75 75 1;0 90 90 0;90 80 80 0],[90 20 20 0;0 60 60 0;90 50 50 0],[0 20 20 -1;0 50 50 2],[90 20 20 0;0 90 90 0;90 50 50 0]},{[27;30;55],[10;10;10],[10;20],[10;20;25]},'angles',[-0.5 0 1;-0.5 0 0;0.5 0.8 0;-0.5 0 0.5],'num_arms',4,'bottom_up','optic_mid','single');
 % [SGm,SGc,ranges] = SGmanipulator({CPL;CPL2},[6],{[45 75 75 1;-50 90 90 0;33 80 80 0]},{[27;30;55]},'angles',[-0.5 0 1],'bottom_up','single','optic_mid');
 
-[SGm,SGc,ranges] = SGmanipulator({CPL3},[1],{[90 75 75 0;90 75 75 0]},{[27;27]},'angles',[-0.5 0],'bottom_up','crimp','optic_mid');
-% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(4.2)}},[6;6;3.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[20 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.5 0 0;-0.5 0 0;0 0 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.7,'optic_radius',2.2);
+% [SGm,SGc,ranges] = SGmanipulator({CPL3},[1],{[88 75 75 -1;33 75 75 1]},{[27;27]},'angles',[-0.9 -0.9],'bottom_up','crimp','optic_mid');
+% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(4.2)}},[6;6;3.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[20 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.5 0 0;-0.5 0 0;0 0 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.8,'optic_radius',2.2);
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(3.75)}},[6;6;1.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[20 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.3 0 0;-0.3 0 0;0 0 0],'num_arms',4,'bottom_up','first_single','hole_radius',0.7,'optic_radius',2.2);
-% 
-% CPL_endoskop = [PLcircle(6);NaN NaN;PLtrans(PLcircle(1.4),[-4 0]);NaN NaN;PLtrans(PLcircle(1.4),[4 0])];
-% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[7.5/2],{[45 180 180 2]},{[60]},'angles',[0],'bottom_up','single','tip');
+
+% CPL_endoskop = [PLcircle(8.5);NaN NaN;PLtrans(PLcircle(1.4),[-6 0]);NaN NaN;PLtrans(PLcircle(1.4),[6 0])];
+% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[7.5],{[45 270 270 2]},{[120 2 0.8 0.25 0.5]},'angles',[0],'bottom_up','single','tip');
 
 %  CPL_endoskop = [PLcircle(3.5);NaN NaN;PLtrans(PLcircle(0.75),[-2 0])];
-% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[1.5],{[45 180 180 2]},{[40 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
+% [SGm,SGc,ranges] = SGmanipulator({CPL_endoskop},[1.5],{[45 360 360 2]},{[80 2 0.5 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
 % 
 
-% [SGm,SGc,ranges] = SGmanipulator({PLcircle(3.3)},[3],{[45 180 180 2]},{[30 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
+% [SGm,SGc,ranges] = SGmanipulator({PLcircle(3.3)},[3],{[45 360 360 2]},{[60 2 0.5 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
 
 % [SGm,SGc,ranges] = SGmanipulator({PLcircle(35)},[6],{[45 180 180 0]},{[250 2 0.8 0.25 0.5]},'angles',[-0],'bottom_up','single','tip','hole_radius',0.4);
 
+
+CPL_G = load('C:\Users\Korbi\Desktop\CPL_G_7mm.mat');
+CPL_G = CPL_G.CPL_G;
+CPL_G = CPLbool('+',CPL_G,PLcircle(3.8));
+% CPL_G_in = CPLselectinout(CPL_G,1);
+CPL_G_out = CPLselectinout(CPL_G,0);
+[SGm,SGc,ranges] = SGmanipulator({flip(CPL_G)},[7],{[45 270 270 2]},{[40 2 0.8 0.25 0.5]},'angles',[0],'bottom_up','tip');
 
 
 % n=104;[SGm,SGc,ranges] = SGmanipulator(repmat({{PLcircle(5)},{PLcircle(5)}},1,n/2),repelem(4.5,n,1),repmat({[90 20 20 1;0 50 50 2]},1,n),repmat({[10;20],[12;20],[15;20],[12;20]},1,n/4),'angles',repmat([-0.9 0],n,1),'radial','num_arms',4,'bottom_up','single');
@@ -97,7 +111,7 @@ SG_connector_SM120 =SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0
 % SGplot(SGboxinlay);
 % SGwriteSTL(SGboxinlay);
 % SGplot(SGmanipulatorBox(3,[1,2],2));
-% SGplot(SGmanipulatorBoxSimple([60]));
+% SGplot(SGmanipulatorBoxSimple([60 60 120]));
 % SGplot(SGpushpullmountSM85BL);
-% SGwriteSTL(SGpushpullmountSM40CL(SG_connector_SM40),"SG-pushpullmount");
+% SGwriteSTL(SGpushpullmountSM40CL2(SG_connector_SM40),"SG-pushpullmount");
 
