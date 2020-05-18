@@ -85,20 +85,28 @@ if ~ischar(varargin{f}), continue; end
 end
 
 %% Setting up variables
-tool_r = tool_d/2;
-if ~symmetric
-    num_arms = size(angle_p,2);
+
+if symmetric
+    angle_p = {angle_p{1},angle_p{1}};
+    length_p = {length_p{1},length_p{1}};
+    CPL_out = {CPL_out(1),CPL_out(1)};
+    tool_d = [tool_d;tool_d];
 end
+
 num_sections = [];
+tool_r = tool_d/2;
+num_arms = size(angle_p,2);
 for i=1:num_arms
     num_sections = [num_sections size(angle_p{i},1)];
 end
+
+
 angle_p = cell2mat(angle_p');
 length_p = cell2mat(length_p');
 angle_p = [angle_p repelem(angle_defaults(1,size(angle_p,2):end),size(angle_p,1),1)];
 length_p = [length_p repelem(length_defaults(1,size(length_p,2):end),size(length_p,1),1)];
 
-if symmetric || num_arms == 1
+if num_arms == 1
     CPL_out = {[CPL_out;repmat(CPL_out(end),size(angle_p,1)-size(CPL_out,1),1)]};
     CPL_in = {PLcircle(tool_r,tool_r*20)};
     if num_arms == 2
@@ -115,11 +123,7 @@ else
         CPL_in{end+1} =  PLcircle(tool_r(i),tool_r(i)*20);
     end
 end
-for i=1:num_arms    
-    if symmetric && i > 1 
-         CPLs{end+1} = CPLs{end};
-        continue; 
-    end
+for i=1:num_arms  
     CPLs_temp = {};
     for j=1:size(CPL_out{1,i},1)
         CPLs_temp{end+1,1} = CPLbool('-',CPL_out{1,i}{j},CPL_in{i});
@@ -152,6 +156,9 @@ for k=1:num_arms
     for i=1:num_sections(k)
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
         if i==1 CPL_combis{end+1} = CPL_combined; end
+         if angle_p{k}(i,4)==2
+             angle_p{k}(i,1) = angle_p{k}(i,1)+90;
+         end
         if i == num_sections(k)   %% Top of arms
             if single == 1
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap' 'single'});
@@ -164,6 +171,9 @@ for k=1:num_arms
 %             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
             SG_conn_temp.hole_positions = positions{k}(i:i+1);
         end
+       if angle_p{k}(i,4)==2
+             angle_p{k}(i,1) = angle_p{k}(i,1)-90;
+         end
         
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,2:5));
         if size(SG_ele_temp,2) == 1
@@ -204,8 +214,9 @@ for k = 1:num_arms
         if angle_p{k}(i,4) == 2
             SG_el = SGstops(flip(SG_elements{k}{i-1}),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
             SG_el = SGstops(flip(SG_el'),CPL_out{k}{i-1},-angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
-            SG_elements{k}{i-1} = SG_el;
-             [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
+            SG_elements{k}{i-1} = SG_el;          
+            
+            [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]),2);
       
         else
             SG_el = SGstops(SG_elements{k}{i-1},CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
@@ -213,14 +224,12 @@ for k = 1:num_arms
              [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
       
         end
-         SG_conns{k}{i-1} = SG_con{1};
+        SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
-        if angle_p{k}(i,4) == 2
-            
+        if angle_p{k}(i,4) == 2            
             %ranges = [ranges; []]
              SG_elements{k}{i-1}{1}.phi =  [phi_left*2,phi_right*2];
-             SG_elements{k}{i-1}{2}.phi =  [phi_left*2,phi_right*2];
-            
+             SG_elements{k}{i-1}{2}.phi =  [phi_left*2,phi_right*2];            
         else
             dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
             height_l = 2*(tand(phi_right)*dis_axis_pos);
@@ -243,6 +252,7 @@ for k=1:num_arms
     for j=1:num_sections(k)
         if angle_p{k}(j+1,4) == 2
             arm_temp = [arm_temp repmat(SG_elements{k}{j}',1,floor(ele_num{k}(j)/2))];
+            arm_temp = [arm_temp SG_elements{k}{j}(1)];
         else
             arm_temp = [arm_temp repelem(SG_elements{k}(j),ele_num{k}(j))];
         end

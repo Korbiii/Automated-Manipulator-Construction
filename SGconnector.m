@@ -155,8 +155,8 @@ end
 e_dir_f = [sind(angle_p(2,1)) -cosd(angle_p(2,1))];
 e_dir_b = [sind(angle_p(1,1)) -cosd(angle_p(1,1))];
 
-H_f = [rotx(90)*roty(90+angle_p(2,1)) [angle_p(2,2)*offset_t*e_dir_f';((height_SG/2)+length_p(2,3))]; 0 0 0 1];
-H_b = [rotx(90)*roty(-90+angle_p(1,1)) [angle_p(1,2)*offset_b*e_dir_b';(-(height_SG/2)-length_p(1,3))]; 0 0 0 1];
+H_f = [rotx(90)*roty(90+angle_p(2,1)) [offset_t*-e_dir_f';((height_SG/2)+length_p(2,3))]; 0 0 0 1];
+H_b = [rotx(90)*roty(-90+angle_p(1,1)) [offset_b*-e_dir_b';(-(height_SG/2)-length_p(1,3))]; 0 0 0 1];
 
 SG = SGTset(SG,'B',H_b);
 SG = SGTset(SG,'F',H_f);

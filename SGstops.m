@@ -3,7 +3,8 @@
 %   CPL:  CPL of element
 %	=== OUTPUT RESULTS ======
 %	SG: 	SGstops
-function [SG,left_height,right_height] =  SGstops(SGs,CPL_out,h_dir,offset,left_angle,right_angle,length_p)
+function [SG,left_height,right_height] =  SGstops(SGs,CPL_out,h_dir,offset,left_angle,right_angle,length_p,varargin)
+dual_axis = 0; if nargin>=8 && ~isempty(varargin{1}); dual_axis=varargin{1}; end
 if size(SGs,2) == 2 
     is_connector = 1; 
     SG = SGs{1};
@@ -77,6 +78,9 @@ end
 if is_connector
     VLcontour_up = VLtrans(VLcontour,[0 0 ele_height(1)]);
     VLcontour_down = VLtrans(VLswapZ(VLcontour),[0 0 -ele_height(2)]);
+    if dual_axis
+        VLcontour_down = VLtrans(VLcontour_down,TofR(rotz(90)));
+    end
     index_up = find(SG.VL(:,3) > ele_height(1)-0.1 & SG.VL(:,3) < ele_height(1)+0.1 );
     index_down = find(SG_2.VL(:,3) < -ele_height(2)+0.1 & SG_2.VL(:,3) > -ele_height(2)-0.1);
 else
@@ -95,7 +99,9 @@ for i=1:size(index_up,1)
     end
 end
 
-
+if dual_axis
+    middle_axis = PLtransR(middle_axis,rot(pi/2));
+end
 if is_connector    
     for i=1:size(index_down,1)
         [~,idx] = min(pdist2(SG_2.VL(index_down(i),1:2),VLcontour_down(:,[1,2])));

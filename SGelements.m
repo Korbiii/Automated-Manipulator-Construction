@@ -54,11 +54,11 @@ end
 
 %% Add frames to element
 e_dir = [sind(angle_p(1)) -cosd(angle_p(1))];
-H_f = TofR(rotx(90)*roty(90+angle_p(1)),[angle_p(2)*offset*e_dir  length_p(4)+(hight_SG/2)]);
-H_f_2 = TofR(rotx(90)*roty(180+angle_p(1)),[angle_p(2)*offset*e_dir length_p(4)+(hight_SG/2)]);
+H_f = TofR(rotx(90)*roty(90+angle_p(1)),[offset*-e_dir  length_p(4)+(hight_SG/2)]);
+H_f_2 = TofR(rotx(90)*roty(180+angle_p(1)),[offset*-e_dir length_p(4)+(hight_SG/2)]);
 if ~bottom_ele
-    H_b = TofR(rotx(90)*roty(-90+angle_p(1)),[angle_p(2)*offset*e_dir  -(hight_SG/2)-length_p(4)]);
-    H_b_2 = TofR(rotx(90)*roty(angle_p(1)),[angle_p(2)*offset*e_dir  -(hight_SG/2)-length_p(4)]);
+    H_b = TofR(rotx(90)*roty(-90+angle_p(1)),[offset*-e_dir  -(hight_SG/2)-length_p(4)]);
+    H_b_2 = TofR(rotx(90)*roty(angle_p(1)),[offset*-e_dir  -(hight_SG/2)-length_p(4)]);
 else
     H_b = [rotx(90)*roty(180) [0;0;(-(hight_SG/2))]; 0 0 0 1];
 end

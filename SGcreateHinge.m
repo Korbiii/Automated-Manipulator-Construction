@@ -82,15 +82,15 @@ if ~already_existing
             offset = (offset-(hinge_width/2));
             SG_hinge = SGtrans(SG_hinge,[-e_dir*offset*hinge_opti 0]);
             leftOf = leftOfLine(PL_offsetline_mid_hinge,[0 0]);
-            if leftOf
-                offset = -offset;
-            end
         else
             error("Not enough space for hinge");
         end
     end
     SG_hinge = SGtrans(SG_hinge,[e_dir*rot(-pi/2)*max_dim 0]);
     VL_hinge = SG_hinge.VL;
+    if distLinePoint(middle_axis,VL_hinge(1,1:2))>distLinePoint(middle_axis,VL_hinge(end,1:2))
+        error("Hinge the wrong way around would create inverted Normals");
+    end
     
     SG =[];
     proj_points = {};
@@ -205,6 +205,7 @@ if ~already_existing
         end
         SG = SGcat(SG,SG_hinge_new);
     end
+    offset = offset*hinge_opti;
     hinges{end+1} = {SG;offset;CPL;[hinge_dir,hinge_opti,hinge_width-1,min_len]};
     
 end

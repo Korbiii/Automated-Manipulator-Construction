@@ -7,14 +7,14 @@
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of Manipulatorbase
 function [SG] = SGmanipulatorbase(CPL,varargin)
-optic_radius=3.25;      if nargin>=2 && ~isempty(varargin{1});  optic_radius=varargin{1};   end
-first_positions=[];           if nargin>=3 && ~isempty(varargin{2});  first_positions=varargin{2};     end
-sensor_channel=0;       if nargin>=4 && ~isempty(varargin{3});  sensor_channel=varargin{3}; end
-optic_channel = 0;      if nargin>=5 && ~isempty(varargin{4});  optic_channel=varargin{4};  end
-single = 0;             if nargin>=6 && ~isempty(varargin{5});  single=varargin{5};         end
-length = 50;             if nargin>=7 && ~isempty(varargin{6});  length=varargin{6};         end
-seal = 0;               if nargin>=8 && ~isempty(varargin{7});  seal=varargin{7};           end
-radial = 0;             if nargin>=9 && ~isempty(varargin{8});  radial=varargin{8};           end
+optic_radius=3.25;      if nargin>=2 && ~isempty(varargin{1});  optic_radius=varargin{1};       end
+first_positions=[];     if nargin>=3 && ~isempty(varargin{2});  first_positions=varargin{2};    end
+sensor_channel=0;       if nargin>=4 && ~isempty(varargin{3});  sensor_channel=varargin{3};     end
+optic_channel = 0;      if nargin>=5 && ~isempty(varargin{4});  optic_channel=varargin{4};      end
+single = 0;             if nargin>=6 && ~isempty(varargin{5});  single=varargin{5};             end
+length = 50;            if nargin>=7 && ~isempty(varargin{6});  length=varargin{6};             end
+seal = 0;               if nargin>=8 && ~isempty(varargin{7});  seal=varargin{7};               end
+radial = 0;             if nargin>=9 && ~isempty(varargin{8});  radial=varargin{8};             end
 %%Generate base CPL based on CPL of bottom element
 
 offset = [0 0];
@@ -215,12 +215,12 @@ if seal
     
 end
 
-SG = SGofCPLz(PLcircle(0.1),0.1);
+% SG = SGofCPLz(PLcircle(0.1),0.1);
 %% Add Frames
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 H_b_b = [rotx(0) [0;0;0]; 0 0 0 1];
 SG = SGTset(SG,'B',H_b_b);
-H_f_b = [rotx(90)*roty(0) [mid_points(1,:)';height_SG]; 0 0 0 1];
+H_f_b = [rotx(90)*roty(180) [mid_points(1,:)';height_SG]; 0 0 0 1];
 SG = SGTset(SG,'F',H_f_b);
 if ~radial
     if size(mid_points,1)>1

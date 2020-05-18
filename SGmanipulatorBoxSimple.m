@@ -74,6 +74,7 @@ SG_slot_slot = SGofCPLy(PL_slot_tensioner,10);
 SG_tensioner = SGcat(SG_tensionerblock,SGtransrelSG(SG_crimp_tensioner,SG_tensionerblock,'behind','centerx','centerz',-2.5));
 SG_slot_slot = SGtransrelSG(SG_slot_slot,SG_tensioner,'alignbottom','infront');
 SG_tensioner = SGcat(SG_slot_slot,SG_tensioner);
+SGwriteSTL(SG_tensioner,"SG_tensioner",'','y');
 SG_tensioners = [];
 
 PL_tensioner_back = CPLbool('+',PLtrans(PLsquare(rotor_radius*2,6),[0 -1]),PLsquare((rotor_radius+8)*2,4));
@@ -91,7 +92,7 @@ SG_sm85_conn = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0 -10.
 SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[10.5 4 1.5],2,22);
 SGwriteSTL(SG_rotors_or{2},"SG_sm85_rotor",'','y');
 SG_sm120_conn = SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0 -12.5,c 16,h 3,enter,c 34.5,c 38,h 3,rel under 0,cat,col y');
-SG_rotors_or{end+1} = SGservorotor(rotor_radius,SG_sm120_conn,[12.5 4 1.5],3,26);
+SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[12.5 4 1.5],3,26);
 SGwriteSTL(SG_rotors_or{3},"SG_sm120_rotor",'','y');
 
 
@@ -126,7 +127,7 @@ SG_retainer_120 = SGcat(SG_retainer_120,SGmirror(SG_retainer_120,'xz'));
 SG_sm120_click = SGcat(SG_sm120_click,SG_retainer_120);
 SG_rotors_or{3} = SG_sm120_click;
 
-SGwriteSTL(SG_sm120_click,"SG_sm85_click",'','y');
+SGwriteSTL(SG_sm120_click,"SG_sm120_click",'','y');
 
 PL_tensioner_holder = CPLbool('-',PLsquare(rotor_radius*2-5,10),CPLgrow(PL_slot_tensioner,-0.1));
 SG_tensioner_holder = SGofCPLy(PL_tensioner_holder,10);
@@ -262,9 +263,9 @@ SG_top_end = SGcat(SG_top_end,SG_top_end_2);
 
 SG = SGcat(SG_back_walls,SG_main_frame_top,SG_front_walls,SG_servo_guides,SG_top_end,SG_top_front);
 SG_tensioners = SGtransrelSG(SG_tensioners,SG,'transy',15);
-SG = SGcat([{SG} SG_texts SG_tensioner_holders SG_rotors SG_tensioners]);
+SG = SGcat([{SG} SG_texts SG_tensioner_holders]);
 
-
+SGwriteSTL(SG,"SG_box",'','y');
 
 
 % PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];

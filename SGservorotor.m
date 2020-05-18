@@ -10,13 +10,14 @@ name = 0; if nargin>=4 && ~isempty(varargin{1}); name=varargin{1}; end
 click = 0; if nargin>=5 && ~isempty(varargin{2}); click=varargin{2}; end
 CPL_screw_circle= [];
 if ~isempty(screw_h) 
-    CPL_screw_circle = PLholePattern(screw_h(1),screw_h(2),screw_h(3)); 
+    CPL_screw_circle = CPLcopyradial(PLcircle(screw_h(3)),screw_h(1),screw_h(2));
     screw_head_s = screw_h(1)+screw_h(3)*2.5; %Platz für Schraubenkopf Mitte
 else
     screw_head_s = 10;
 end
 
-PL_click = PLtransR(PLsquare(click+0.2),rot(pi/4));
+PL_click = PLtransR(PLsquare(click+0.2),rot(-pi/2.5));
+if click CPL_screw_circle = []; end
 
 SG_text = {SGoftext("SM40BL",[10 4 1]),SGoftext("SM85CL",[10 4 1]),SGoftext("SM120BL",[10 4 1])};
 
@@ -33,7 +34,7 @@ endp = pi;
 if ~isempty(CPL_screw_circle)
     PL_base_layer = [PLcircle(1.75);NaN NaN;PLcircle(base_r);NaN NaN;CPL_screw_circle];    
     PL_base_layer = CPLbool('-',PL_base_layer,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
-    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest))
+    PL_base_layer = CPLbool('-',PL_base_layer,PLtransC(VLswapY(PLtrans(PLsquare(5,4),[-r_mid_pos -8])),[0 0],phi_closest));
 else
     PL_base_layer = PLcircle(base_r);
     PL_base_layer = CPLbool('-',PL_base_layer,PLtrans(PLsquare(5,4),[-r_mid_pos -8]));
@@ -75,7 +76,7 @@ SG_rope_ramp = SGcat(SGtransR(SGmirror(SG_rope_ramp,'xz'),rot(0,0,phi_closest)),
 PL_top_layer = [PLcircle(screw_head_s);NaN NaN;PLcircle(rotor_radius+2);NaN NaN;PL_rope_ramp_cutout;NaN NaN;PLtransC(VLswapY(PL_rope_ramp_cutout),[0 0],phi_closest)];
 
 PL_top_layer = CPLbool('+',PL_top_layer,PLcircle(screw_head_s));
-PL_top_layer = CPLbool('-',PL_top_layer,PLholePattern(screw_h(1),screw_h(2),screw_h(3)+1));
+if ~click PL_top_layer = CPLbool('-',PL_top_layer,CPLcopyradial(PLcircle(screw_h(3)+1),screw_h(1),screw_h(2))); end
 PL_top_layer = CPLbool('-',PL_top_layer,PLcircle(screw_h(3)+1));
 PL_top_layer = CPLbool('-',PL_top_layer,PL_click);
 SG_top_layer = SGofCPLz(PL_top_layer,1.5);
@@ -112,7 +113,8 @@ SG_tex_2 = SGoftext("R = " + rotor_radius+"MM",[10 4 1]);
  SG_tex_2= SGtransrelSG(SG_tex_2,SG,'ontop','centerx','transy',-rotor_radius,'rotz',pi/2);
 SG_tex = SGcat(SG_tex,SG_tex_2);
 
-PL_stamp = CPLbool('+',PLsquare(8.7,5),PLtrans(PLsquare(4.7,1.25),[0 -3.125]));
+PL_stamp = CPLbool('+',PLsquare(8.7,5),PLtrans(PLsquare(4.7,4),[0 -4.5]));
+PL_stamp = [PL_stamp;NaN NaN;PLtrans(PLcircle(0.4),[0 1])];
 PL_stamp = PLroundcorners2(PL_stamp,[1,2,4,5,6,7],1);
 SG_stamp = SGtrans(SGofCPLy(PL_stamp,4),[0 10 0]);
 % SG_stamps = SGcircularpattern(SG_stamp,4,20);
