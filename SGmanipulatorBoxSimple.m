@@ -74,7 +74,7 @@ SG_slot_slot = SGofCPLy(PL_slot_tensioner,10);
 SG_tensioner = SGcat(SG_tensionerblock,SGtransrelSG(SG_crimp_tensioner,SG_tensionerblock,'behind','centerx','centerz',-2.5));
 SG_slot_slot = SGtransrelSG(SG_slot_slot,SG_tensioner,'alignbottom','infront');
 SG_tensioner = SGcat(SG_slot_slot,SG_tensioner);
-SGwriteSTL(SG_tensioner,"SG_tensioner",'','y');
+% SGwriteSTL(SG_tensioner,"SG_tensioner",'','y');
 SG_tensioners = [];
 
 PL_tensioner_back = CPLbool('+',PLtrans(PLsquare(rotor_radius*2,6),[0 -1]),PLsquare((rotor_radius+8)*2,4));
@@ -90,13 +90,13 @@ SG_sm40_conn = SGofCPLcommand('c 25,d 3 7 0,d 3 -7 0,d 3 0 7,d 3 0 -7,c 8,h 2,en
 SG_rotors_or{end+1} = SGservorotor(rotor_radius,SG_sm40_conn,[7 4 1.5],1);
 SG_sm85_conn = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0 -10.5,c 13.5,h 1,enter,c 26,c 30,h 2.5,rel under 0,cat,col y');
 SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[10.5 4 1.5],2,22);
-SGwriteSTL(SG_rotors_or{2},"SG_sm85_rotor",'','y');
+% SGwriteSTL(SG_rotors_or{2},"SG_sm85_rotor",'','y');
 SG_sm120_conn = SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0 -12.5,c 16,h 3,enter,c 34.5,c 38,h 3,rel under 0,cat,col y');
 SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[12.5 4 1.5],3,26);
-SGwriteSTL(SG_rotors_or{3},"SG_sm120_rotor",'','y');
+% SGwriteSTL(SG_rotors_or{3},"SG_sm120_rotor",'','y');
 
 
-PL_retainer = CPLbool('+',PLsquare(2,8),[1 4;1 1.1;3 1.1]);
+PL_retainer = CPLbool('+',PLsquare(1.5,8),[0.75 4;0.75 1.1;2 1.1]);
 SG_retainer = SGofCPLx(PL_retainer,6);
 
 PL_sm85_holes_rotor = CPLcopyradial(PLcircle(1.5),10.5,4,pi/4);
@@ -106,11 +106,13 @@ PL_cut = CPLbool('-',PLsquare(8,24),PLsquare(8,12));
 PL_sm85_top =CPLbool('-',PL_sm85_top,PL_cut);
 PL_sm85_top = CPLbool('-',PL_sm85_top,PL_sm85_holes_rotor);
 SG_sm85_top = SGofCPLz(PL_sm85_top,5.1);
-SG_sm85_click = SGstack('z',SGtransR(SG_sm85_conn,rot(0,0,pi/4)),SG_disk,SG_sm85_top);
-SG_retainer_85 = SGtransrelSG(SG_retainer,SG_sm85_click,'center','ontop',-5.1,'transy',11);
+
+SG_retainer_85 = SGtransrelSG(SG_retainer,SG_sm85_top,'center','alignbottom','behind',-1.5);
 SG_retainer_85 = SGcat(SG_retainer_85,SGmirror(SG_retainer_85,'xz'));
-SG_sm85_click = SGcat(SG_sm85_click,SG_retainer_85);
-SGwriteSTL(SG_sm85_click,"SG_sm85_click",'','y');
+SG_sm85_top = SGcat(SG_sm85_top,SG_retainer_85);
+SG_sm85_click = SGstack('z',SGtransR(SG_sm85_conn,rot(0,0,pi/4)),SG_disk,SG_sm85_top);
+
+% SGwriteSTL(SG_sm85_click,"SG_sm85_click",'','y');
 SG_rotors_or{2} = SG_sm85_click;
 
 
@@ -120,19 +122,18 @@ PL_sm120_top = [PLroundcorners(PLsquare(26),[1,2,3,4],2);NaN NaN;PLcircle(1.5)];
 PL_cut_120 = CPLbool('-',PLsquare(8,26),PLsquare(8,16));
 PL_sm120_top =CPLbool('-',PL_sm120_top,PL_cut_120);
 PL_sm120_top = CPLbool('-',PL_sm120_top,PL_sm120_holes_rotor);
-PL_sm120_top = SGofCPLz(PL_sm120_top,5.1);
-SG_sm120_click = SGstack('z',SGtransR(SG_sm120_conn,rot(0,0,pi/4)),SG_disk_120,PL_sm120_top);
-SG_retainer_120 = SGtransrelSG(SG_retainer,SG_sm120_click,'center','ontop',-5.1,'transy',13);
+SG_sm120_top = SGofCPLz(PL_sm120_top,5.1);
+
+SG_retainer_120 = SGtransrelSG(SG_retainer,SG_sm120_top,'center','alignbottom','behind',-1.5);
 SG_retainer_120 = SGcat(SG_retainer_120,SGmirror(SG_retainer_120,'xz'));
-SG_sm120_click = SGcat(SG_sm120_click,SG_retainer_120);
+SG_sm120_top = SGcat(SG_sm120_top,SG_retainer_120);
+SG_sm120_click = SGstack('z',SGtransR(SG_sm120_conn,rot(0,0,pi/4)),SG_disk_120,SG_sm120_top);
 SG_rotors_or{3} = SG_sm120_click;
 
-SGwriteSTL(SG_sm120_click,"SG_sm120_click",'','y');
+% SGwriteSTL(SG_sm120_click,"SG_sm120_click",'','y');
 
 PL_tensioner_holder = CPLbool('-',PLsquare(rotor_radius*2-5,10),CPLgrow(PL_slot_tensioner,-0.1));
 SG_tensioner_holder = SGofCPLy(PL_tensioner_holder,10);
-
-
 
 
 
@@ -265,7 +266,7 @@ SG = SGcat(SG_back_walls,SG_main_frame_top,SG_front_walls,SG_servo_guides,SG_top
 SG_tensioners = SGtransrelSG(SG_tensioners,SG,'transy',15);
 SG = SGcat([{SG} SG_texts SG_tensioner_holders]);
 
-SGwriteSTL(SG,"SG_box",'','y');
+% SGwriteSTL(SG,"SG_box",'','y');
 
 
 % PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];
@@ -304,6 +305,11 @@ SG_base_frame = SGofCPLz(PLroundcorners(PL_base_frame,[1,2],5),10);
 SG_base_frame_2 = SGofCPLz(CPLbool('-',PLroundcorners(PL_base_frame,[1,2],5),PLtrans(PLsquare(20,100),[-20 50])),10);
 SG_base_frame = SGstack('z',SG_base_frame_2,SG_base_frame);
 
+PL_clips_corner = CPLbool('-',PLsquare(106,60),PLsquare(102,60));
+PL_clips_corner = CPLbool('-',PL_clips_corner,PLsquare(109,54));
+SG_clips_corner = SGofCPLz(PL_clips_corner,10);
+SG_clips_corner = SGtransrelSG(SG_clips_corner,SG_base_frame,'ontop',-5);
+
 PL_clips = CPLbool('-',PLsquare(8,15),PLtrans(PLsquare(8,15),[-5 5]));
 SG_clips = SGofCPLx(PL_clips,15);
 SG_clips = SGtransrelSG(SG_clips,SG_base_frame,'alignbottom',-4.8,'behind','alignleft',-10);
@@ -315,8 +321,8 @@ PL_power_16 = CPLconvexhull(PL_power_16);
 PL_front_bot = [PLsquare(60,20);NaN NaN;PLtrans(PL_power_16,[-15 0]),;NaN NaN;PLtrans(PLsquare(14,8),[20 0])];
 SG_front_bot = SGofCPLx(PL_front_bot,3);
 SG_front_bot = SGtransrelSG(SG_front_bot,SG_base_plate,'alignbottom','right');
-SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_base_plate,'center','ontop','transx',-5);
-SG_feetech_mounting = SGtransrelSG(SG_feetech_mounting,SG_base_plate,'rotz',pi/2,'center','ontop','alignfront',-5);
+SG_arduino_mounting = SGtransrelSG(SG_arduino_mounting,SG_base_plate,'center','ontop','transx',-3);
+SG_feetech_mounting = SGtransrelSG(SG_feetech_mounting,SG_base_plate,'rotz',pi/2,'center','ontop','alignfront',-5,'transx',-4);
 
 SG_top_frame = SGtransrelSG(SGofCPLz(PLroundcorners(PL_base_frame,[1,2],5),28),SG_base_frame,'ontop');
 SG_top_plate_f = SGtransrelSG(SG_base_plate,SG_top_frame,'aligntop');
@@ -335,14 +341,14 @@ SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'c
 % SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_nut_holder);
 % SG_bottom = SGcat([{SG_bottom} SG_texts {SG_crimp_tensioners} {SG_tensionerblocks} SG_rotors {SG_holes} {SG_back_walls}]);
 %
-SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot,SG_clips);
+SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot,SG_clips,SG_clips_corner);
 SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
 %
 SG_electric = SGtransrelSG(SGcat(SG_electic_bot),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
 % SG = SGcat(SG_electric,SG);
 % SG = SGcat([{SG} SG_rotors]);
 
-SGplot(SG,'w');
+% SGplot(SG,'w');
 SGwriteSTL(SG_electic_bot,"Box_bottom",'','y');
 
 SGwriteSTL(SG_electric_top,"Box_top",'','y');

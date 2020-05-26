@@ -20,15 +20,14 @@ CPLs = {};
 CPL_holes = [];
 CPL_holes_2 = [];
 positions = {};
-angle_p = flip(angle_p,1);
-CPL_out = flip(CPL_out);
+CPL_small_holes = {};
+CPL_big_holes = {};
 CPL_in = PLcircle(tool_r);
-min_len = flip(min_len);
 CPL_no_go_areas = {};
 PL_hole = PLcircle(hole_r,40);
 PL_hole_small = PLcircle(0.4);
 %% Generating CPL of area where no holes can go based on axis constraints
-for i=1:size(angle_p,1)
+for i=2:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
         if torsion == 0
             CPL_axis_constraint = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) hinge_w(i)/2];
@@ -72,23 +71,24 @@ for i=1:size(angle_p,1)
         CPL_no_go_areas{end+1} = [];
     end
 end
-if ~isempty(CPL_no_go_area)
-    CPL_no_go_area = CPLgrow(CPL_no_go_area,-hole_r);
-end
+
 max_dim = 2*max(sizeVL(CPL_out{size(angle_p,1)}));
 
 %%Looping over each section
 if bottom_up     
+    CPL_no_go_areas{end+1} = [];
     start_value = 1;
     step = 1;
     end_value = size(angle_p,1);
-else
+else    
+    CPL_no_go_areas =[{[]},CPL_no_go_areas];
     start_value = size(angle_p,1);
     step = -1;
     end_value = 1;
 end
 
 for i=start_value:step:end_value
+    first_section = (i==1);
     %% calculating general values
     CPL_opti_area = [];
     curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(angle_p(i,1))));
@@ -121,10 +121,10 @@ for i=start_value:step:end_value
      for u=1:separateNaN(CPL_all_in)
             CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_all_in,u),+0.5+hole_r));
      end
-        if ~isempty(CPL_holes)
-        for u=1:separateNaN(CPL_holes)
-            CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+0.5+hole_r));
-        end
+     if ~isempty(CPL_holes)
+         for u=1:separateNaN(CPL_holes)
+             CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+0.5+hole_r));
+         end
     end
     %% Searching point with furthest distant to axis that still can be mirrored to the other side
     if angle_p(i,2) == 2 
@@ -132,6 +132,7 @@ for i=start_value:step:end_value
     else
         num_iterations = 1;
     end
+  
     CPL_hole_positions_temp =[];
     for k=1:num_iterations
         
@@ -143,9 +144,9 @@ for i=start_value:step:end_value
         ordered_limit_points = sortrows(ordered_limit_points,3,'descend');
         hole_position = [];
         CPL_limit_tol = CPLgrow(CPL_limit,-0.1);
-        while isempty(hole_position) && size(CPL_limit,2) > 0
+        while isempty(hole_position) && size(CPL_limit,2) > 0            
             if ~isnan(ordered_limit_points(1,1))
-                if single == 1 || (single == 2 && i == size(angle_p,1))
+                if single == 1 || (single == 2 && first_section)
                     hole_position = ordered_limit_points(1,[1,2]);
                 else
                     is_inside = insideCPS(CPL_limit_tol,PLtransC(ordered_limit_points(1,[1,2]),curr_mid_point,pi));
@@ -161,42 +162,60 @@ for i=start_value:step:end_value
         if isempty(hole_position) error("CPL für Sektion " + i + " zu klein"); end
         
         %% Adding Points
-        if single == 1 || (single == 2 && i == size(angle_p,1))
+        if single == 1 || (single == 2 && first_section)
             hole_positions = hole_position;
         else
             hole_positions = [hole_position;PLtransC(hole_position,curr_mid_point,pi)];
         end
         
         if isempty(CPL_holes)
-            if single == 1 || (single == 2 && i == size(angle_p,1))
+            if single == 1 || (single == 2 && first_section)
                 CPL_holes = PLtrans(PL_hole,hole_positions(1,:));                
                 CPL_holes_2 = PLtrans(PL_hole_small,hole_positions(1,:));
             else
                 CPL_holes = [PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];                
-                CPL_holes_2 = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                CPL_holes_2 = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];                
+            end  
+            if bottom_up
+                CPL_small_holes{end+1} = CPL_holes_2;
             end
         else
-            if single == 1 || (single == 2 && i == size(angle_p,1)) 
-                if k>1                    
-                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))];
+            if single == 1 || (single == 2 && first_section) 
+                PL_hole_small_temp = PLtrans(PL_hole_small,hole_positions(1,:));
+                if k>1
+                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PL_hole_small_temp];
                 else
-                    CPL_holes_2 = [CPL_holes;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:))];
+                    CPL_holes_2 = [CPL_holes;NaN NaN;PL_hole_small_temp];
                 end
                 CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:))];           
             else
+                PL_hole_small_temp = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
                 if k>1
-                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                    CPL_holes_2 = [CPL_holes_2;NaN NaN;PL_hole_small_temp];
                 else
-                    CPL_holes_2 = [CPL_holes;NaN NaN;PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                    CPL_holes_2 = [CPL_holes;NaN NaN;PL_hole_small_temp];
                 end
                 CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
+            end
+            if bottom_up
+                 CPL_small_holes{end+1} = PL_hole_small_temp;
             end
         end
         CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
     end
+    
     CPLs{end+1} = CPL_holes_2;
     positions{end+1} = CPL_hole_positions_temp;
 end
-CPLs = flip(CPLs);
-positions = flip(positions);
+if ~bottom_up
+    CPLs = flip(CPLs);
+    positions = flip(positions);
+else
+    CPLs = CPL_small_holes;
+    for i=1:size(angle_p,1)
+        for j = i+1:size(angle_p,1)
+            CPLs{i} = CPLbool('+',CPLs{i},CPLgrow(CPLs{j},hole_r-0.4));
+        end
+    end    
+end
 end

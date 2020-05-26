@@ -74,13 +74,13 @@ if ~ischar(varargin{f}), continue; end
               angles = varargin{f+1};
           case 'hole_radius'
               hole_r = varargin{f+1};
-          case 'num_arms'
-              num_arms = varargin{f+1};
           case 'symmetric'
               symmetric = 1;
               num_arms = 2;
           case 'radial'
               radial = 1;
+          otherwise
+              error(varargin{f} + " isn't a valid flag!!!!");            
       end   
 end
 
@@ -279,10 +279,14 @@ else
     for k=1:num_arms
         phis{end+1} = 0;
         for i=1:num_sections(k)
-            if angles(1,i)>=0
-                phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);
+            if angles(1,i)>=0                
+                phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);                
             else
-                phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);
+                if angle_p{k}(i+1,4) == 2
+                    phis{end+1} = repmat([angles_sections{k}(i,2)*angles(k,i),angles_sections{k}(i,2)*angles(k,i)*0],1,(ele_num{k}(i)/2)+1);
+                else
+                    phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);
+                end
             end
         end
     end

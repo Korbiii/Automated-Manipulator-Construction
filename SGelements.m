@@ -15,7 +15,7 @@ for f=1:size(varargin,2)
        case 'bottom_element'
            bottom_ele = 1;     
            if angle_p(2) == 2, angle_p(2) = 0; end
-           length_p(1) = 5;
+%            length_p(1) = 5;
    end
 end
 
@@ -26,14 +26,29 @@ SG = SGtrans(SG,[0 0 -hight_SG/2]);
 
 %% Add hinge to base
 SG_hinge = SGhingeround(length_p(3),length_p(2), length_p(4));
-SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
-SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
-[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,angle_p(1),angle_p(2),length_p(2),length_p(3), length_p(4));
+
+if abs(angle_p(2)) == 1 || length_p(3) == 0
+    SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
+    SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
+    [SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,angle_p(1),angle_p(2),length_p(2),length_p(3), length_p(4));
+else
+    radius_in = max(min(abs(PLcrossCPLLine2([-500 0;500 0],CPL))));
+    SG_hinge = SGtrans(SG_hinge,[radius_in+length_p(4)/2 0 0]);
+    SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
+    SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
+    SG_hinge = SGcat(SG_hinge,SGtransR(SG_hinge,rotz(180)));
+    offset = 0;
+end
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
 
 if angle_p(2) == 2
-    [SG_hinge_2,offset_2]= SGcreateHinge(CPL,SG_hinge_2,angle_p(1)-90,angle_p(2),length_p(2),length_p(3), length_p(4));
+ if angle_p(2) == 1 || length_p(3) == 0
+    [SG_hinge_2,offset_2]= SGcreateHinge(CPL,SG_hinge_2,angle_p(1)-90,angle_p(2),length_p(2),length_p(3), length_p(4));   
+ else
+     SG_hinge_2 = SGtransR(SG_hinge,rotz(90));
+     offset_2 = 0;
+ end
     SG_hinge_2_top = SGontop(SG_hinge_2,SG);
     SG_hinge_2_bottom = SGmirror(SG_hinge_2_top,'xy');
 end
