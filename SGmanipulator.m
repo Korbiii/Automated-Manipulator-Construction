@@ -161,7 +161,7 @@ for k=1:num_arms
          end
         if i == num_sections(k)   %% Top of arms
             if single == 1
-                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap' 'single'});
+                SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap','single'});
             else
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap'});
             end
@@ -283,7 +283,7 @@ else
                 phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);                
             else
                 if angle_p{k}(i+1,4) == 2
-                    phis{end+1} = repmat([angles_sections{k}(i,2)*angles(k,i),angles_sections{k}(i,2)*angles(k,i)*0],1,(ele_num{k}(i)/2)+1);
+                    phis{end+1} = repmat([angles_sections{k}(i,2)*angles(k,i),angles_sections{k}(i,2)*angles(k,i)*-1],1,(ele_num{k}(i)/2)+1);
                 else
                     phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);
                 end

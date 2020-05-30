@@ -58,7 +58,7 @@ end
 CPL_b = CPLbool('-',CPL_b,CPL_holes_b);
 CPL_f_baseholes = CPLbool('-',CPL_f,CPL_holes_b);
 CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
-PL_wireescape = CPLconvexhull([PLcircle(h_r);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -10*h_r])]);
+PL_wireescape = CPLconvexhull([PLcircle(h_r*1.25);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -10*h_r])]);
 PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -10*h_r])]);
 [sizey,sizex,~,~,~,~] = sizeVL(CPL_b);
 SG_bottom = SGofCPLz(CPL_b,2);

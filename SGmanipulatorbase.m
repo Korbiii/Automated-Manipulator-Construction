@@ -34,7 +34,7 @@ num_arms = size(CPL,2);
 if ~radial
     [x1,y1,~,~,~,~] = sizeVL(CPL{1});
     CPL{1} = PLtransR(CPL{1},rot(pi));
-    mid_points = [-x1/2-offset(1) offset(2)];
+    mid_points = [-x1/2-offset(1)-0.2 offset(2)];
     CPL{1} = PLtrans(CPL{1},mid_points);
     if optic_channel == 2
         CPL{1} = PLtrans(CPL{1},[0 y1/2]);
@@ -42,7 +42,7 @@ if ~radial
     end
     if size(CPL,2)>1
         [x2,y2,~,~,~,~] = sizeVL(CPL{2});
-        mid_points = [mid_points;x2/2+offset(1) offset(2)];
+        mid_points = [mid_points;x2/2+offset(1)+0.2 offset(2)];
         CPL{2} = PLtrans(CPL{2},mid_points(2,:));
         if optic_channel == 2
             CPL{2} = PLtrans(CPL{2},[0 y2/2]);
@@ -59,7 +59,7 @@ if ~radial
     if size(CPL,2)>2
         CPL{3} = PLtransR(CPL{3},rot(0));
         [~,y3,~,~,~,~] = sizeVL(CPL{3});
-        mid_points = [mid_points;0 max(y1/2,y2/2)+y3/4];
+        mid_points = [mid_points;0 max(y1/2,y2/2)+y3/2+0.3];
         %         mid_points = [mid_points;0 max(y1/2,y2/2)];
         CPL{3} = PLtrans(CPL{3},mid_points(3,:));
         if optic_channel == 2

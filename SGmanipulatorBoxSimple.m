@@ -266,7 +266,7 @@ SG = SGcat(SG_back_walls,SG_main_frame_top,SG_front_walls,SG_servo_guides,SG_top
 SG_tensioners = SGtransrelSG(SG_tensioners,SG,'transy',15);
 SG = SGcat([{SG} SG_texts SG_tensioner_holders]);
 
-% SGwriteSTL(SG,"SG_box",'','y');
+SGwriteSTL(SG,"SG_box",'','y');
 
 
 % PL_nut_holder = [PLsquare(12);NaN NaN;PLcircle(4.1,6)];
@@ -331,7 +331,7 @@ SG_pin_ard = SGtransrelSG(SGmirror(SG_pin_USB_shield_top,'xy'),SG_pin_counter,'a
 SG_arduino_mounting_top =SGcat(SGtrans(SG_pin_ard,[52.07 32.98 0]),SGtrans(SG_pin_counter,[82.55 0 0]),SGtrans(SG_pin_ard,[52.07 5.08 0]),SGtrans(SG_pin_counter,[76.2 48.26 0]));
 
 SG_arduino_mounting_top = SGmirror(SGmirror(SG_arduino_mounting_top,'yz'),'xz');
-SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'center','under','transx',-5,'alignleft',-3.75);
+SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'center','under','alignleft',-5.75);
 
 
 %
@@ -341,15 +341,15 @@ SG_arduino_mounting_top = SGtransrelSG(SG_arduino_mounting_top,SG_top_plate_f,'c
 % SG_bottom = SGcat(SG_servo_guides,SG_main_frame,SG_main_frame_top,SG_nut_holder);
 % SG_bottom = SGcat([{SG_bottom} SG_texts {SG_crimp_tensioners} {SG_tensionerblocks} SG_rotors {SG_holes} {SG_back_walls}]);
 %
-SG_electic_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot,SG_clips,SG_clips_corner);
+SG_electric_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG_base_frame,SG_front_bot,SG_clips,SG_clips_corner);
 SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
 %
-SG_electric = SGtransrelSG(SGcat(SG_electic_bot),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
+SG_electric = SGtransrelSG(SGcat(SG_electric_bot),SG,'rotz',-pi/2,'left',20,'alignbottom','alignback',-25);
 % SG = SGcat(SG_electric,SG);
 % SG = SGcat([{SG} SG_rotors]);
 
 % SGplot(SG,'w');
-SGwriteSTL(SG_electic_bot,"Box_bottom",'','y');
+SGwriteSTL(SG_electric_bot,"Box_bottom",'','y');
 
 SGwriteSTL(SG_electric_top,"Box_top",'','y');
 % SGwriteSTL(SG_electric_top,"Platinenbox Deckel",'','y');
