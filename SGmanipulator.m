@@ -25,7 +25,7 @@
 %	=== OUTPUT RESULTS =====
 %	SG:                 SG of Manipulator
 %   SGc:                SGTchain of Manipulator
-function [SG,SGc,ranges] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
+function [SG,SGc,ranges,framechain,phis] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
 base_length = 7;optic_radius = 2.2;hole_r = 0.7; num_arms = 2;
 angle_defaults = [90 90 0];
 length_defaults = [2 1 0.25 0.5];
@@ -228,7 +228,13 @@ for k = 1:num_arms
         SG_conns{k}{i} = SG_con{2};
         if angle_p{k}(i,4) == 2            
             %ranges = [ranges; []]
-             SG_elements{k}{i-1}{1}.phi =  [phi_left*2,phi_right*2];
+            dis_axis_pos_1 = distPointLine(middle_axis,positions{k}{i-1}(1,:));
+            dis_axis_pos_2 = distPointLine(middle_axis*rot(pi/2),positions{k}{i-1}(2,:));
+            height_1 = 2*(tand(phi_right)*dis_axis_pos_1);
+            height_2 = 2*(tand(phi_left)*dis_axis_pos_2);
+            
+            ranges = [ranges;max(0,height_1*ele_num_temp(i-1)),max(0,height_1*ele_num_temp(i-1));max(0,height_2*ele_num_temp(i-1)),max(0,height_2*ele_num_temp(i-1))];
+            SG_elements{k}{i-1}{1}.phi =  [phi_left*2,phi_right*2];
              SG_elements{k}{i-1}{2}.phi =  [phi_left*2,phi_right*2];            
         else
             dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
@@ -305,6 +311,41 @@ phis = deg2rad(cell2mat(phis));
 SGc = SGTchain(SGs,[0 phis],'',framechain);
 disp("Created SGTchain");
 SG = SGc;
+
+[~, userdir] = system('echo %USERPROFILE%');
+userdir(end) = [];
+path = strsplit(userdir, '\');
+path{end+1} = 'Desktop\Manipulator.txt';
+path = strjoin(path,'\'); 
+fileID = fopen(path,'w');
+
+id_start = 1;
+fprintf(fileID,'int rotor_radius = 25;\n');
+fprintf(fileID,'double ranges_mm[][2] = {');
+for k=1:size(ranges,1)
+    fprintf(fileID,'{%.2f,%.2f}',ranges(k,1),ranges(k,1));
+end
+fprintf(fileID,'};\n');
+fprintf(fileID,'int ids[] = {');
+for k=1:size(ranges,1)
+    if k >1 fprintf(fileID,','); end
+    fprintf(fileID,'%i',id_start+k);
+end
+fprintf(fileID,'};\n');
+
+fprintf(fileID,'int fixed[] = {');
+for k=1:size(ranges,1)
+    if k >1 fprintf(fileID,','); end
+    fprintf(fileID,'%i',0);
+end
+fprintf(fileID,'};\n');
+fprintf(fileID,'int ord[] = {1,2,3,4,5,6};\n');
+fprintf(fileID,'int servo_speed = 2000;\n');
+
+fprintf(fileID,'Arduino Code mit erzeugtem Code ersetzen!\n');
+
+fclose(fileID);
+
 % SGplot(SG);
 
 

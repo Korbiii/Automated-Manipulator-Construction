@@ -136,6 +136,7 @@ SG = SGtrans(SG,[0 0 (height_SG/2)-max(SG.VL(:,3))]);
 %% add hinge
 
 SG_hinge = SGhingeround(length_p(1,2),length_p(1,1),length_p(1,3));
+
 SG_hinge_b = SGtransR(SG_hinge,rotz(angle_p(1,1)));
 [SG_hinge_b,offset_b] = SGcreateHinge(CPL_b,SG_hinge_b,angle_p(1,1),angle_p(1,2),length_p(1,1),length_p(1,2),length_p(1,3));
 SG_hinge_b = SGmirror(SG_hinge_b,'xy');
