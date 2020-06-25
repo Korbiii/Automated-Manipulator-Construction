@@ -1,40 +1,17 @@
-%%  [SG] = SGmotormountSM85BL(radius)
+%%  [SG] = SGpushpullmountSM85BL()
 %	=== INPUT PARAMETERS ===
-%	radius:        radius of rotordisk
 %	=== OUTPUT RESULTS ======
 %	SG:         SG of Servomount
-function [SG] = SGmotormountSM120BL(radius)
+function [SG] = SGpushpullmountSM40CL(SG_connector)
 %% Dimensions of Servo
-servo_d = [78 43 62];
+servo_d = [28.5,46.5,34.5];
+sledge_x = 20;
 
-PL_screw_holes = PLpatternXY(PLcircle(1.5),1,2,28,28);
-CPL_top =  [PLsquare(12,34);NaN NaN;PLtrans(PL_screw_holes,[3 0])];
-SG_screw_plate = SGofCPLz(CPL_top,4);
+%% Sledge
+PL_sledge = [-sledge_x/2 0;-sledge_x/2-5 -5;sledge_x/2+5 -5;sledge_x/2 0];
+SG_sledge = SGofCPLy(PL_sledge,45);
 
-PL_brace_top = PLsquare(10,34);
-PL_brace_bottom = PLtrans(PLsquare(5,34),[-2.5 0]);
-SG_brace = SGof2CPLsz(PL_brace_bottom,PL_brace_top,20);
-SG_brace = SGtransrelSG(SG_brace,SG_screw_plate,'aligntop','right','centery');
-
-SG_tensioning = SGtrans(SGcrimptensioner(10,3,20,2),TofR(rotz(-90),[0 radius 9]));
-SG_tensioning = SGcat(SG_tensioning,SGtrans(SG_tensioning,[0 -2*radius 0]));
-SG_tensioning = SGtransrelSG(SG_tensioning,SG_brace,'alignright',20,'right');
-
-PL_thread_brace = PLroundcorners2([0 0;10 10;radius+5 10;radius+5 0],[2,3,4],4.9);
-PL_thread_brace = [PL_thread_brace;NaN NaN;PLtrans(PLcircle(1),[radius 5])];
-SG_thread_brace = SGofCPLz(PL_thread_brace,10);
-SG_thread_brace = SGtransrelSG(SG_thread_brace,SG_brace,'rotx',pi/2,'rotz',pi/2,'ontop','alignleft');
-SG_thread_brace = SGcat(SG_thread_brace,SGmirror(SG_thread_brace,'xz'));
-
-
-SG = SGcat(SG_screw_plate,SG_brace,SG_tensioning,SG_thread_brace);
-% SGs = SGanalyzeGroupParts(SG);
-% SGs.SG(2) = SGtransrelSG(SGs.SG(2),SGs.SG(1),'aligntop','right');
-% SG = SGcat(SGs);
-clf;
-% SGplot(SG);
-
-endCPLz(PLgearrackDIN(1,14,8),12);
+SG_sledge_gear_rack = SGofCPLz(PLgearrackDIN(1,14,8),12);
 SG_sledge_gear_rack = SGtransrelSG(SG_sledge_gear_rack,SG_sledge,'rotz',pi/2,'centery','under');
 
 PL_fork = CPLbool('-',PLsquare(8,20),PLsquare(8,5));
@@ -79,7 +56,7 @@ PL_bracket_right = [5 -5;19.7 -5;19.7 9.3;9.7 9.3;9.7 0;5 0];
 SG_bracket_right = SGofCPLy(PL_bracket_right,servo_d(2));
 SG_bracket_right = SGtransrelSG(SG_bracket_right,SG_servo_mount_r,'ontop',-5,'alignfront','right');
 
-PL_bracket = CPLbool('-',PLsquare(70,35),CPLbool('-',PLsquare(50,40),PLsquare(25,40)));
+PL_bracket = CPLbool('-',PLsquare(64,29),CPLbool('-',PLsquare(50,40),PLsquare(25,40)));
 PL_bracket_top = CPLbool('-',PL_bracket,PLsquare(60,20));
 PL_bracket_top = CPLbool('-',PL_bracket_top,PLsquare(80,16));
 PL_bracket_bottom = CPLbool('-',PL_bracket,PLsquare(60,25));
@@ -99,7 +76,8 @@ SG_servo = SGtransrelSG(SG_servo,SG_gear,'centerx','centery',-12,'under',2);
 % SG = SGcat(,SG_act,SG_sledge_gear_rack,SG_gear,SG_servo,SG_servo_mount,SG_bracket_left,SG_bracket_right,SG_bracket);
 % SG = SGcat(SG_sledge,SG_stops,SG_base,SG_fork,SG_act,SG_sledge_gear_rack,SG_gear);
 SG_base = SGcat(SG_sledge,SG_stops,SG_base,SG_fork,SG_servo_mount,SG_bracket_left,SG_bracket_right,SG_bracket,SG_sledge_gear_rack);
-SGwriteSTL(SG_gear,"SGgear",'y');
+SGwriteSTL(SG_base,"SG_base",'','y');
+SGwriteSTL(SG_gear,"SG_gear",'','y');
 SG = SGcat(SG_base,SG_gear);
 
 
