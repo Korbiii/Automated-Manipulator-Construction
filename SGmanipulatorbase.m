@@ -215,7 +215,6 @@ if seal
     
 end
 
-% SG = SGofCPLz(PLcircle(0.1),0.1);
 %% Add Frames
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
 H_b_b = [rotx(0) [0;0;0]; 0 0 0 1];
