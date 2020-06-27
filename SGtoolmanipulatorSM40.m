@@ -95,7 +95,7 @@ PL_rotator_servo_mount_top_guide_fixer = PLroundcorners(PL_rotator_servo_mount_t
 SG_rotator_servo_mount_top_guide_fixer = SGofCPLy(PL_rotator_servo_mount_top_guide_fixer,10);
 SG_rotator_servo_mount_top_guide_fixer = SGtransrelSG(SG_rotator_servo_mount_top_guide_fixer,SG_rotator_servo_mount_top_guide,'infront',2,'ontop',-5,'centerx'); 
 %% Cam Rotor
-SG_cam_rotor = SGofCPLz([PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;PLcircularpattern(PLcircle(3),7,pi/2,4)],2);
+SG_cam_rotor = SGofCPLz([PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;CPLcopyradial(PLcircle(3),7,4)],2);
 SG_cam_rotor_stud = SGofCPLz([PLtrans(PLcircle(9),[0 distance]);NaN NaN;PLcircle(1.5)],7.5);
 SG_cam_rotor = SGstack('z',SG_servo_connector,SG_cam_rotor,SG_cam_rotor_stud);
 SG_cam_rotor = SGtransrelSG(SG_cam_rotor,SG_cam_servo_mount,'centery',-12,'centerx','ontop',-3);
@@ -137,7 +137,7 @@ SG_main_servo_bracket = SGofCPLx(PL_main_servo_bracket,28.5);
 SG_main_servo_bracket = SGtransrelSG(SG_main_servo_bracket,SG_main_guide_base,'alignbottom','left',-10,'centery');
 %% Base Gear
 SG_base_gear = SGofCPLz([PLgearDIN(2,36);NaN NaN;PLcircle(12.5)],6);
-PL_gear_insert = [PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;PLcircularpattern(PLcircle(3),7,pi/2,4)];
+PL_gear_insert = [PLcircle(12.5);NaN NaN;PLcircle(1.5);NaN NaN;CPLcopyradial(PLcircle(3),7,4)];
 SG_gear_insert = SGofCPLz(PL_gear_insert,3);
 SG_servo_connector_base_gear = SGstack('z',SG_gear_insert,SGmirror(SG_servo_connector,'xy'));
 SG_base_gear = SGcat(SG_base_gear,SGtransrelSG(SG_servo_connector_base_gear,SG_base_gear,'centery','alignbottom'));
