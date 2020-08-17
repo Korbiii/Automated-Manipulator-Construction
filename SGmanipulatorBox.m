@@ -78,7 +78,7 @@ SG_cover_front = SGofCPLy(PL_cover_front,10);
 SG_sm40_conn = SGofCPLcommand('c 25,d 3 7 0,d 3 -7 0,d 3 0 7,d 3 0 -7,c 8,h 2,enter,c 19,c 25,h 2.5,rel under 0,cat,col y');
 SG_rotors_or{end+1} = SGservorotor(rotor_radius-3,'',[7 4 1.5],1,19);
 SG_sm85_conn = SGofCPLcommand('c 30,d 3 10.5 0,d 3 -10.5 0,d 3 0 10.5,d 3 0 -10.5,c 13.5,h 1,enter,c 26,c 30,h 2.5,rel under 0,cat,col y');
-SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[10.5 4 1.5],2,22);
+SG_rotors_or{end+1} = SGtrans(SGservorotor(rotor_radius,'',[10.5 4 1.5],2,22),[0 0 -2]);
 SG_sm120_conn = SGofCPLcommand('c 38,d 3 12.5 0,d 3 -12.5 0,d 3 0 12.5,d 3 0 -12.5,c 16,h 3,enter,c 34.5,c 38,h 3,rel under 0,cat,col y');
 SG_rotors_or{end+1} = SGservorotor(rotor_radius,'',[12.5 4 1.5],3,26);
 
@@ -221,8 +221,8 @@ for i=1:dofs
     SG_text_temp = SGtransrelSG(SG_text{power(i)},SG_guide,'rotx',pi/2,'rotz',pi,'centerx');
     SG_text_temp = SGtransrelSG(SG_text_temp,SG_wall_temp_f,'alignbottom','behind');
     SG_texts{end+1} = SG_text_temp; 
-    SG_rotor_clickbases{end+1} = SGtransrelSG(SG_rotor_clickbase{power(i)},SG_guide,'transx',-dists(i),'transy',-servo_ax(power(i)),'ontop');    
-    SG_rotors{end+1} = SGtransrelSG(SG_rotors_or{power(i)},SG_guide,'transx',-dists(i),'transy',-servo_ax(power(i)),'ontop',5);
+    SG_rotor_clickbases{end+1} = SGtransrelSG(SG_rotor_clickbase{power(i)},SG_guide,'rotz',pi/4,'transx',-dists(i),'transy',-servo_ax(power(i)),'ontop');    
+    SG_rotors{end+1} = SGtransrelSG(SG_rotors_or{power(i)},SG_guide,'transx',-dists(i),'transy',-servo_ax(power(i)),'ontop',7);
     SG_cover{end+1} = SGtransrelSG(SGstack('y',SG_cover_front,SGofCPLy(PL_cover_mid, servo_d{power(i)}(3)+20 ),SG_cover_front,SG_cover_outside),SG_guide,'transx',-dists(i),'ontop',3,'transy',10,'transy',-(0)*60);
     SG_tension_back{end+1}  = SGtransrelSG(SG_tensioner_back,SG_guide,'ontop',3,'transx',-dists(i),'transy',-80.5);
     SG_tensioner_holders{end+1} =SGtransrelSG(SG_tensioner_holder,SG_guide,'ontop',3,'transx',-dists(i));
@@ -312,7 +312,7 @@ SG_electric_bot = SGcat(SG_base_plate,SG_arduino_mounting,SG_feetech_mounting,SG
 SG_electric_top = SGcat(SG_top_frame,SG_arduino_mounting_top,SG_top_plate_f);
 
 %% Matlab Plot
-SG_electric = SGtransrelSG(SGcat(SG_electric_bot,SG_electric_top),SG_base_box,'rotz',-pi/2,'left',20,'alignbottom','alignback','left',-10);
+SG_electric = SGtransrelSG(SGcat(SG_electric_bot),SG_base_box,'rotz',-pi/2,'left',20,'alignbottom','alignback','left',-10);
 SG = SGcat(SG_electric,SG_base_box);
 SG = SGcat([{SG} SG_rotors SG_tensioners SG_rotor_clickbases]);
 SGplot(SG,'w');
@@ -346,19 +346,43 @@ fprintf(fileID,'Webseite: https://www.premium-modellbau.de/feetech-fe-urt-1-fuer
 fprintf(fileID,'1x Arduino USB Host Shield\n');
 fprintf(fileID,'Webseite: https://store.arduino.cc/arduino-usb-host-shield\n');
 fprintf(fileID,'\n');
+fprintf(fileID,'9V Netzteil für Arduino\n');
+fprintf(fileID,'https://www.conrad.de/de/p/voltcraft-esps-600-steckernetzteil-einstellbar-3-v-dc-4-5-v-dc-5-v-dc-6-v-dc-7-5-v-dc-9-v-dc-12-v-dc-600-ma-7-2-1380517.html\n');
+fprintf(fileID,'\n');
+fprintf(fileID,'12-16V Netzteil für Servomotoren mit 4 Pin Stecker\n');
+fprintf(fileID,'https://www.conrad.de/de/p/mean-well-gsm120a15-r7b-tischnetzteil-festspannung-15-v-dc-7-a-105-1837910.html\n');
+fprintf(fileID,'\n');
+fprintf(fileID,'Montagestecker für Servonetzteil\n');
+fprintf(fileID,'https://www.conrad.de/de/p/kycon-dc-4pol-panel-kpjx-pm-4s-s-1594181.html\n');
+fprintf(fileID,'\n');
 fprintf(fileID,'Servomotoren:\n');
 fprintf(fileID,'\n');
+m25bolts = 0;
+m3bolts = 0;
 for k=1:dofs
-    fprintf(fileID,"1x Feetech "+ServoNames{power(i)}+" Servomotor\n");
+    fprintf(fileID,"1x Feetech "+ServoNames{power(k)}+" Servomotor\n");
+    if power(k)==1
+        m25bolts = m25bolts+4;
+    else
+        m3bolts=m3bolts+6;
+    end
 end
+
+fprintf(fileID,'Schrauben:\n');
+fprintf(fileID,'%d x M2.5x8\n',m25bolts);
+fprintf(fileID,'%d x M3x8\n',m3bolts);
+fprintf(fileID,'%d x M3x14\n',dofs*4);
+% Schrauben
 
 fprintf(fileID,'\n');
 fprintf(fileID,'Zubehör:\n');
 fprintf(fileID,'\n');
 fprintf(fileID,'Arduinojumper\n');
-fprintf(fileID,'9V Netzteil für Arduino\n');
-fprintf(fileID,'12-16V Netzteil für Servomotoren\n');
 fprintf(fileID,'Mini-USB Kabel\n');
+fprintf(fileID,'Molex Mini SPOX Verbindungsstecker für Erweiterung:\n');
+fprintf(fileID,'https://www.deutsch.molex.com/molex/products/part-detail/crimp_housings/0050375043\n');
+fprintf(fileID,'Molex Inserts\n');
+fprintf(fileID,'https://www.deutsch.molex.com/molex/products/part-detail/crimp_terminals/0008701039\n');
 
 fclose(fileID);
 

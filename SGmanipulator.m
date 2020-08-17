@@ -319,6 +319,17 @@ path{end+1} = 'Desktop\Manipulator.txt';
 path = strjoin(path,'\'); 
 fileID = fopen(path,'w');
 
+fprintf(fileID,'\n');
+fprintf(fileID,'IDs der Servomotoren mit folgendem Code durch Matlab ersetzen\n');
+fprintf(fileID,'\n');
+fprintf(fileID,'Bus = FTBus("COMXX",BAUDRATE); \t// BAUDRATE = 115200 standardmäßig/ COM-Port aus Gerätemanager  \n');
+fprintf(fileID,'Servo = SM[C/B]LServo(Bus,CURRENT_ID); \t//Je nach Servotyp C oder B einfügen \n');
+fprintf(fileID,'Servo.cfgID = NEW_ID; \n');
+fprintf(fileID,'Servo.Output(); \n');
+fprintf(fileID,'\n\n');
+
+fprintf(fileID,'Arduino Code mit folgendem Initialisierungscode ersetzen:\n\n');
+
 id_start = 1;
 fprintf(fileID,'int rotor_radius = 25;\n');
 fprintf(fileID,'double ranges_mm[][2] = {');
@@ -341,9 +352,24 @@ end
 fprintf(fileID,'};\n');
 fprintf(fileID,'int ord[] = {1,2,3,4,5,6};\n');
 fprintf(fileID,'int servo_speed = 2000;\n');
+fprintf(fileID,'\n\n');
 
-fprintf(fileID,'Arduino Code mit erzeugtem Code ersetzen!\n');
+fprintf(fileID,'\n');
+fprintf(fileID,'Befehl zur Ansteuerung per MATLAB:\n');
+fprintf(fileID,'\n');
+fprintf(fileID,'SMControl([');
+for k=1:size(ranges,1)    
+    if k >1 fprintf(fileID,';'); end
+    fprintf(fileID,'[%.2f,%.2f 0]',ranges(k,1),ranges(k,1));
+end
+fprintf(fileID,'],[');
+id_start = 1;
+for k=1:size(ranges,1)
+    if k >1 fprintf(fileID,','); end
+    fprintf(fileID,'%i',id_start+k);
+end
 
+fprintf(fileID,'],25,1,[1,2,3,4,5,6],1)\n');
 fclose(fileID);
 
 % SGplot(SG);

@@ -5,17 +5,20 @@
 %   length_p:           [element_height,hinge_width,min_length,hinge_height]
 %   === FLAGS ==============
 %   'bottom_element':   Creates element with only top hinge
+%   'non_torsion':      
 %	=== OUTPUT RESULTS =====
 %	SG:             SG of element
 function [SG,offset] = SGelements(CPL,angle_p,length_p,varargin)
 %% Initializing
-bottom_ele = 0; 
+bottom_ele = 0; torsion = 1;
 for f=1:size(varargin,2)
    switch varargin{f}
        case 'bottom_element'
            bottom_ele = 1;     
            if angle_p(2) == 2, angle_p(2) = 0; end
 %            length_p(1) = 5;
+       case 'non_torsion'
+           torsion = 0;
    end
 end
 
@@ -27,28 +30,60 @@ SG = SGtrans(SG,[0 0 -hight_SG/2]);
 %% Add hinge to base
 SG_hinge = SGhingeround(length_p(3),length_p(2), length_p(4));
 
-if abs(angle_p(2)) == 1 || length_p(3) == 0
-    SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
-    SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
-    [SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,angle_p(1),angle_p(2),length_p(2),length_p(3), length_p(4));
-else
-    radius_in = max(min(abs(PLcrossCPLLine2([-500 0;500 0],CPL))));
-    SG_hinge = SGtrans(SG_hinge,[radius_in+length_p(4)/2 0 0]);
-    SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
-    SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
-    SG_hinge = SGcat(SG_hinge,SGtransR(SG_hinge,rotz(180)));
-    offset = 0;
+SG_hinge = SGtransR(SG_hinge,rotz(angle_p(1)));
+SG_hinge_2 = SGtransR(SG_hinge,rotz(-90));
+[SG_hinge,offset]= SGcreateHinge(CPL,SG_hinge,angle_p(1),angle_p(2),length_p(2),length_p(3), length_p(4));
+
+if length_p(3) ~= 0
+    cp = PLcrossCPLLine2(PLtransC([-500 0;500 0],[0 0],deg2rad(angle_p(1))),CPL);
+    dis_in_lef = pdist2(cp(3,:),[0 0]);
+    dis_in_rig = pdist2(cp(4,:),[0 0]);
+    dis_out_lef = pdist2(cp(1,:),[0 0]);
+    dis_out_rig = pdist2(cp(2,:),[0 0]);
+    SG_hinge =  SGtransR(SG_hinge,rotz(-angle_p(1)));
+    if torsion
+        distance_whole = dis_out_lef+dis_out_rig;
+        SG_hinge_l = SGcutend(SG_hinge,'right',distance_whole-length_p(3));
+        SG_hinge_r =  SGcutend(SG_hinge,'left',distance_whole-length_p(3));
+        SG_hinge = SGcat(SG_hinge_l,SG_hinge_r);
+    else
+        left_cut_distance = (dis_out_lef-dis_in_lef);
+        right_cut_distance = (dis_out_rig-dis_in_rig);
+        SG_hinge = SGcutend(SG_hinge,'left',left_cut_distance-length_p(3));
+        SG_hinge = SGcutend(SG_hinge,'right',right_cut_distance-length_p(3));
+    end
+    SG_hinge =  SGtransR(SG_hinge,rotz(angle_p(1)));
 end
+
+
+
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
 
 if angle_p(2) == 2
- if angle_p(2) == 1 || length_p(3) == 0
     [SG_hinge_2,offset_2]= SGcreateHinge(CPL,SG_hinge_2,angle_p(1)-90,angle_p(2),length_p(2),length_p(3), length_p(4));   
- else
-     SG_hinge_2 = SGtransR(SG_hinge,rotz(90));
-     offset_2 = 0;
- end
+    
+    if length_p(3) ~= 0
+        cp = PLcrossCPLLine2(PLtransC([-500 0;500 0],[0 0],deg2rad(-angle_p(1)+90)),CPL);
+        dis_in_lef = pdist2(cp(3,:),[0 0]);
+        dis_in_rig = pdist2(cp(4,:),[0 0]);
+        dis_out_lef = pdist2(cp(1,:),[0 0]);
+        dis_out_rig = pdist2(cp(2,:),[0 0]);
+        SG_hinge_2 =  SGtransR(SG_hinge_2,rotz(-angle_p(1)+90));
+        if torsion
+            distance_whole = dis_out_lef+dis_out_rig;
+            SG_hinge_l = SGcutend(SG_hinge_2,'right',distance_whole-length_p(3));
+            SG_hinge_r =  SGcutend(SG_hinge_2,'left',distance_whole-length_p(3));
+            SG_hinge_2 = SGcat(SG_hinge_l,SG_hinge_r);
+        else
+            left_cut_distance = (dis_out_lef-dis_in_lef);
+            right_cut_distance = (dis_out_rig-dis_in_rig);
+            SG_hinge_2 = SGcutend(SG_hinge_2,'left',left_cut_distance-length_p(3));
+            SG_hinge_2 = SGcutend(SG_hinge_2,'right',right_cut_distance-length_p(3));
+        end
+        SG_hinge_2 =  SGtransR(SG_hinge_2,rotz(angle_p(1)-90));        
+        
+    end
     SG_hinge_2_top = SGontop(SG_hinge_2,SG);
     SG_hinge_2_bottom = SGmirror(SG_hinge_2_top,'xy');
 end

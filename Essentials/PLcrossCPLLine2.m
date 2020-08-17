@@ -23,12 +23,19 @@ for k=1:size(CPLs,2)
     for n=1:size(CPLs{1,k},1)
         if n==size(CPLs{1,k},1) %% Wraparound for last to first point
             CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(1,:));
+            CP_temp_2 = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(1,:),true);
         else
-            CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:));
+            CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:)); 
+            CP_temp_2 = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:),true);
+            
+        end
+        if isempty(CP_temp)
+            CP_temp = CP_temp_2;
         end
         CP = [CP;CP_temp];
         
     end
 end
+  CP = unique(CP,'rows','stable');
 end
 
