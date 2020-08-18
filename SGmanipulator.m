@@ -152,6 +152,8 @@ for k=1:num_arms
     SG_elements_temp = {}; 
     offsets_temp = [];
     SG_bottom = SGelements(CPLbool('-',CPLs{k}{1},CPLs_holes{k}{1}),angle_p{k}(1,[1,4]),length_p{k}(1,2:5),'bottom_element');
+    SG_bottom.hole_positions = positions{k}{1};
+    SG_bottom.angle = angle_p{k}(1,1);
     SG_conns_temp = {SG_bottom};
     for i=1:num_sections(k)
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
@@ -165,23 +167,32 @@ for k=1:num_arms
             else
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap'});
             end
-            SG_conn_temp.hole_positions = positions(end,:);
+            SG_conn_temp.hole_positions = positions{end,:}{1};   
+            SG_conn_temp.angle = angle_p{k}(i,1);
         else
             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),length_p{k}(i:i+1,3:5),hole_r,tool_r(k),c_inputs);
 %             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
-            SG_conn_temp.hole_positions = positions{k}(i:i+1);
+            SG_conn_temp.hole_positions = positions{k}{i:i+1}{1};
+            SG_conn_temp.angle = [angle_p{k}(i,1);angle_p{k}(i+1,1)];
         end
-       if angle_p{k}(i,4)==2
-             angle_p{k}(i,1) = angle_p{k}(i,1)-90;
-         end
+        if angle_p{k}(i,4)==2
+            angle_p{k}(i,1) = angle_p{k}(i,1)-90;
+        end
         
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,2:5));
         if size(SG_ele_temp,2) == 1
             if i == num_sections(k)
-                SG_ele_temp.hole_positions = positions{k}(end);
+                SG_ele_temp.hole_positions = positions{k}{end};
+                SG_ele_temp.angle = angle_p{k}(i,1);
             else
-                SG_ele_temp.hole_positions = positions{k}(i:i+1);
+                SG_ele_temp.hole_positions = positions{k}{i:i+1};
+                SG_ele_temp.angle = angle_p{k}(i,1);
             end
+        else
+            SG_ele_temp{1}.hole_positions = positions{k}{end};            
+            SG_ele_temp{2}.hole_positions = positions{k}{end};
+            SG_ele_temp{1}.angle = angle_p{k}(i,1);
+            SG_ele_temp{2}.angle = angle_p{k}(i,1)-90;
         end
         if ~isempty(SG_conn_temp) SG_conns_temp{end+1} = SG_conn_temp;   SG_conn_temp = []; end
         SG_elements_temp{end+1} = SG_ele_temp;
@@ -272,6 +283,9 @@ for i=1:num_arms
     first_positions = [first_positions;positions{i}{1}];
 end
 base = SGmanipulatorbase(CPL_combis,optic_radius,first_positions,sensor_channel,optic,single,base_length,seal,radial);
+base.numArms = num_arms;
+base.numSections =  num_sections;
+base.numElements = ele_num;
 SGs = [{base} arms{:}];
 num = size(SGs,2);
 disp("Created Base");
