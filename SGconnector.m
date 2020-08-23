@@ -62,7 +62,8 @@ CPL_f = CPLbool('-',CPL_f,CPL_holes_f);
 PL_wireescape = CPLconvexhull([PLcircle(h_r*1.25);NaN NaN;PLtrans(PLsquare(h_r*2),[0 -10*h_r])]);
 PL_crimp_hole = CPLconvexhull([PLcircle(h_r*1.5);NaN NaN;PLtrans(PLsquare(h_r*3),[0 -10*h_r])]);
 [sizey,sizex,~,~,~,~] = sizeVL(CPL_b);
-SG_bottom = SGofCPLz(CPL_b,2);
+% SG_bottom = SGofCPLz(CPL_b,2);
+SG_bottom= SGofCPLzdelaunayGrid(CPL_b, 2,0.5,0.5);
 CPL_b_wireescape = CPL_b;
 CPL_f_wireescape = CPL_f;
 for k=1:size(positions{1},1)
@@ -95,7 +96,13 @@ if crimp
         CPL_f = CPL_f_wireescape;
     end
     SG_middle = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,10.5,'','rot');
-    SG_top = SGofCPLz(CPL_f,1);
+    if end_cap 
+%         SG_top = SGofCPLz(CPL_f,1);
+           SG_top= SGofCPLzdelaunayGrid(CPL_f, 1,0.5,0.5);
+    else
+%         SG_top = SGofCPLz(CPL_f,2);
+            SG_top= SGofCPLzdelaunayGrid(CPL_f, 2,0.5,0.5);
+    end
     SG = SGstack('z',SG_bottom,SG_middle,SG_top);
     
 else      

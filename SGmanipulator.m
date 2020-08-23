@@ -167,12 +167,12 @@ for k=1:num_arms
             else
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap'});
             end
-            SG_conn_temp.hole_positions = positions{end,:}{1};   
+%             SG_conn_temp.hole_positions = positions{end,:}{1};   
             SG_conn_temp.angle = angle_p{k}(i,1);
         else
             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),length_p{k}(i:i+1,3:5),hole_r,tool_r(k),c_inputs);
 %             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
-            SG_conn_temp.hole_positions = positions{k}{i:i+1}{1};
+%             SG_conn_temp.hole_positions = positions{k}{i:i+1}{1};
             SG_conn_temp.angle = [angle_p{k}(i,1);angle_p{k}(i+1,1)];
         end
         if angle_p{k}(i,4)==2

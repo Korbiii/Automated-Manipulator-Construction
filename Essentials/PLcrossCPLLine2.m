@@ -25,11 +25,17 @@ for k=1:size(CPLs,2)
             CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(1,:));
             CP_temp_2 = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(1,:),true);
         else
-            CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:)); 
+            CP_temp = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:));
             CP_temp_2 = PLcrossCPLline(CPL_line,CPLs{1,k}(n,:),CPLs{1,k}(n+1,:),true);
             
         end
+               
         if isempty(CP_temp)
+            if ~isempty(CP_temp_2)
+                if sum(CP_temp_2 == CPL_line(1,:)) == 2 || sum(CP_temp_2 == CPL_line(2,:)) == 2
+                    CP_temp_2 = [];
+                end
+            end
             CP_temp = CP_temp_2;
         end
         CP = [CP;CP_temp];
