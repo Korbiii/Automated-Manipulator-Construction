@@ -287,10 +287,10 @@ for k=1:num_arms
 end
 %% Adding base to arms in a cell list
 first_positions = [];
-for i=1:num_arms
-    first_positions = [first_positions;positions{i}{1}];
-end
-base = SGmanipulatorbase(CPL_combis,optic_radius,first_positions,sensor_channel,optic,single,base_length,seal,radial,flex,flex_angle);
+% for i=1:num_arms
+%     first_positions = [first_positions;positions{i}{1}];
+% end
+base = SGmanipulatorbase(CPL_combis,optic_radius,positions,sensor_channel,optic,single,base_length,seal,radial,flex,flex_angle);
 base.numArms = num_arms;
 base.numSections =  num_sections;
 base.numElements = ele_num;
@@ -397,7 +397,7 @@ fclose(fileID);
 % SGplot(SG);
 end
 
-%%  [CPLs,positions] = hole_finder(CPL_out,CPL_in,h_axis,hole_r,push_rod)
+%%  [CPLs,positions] = PLholeFinder(CPL_out,CPL_in,h_axis,hole_r,push_rod)
 %	=== INPUT PARAMETERS ===
 %	CPL_out:    CPL of outer contour of elements
 %	CPL_in:     CPL of tool hole
@@ -425,6 +425,7 @@ CPL_in = PLcircle(tool_r);
 CPL_no_go_areas = {};
 PL_hole = PLcircle(hole_r,40);
 PL_hole_small = PLcircle(0.4);
+if single PL_hole = PL_hole_small; end
 %% Generating CPL of area where no holes can go based on axis constraints
 for i=2:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
@@ -562,7 +563,12 @@ for i=start_value:step:end_value
         
         %% Adding Points
         if single == 1 || (single == 2 && first_section)
-            hole_positions = hole_position;
+            if angle_p(i,2) == 2
+                hole_positions = [hole_position;PLtransC(hole_position,curr_mid_point,pi)];
+%                 hole_positions = hole_position;
+            else                
+                hole_positions = hole_position;
+            end
         else
             hole_positions = [hole_position;PLtransC(hole_position,curr_mid_point,pi)];
         end
@@ -600,7 +606,12 @@ for i=start_value:step:end_value
                  CPL_small_holes{end+1} = PL_hole_small_temp;
             end
         end
-        CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
+          if angle_p(i,2) == 2          
+              CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions([1,2],:)];              
+%               CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
+          else              
+              CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
+          end
     end
     
     CPLs{end+1} = CPL_holes_2;
@@ -983,7 +994,7 @@ end
 %	SG:             SG of Manipulatorbase
 function [SG] = SGmanipulatorbase(CPL,varargin)
 optic_radius=3.25;      if nargin>=2 && ~isempty(varargin{1});  optic_radius=varargin{1};       end
-first_positions=[];     if nargin>=3 && ~isempty(varargin{2});  first_positions=varargin{2};    end
+channel_positions=[];     if nargin>=3 && ~isempty(varargin{2});  channel_positions=varargin{2};    end
 sensor_channel=0;       if nargin>=4 && ~isempty(varargin{3});  sensor_channel=varargin{3};     end
 optic_channel = 0;      if nargin>=5 && ~isempty(varargin{4});  optic_channel=varargin{4};      end
 single = 0;             if nargin>=6 && ~isempty(varargin{5});  single=varargin{5};             end
@@ -1080,12 +1091,15 @@ CPL_out = CPLconvexhull(CPL_base);
 CPL = CPLbool('-',CPL_out,CPL_holes);
 
 
-for i=1:num_arms
-    PL_crimp_holes = PLtrans(PLcircle(1.2),-first_positions(i,:));
+
+
+
+for i=1:num_arms   
+    PL_crimp_holes = PLtrans(PLcircle(0.7),-channel_positions{i}{1});
+      
     if ~single
         PL_crimp_holes = [PL_crimp_holes;NaN NaN;PLtransR(PL_crimp_holes,rot(pi))];
     end
-    
     if radial
         PL_crimp_holes = PLtrans(PL_crimp_holes,mid_points(1,:));
         PL_crimp_holes = PLtransR( PL_crimp_holes,rot((i-1)*(2*pi)/size(edges,1)));
@@ -1106,6 +1120,168 @@ for i=1:num_arms
 end
 
 
+PL_wire_escape = CPLconvexhull([PLcircle(0.6);NaN NaN;PLtrans(PLsquare(1.2),[0 -10])]);
+PL_crimp_escape = CPLconvexhull([PLcircle(1.5);NaN NaN;PLtrans(PLsquare(3),[0 -10])]);
+PL_hole = PLcircle(0.7);
+CPLs_crimp_connector = CPL;
+CPLs_wiree_connector = CPL;
+
+
+SG_crimp_conn_top = SGofCPLz(CPL,2);
+for k =1:num_arms
+    temp_pos = cat(1,channel_positions{k}{:});
+    if radial
+        PL_temp_cut = [];
+        PL_temp_cut_wire = [];
+        PL_temp_cut_hole = [];
+        if single 
+            end_to = size(temp_pos,1);
+        else
+            end_to = 1;
+        end          
+        for i=1:end_to
+            curr_temp_pos = mid_points(1,:)-temp_pos(i,:);              
+            alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));            
+            PL_temp_c = PLtransR(PL_crimp_escape,rot(pi-alpha));
+            PL_temp_c = PLtrans(PL_temp_c,curr_temp_pos);
+            PL_temp_c = PLtransR( PL_temp_c,rot((k-1)*(2*pi)/size(edges,1)));
+            
+            
+            PL_temp_cut_w = PLtransR(PL_wire_escape,rot(pi-alpha));
+            PL_temp_cut_w = PLtrans(PL_temp_cut_w,curr_temp_pos);
+            PL_temp_cut_w = PLtransR( PL_temp_cut_w,rot((k-1)*(2*pi)/size(edges,1)));
+            
+            PL_temp_cut_h = PLtransR(PL_hole,rot(pi-alpha));
+            PL_temp_cut_h = PLtrans(PL_temp_cut_h,curr_temp_pos);
+            PL_temp_cut_h = PLtransR( PL_temp_cut_h,rot((k-1)*(2*pi)/size(edges,1)));
+            
+             PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_c];            
+            PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_w];            
+            PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_h];
+            
+            if single == 0
+                curr_temp_pos = mid_points(1,:)+temp_pos(i,:);
+                alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));
+                PL_temp_c = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                PL_temp_c = PLtrans(PL_temp_c,curr_temp_pos);
+                PL_temp_c = PLtransR( PL_temp_c,rot((k-1)*(2*pi)/size(edges,1)));                
+                
+                PL_temp_cut_w = PLtransR(PL_wire_escape,rot(pi-alpha));
+                PL_temp_cut_w = PLtrans(PL_temp_cut_w,curr_temp_pos);
+                PL_temp_cut_w = PLtransR( PL_temp_cut_w,rot((k-1)*(2*pi)/size(edges,1)));
+                
+                PL_temp_cut_h = PLtransR(PL_hole,rot(pi-alpha));
+                PL_temp_cut_h = PLtrans(PL_temp_cut_h,curr_temp_pos);
+                PL_temp_cut_h = PLtransR( PL_temp_cut_h,rot((k-1)*(2*pi)/size(edges,1)));
+            end
+            
+            PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_c];            
+            PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_w];            
+            PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_h];
+        end
+    else        
+        for i=1:size(temp_pos,1)
+            if ~single && i > 1 continue; end
+            if k==1
+                curr_temp_pos = mid_points(k,:)-temp_pos(i,:);
+                alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));
+                PL_temp_cut = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                PL_temp_cut = PLtrans(PL_temp_cut,curr_temp_pos);
+                PL_temp_cut_wire = PLtransR(PL_wire_escape,rot(pi-alpha));
+                PL_temp_cut_wire = PLtrans(PL_temp_cut_wire,curr_temp_pos);
+                PL_temp_cut_hole = PLtrans(PL_hole,curr_temp_pos);
+                if single == 0
+                    curr_temp_pos_2 =  mid_points(k,:)+temp_pos(i,:);
+                    alpha = atan2(curr_temp_pos_2(1),curr_temp_pos_2(2));
+                    PL_temp_cut_2 = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                    PL_temp_cut_2 = PLtrans(PL_temp_cut_2,curr_temp_pos_2);
+                    
+                    PL_temp_cut_wire_2 = PLtransR(PL_wire_escape,rot(pi-alpha));
+                    PL_temp_cut_wire_2 = PLtrans(PL_temp_cut_wire_2,curr_temp_pos_2);
+                    PL_temp_cut_hole_2 = PLtrans(PL_hole,curr_temp_pos_2);
+                    
+                    PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_cut_2];
+                    PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_wire_2];
+                    PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_hole_2];
+                end
+            elseif k==2
+                curr_temp_pos = mid_points(k,:)+temp_pos(i,:);
+                alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));
+                PL_temp_cut = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                PL_temp_cut = PLtrans(PL_temp_cut,curr_temp_pos);
+                PL_temp_cut_wire = PLtransR(PL_wire_escape,rot(pi-alpha));
+                PL_temp_cut_wire = PLtrans(PL_temp_cut_wire,curr_temp_pos);
+                PL_temp_cut_hole = PLtrans(PL_hole,curr_temp_pos);
+                if single == 0
+                    curr_temp_pos_2 =  mid_points(k,:)-temp_pos(i,:);
+                    alpha = atan2(curr_temp_pos_2(1),curr_temp_pos_2(2));
+                    PL_temp_cut_2 = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                    PL_temp_cut_2 = PLtrans(PL_temp_cut_2,curr_temp_pos_2);
+                    
+                    PL_temp_cut_wire_2 = PLtransR(PL_wire_escape,rot(pi-alpha));
+                    PL_temp_cut_wire_2 = PLtrans(PL_temp_cut_wire_2,curr_temp_pos_2);
+                    PL_temp_cut_hole_2 = PLtrans(PL_hole,curr_temp_pos_2);
+                    
+                    PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_cut_2];
+                    PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_wire_2];
+                    PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_hole_2];
+                end
+            elseif k==3
+                curr_temp_pos = mid_points(k,:)-temp_pos(i,:)*rot(0);
+                alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));
+                PL_temp_cut = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                PL_temp_cut = PLtrans(PL_temp_cut,curr_temp_pos);
+                PL_temp_cut_wire = PLtransR(PL_wire_escape,rot(pi-alpha));
+                PL_temp_cut_wire = PLtrans(PL_temp_cut_wire,curr_temp_pos);
+                PL_temp_cut_hole = PLtrans(PL_hole,curr_temp_pos);
+                if single == 0
+                    curr_temp_pos_2 =  mid_points(k,:)+temp_pos(i,:)*rot(0);
+                    alpha = atan2(curr_temp_pos_2(1),curr_temp_pos_2(2));
+                    PL_temp_cut_2 = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                    PL_temp_cut_2 = PLtrans(PL_temp_cut_2,curr_temp_pos_2);
+                    
+                    PL_temp_cut_wire_2 = PLtransR(PL_wire_escape,rot(pi-alpha));
+                    PL_temp_cut_wire_2 = PLtrans(PL_temp_cut_wire_2,curr_temp_pos_2);
+                    PL_temp_cut_hole_2 = PLtrans(PL_hole,curr_temp_pos_2);
+                    
+                    PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_cut_2];
+                    PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_wire_2];
+                    PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_hole_2];
+                end
+            elseif k ==4
+                curr_temp_pos = mid_points(k,:)+temp_pos(i,:)*rot(pi/2);
+                alpha = atan2(curr_temp_pos(1),curr_temp_pos(2));
+                PL_temp_cut = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                PL_temp_cut = PLtrans(PL_temp_cut,curr_temp_pos);
+                PL_temp_cut_wire = PLtransR(PL_wire_escape,rot(pi-alpha));
+                PL_temp_cut_wire = PLtrans(PL_temp_cut_wire,curr_temp_pos);
+                PL_temp_cut_hole = PLtrans(PL_hole,curr_temp_pos);
+                if single == 0
+                    curr_temp_pos_2 =  mid_points(k,:)-temp_pos(i,:)*rot(pi/2);
+                    alpha = atan2(curr_temp_pos_2(1),curr_temp_pos_2(2));
+                    PL_temp_cut_2 = PLtransR(PL_crimp_escape,rot(pi-alpha));
+                    PL_temp_cut_2 = PLtrans(PL_temp_cut_2,curr_temp_pos_2);
+                    
+                    PL_temp_cut_wire_2 = PLtransR(PL_wire_escape,rot(pi-alpha));
+                    PL_temp_cut_wire_2 = PLtrans(PL_temp_cut_wire_2,curr_temp_pos_2);
+                    PL_temp_cut_hole_2 = PLtrans(PL_hole,curr_temp_pos_2);
+                    
+                    PL_temp_cut = [PL_temp_cut;NaN NaN;PL_temp_cut_2];
+                    PL_temp_cut_wire = [PL_temp_cut_wire;NaN NaN;PL_temp_cut_wire_2];
+                    PL_temp_cut_hole = [PL_temp_cut_hole;NaN NaN;PL_temp_cut_hole_2];
+                end
+            end
+        end        
+    end
+    
+        CPL= CPLbool('-',CPL,PL_temp_cut_hole);
+        CPLs_crimp_connector = CPLbool('-',CPLs_crimp_connector,PL_temp_cut);
+        CPLs_wiree_connector = CPLbool('-',CPLs_wiree_connector,PL_temp_cut_wire);
+end
+
+SG_wireescape = SGofCPLz(CPLs_wiree_connector,5);
+SG_crimpescape = SGofCPLz(CPLs_crimp_connector,10.5);
+SG_crimp_connector = SGstack('z',SG_wireescape,SG_crimpescape,SG_crimp_conn_top);
 
 
 %%
@@ -1139,6 +1315,7 @@ if flex
 else    
     SG = SGstackn(SG,length,0);
 end
+SG = SGstack('z',SG,SG_crimp_connector);
 
 if seal
     max_value = max(sizex,sizey)/2;
