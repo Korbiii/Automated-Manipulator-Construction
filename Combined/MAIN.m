@@ -1,5 +1,5 @@
 clear all; clf;
-addpath('Essentials');
+% addpath('Essentials');
 path = prefdir; path = strsplit(path, '\');path{7} = 'MATLAB Add-Ons\Toolboxes\SolidGeometry 4.9'; path = strjoin(path(1:7),'\'); addpath(path);
 axis equal; hold on;
 
@@ -18,6 +18,10 @@ axis equal; hold on;
 % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
 % CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
 % [SGm,SGc,ranges] = SGmanipulator({CPL,CPL2},6.8,[90;0;90],[27;30;55],'symmetric');
+
+ CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
+ [SGm,SGc,ranges] = SGmanipulator({CPL},6.8,[90 40 40 0; 0 30 30 2],[27;30],'symmetric','single','optic_mid','length',10,'flex',10);
+% [SGm,SGc,ranges] = SGmanipulator({PLtrans(PLkidney(7,17,pi/6.5),[-12 0])},6.8,[90;0;90],[27;30;55],'symmetric');
 %%ONE ARM TEST
 % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
 % CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
@@ -31,7 +35,7 @@ axis equal; hold on;
 % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
 % CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
 % CPL3 = PLtrans(PLkidney(2,12,pi/12),[-7 0]);
-% [SGm,SGc,ranges] = SGmanipulatorS({{CPL;CPL2},{CPL2;CPL3},{PLcircle(5)}},[6;4;3],{[90 75 75 1;0 90 90 0;90 120 120 0],[0 20 20 0;90 90 90 0;0 50 50 0],[90 20 20 0;0 90 90 0;0 50 50 2]},{[27;30;55],[10;10;10],[10;10;20]},'angles',[-0.9 0 1;0.5 0 0;-0.9 0 0.5 ],'first_single');
+% [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL2;CPL3},{PLcircle(5)}},[6;4;3],{[90 75 75 1;0 90 90 0;90 120 120 0],[0 20 20 0;90 90 90 0;0 50 50 0],[90 20 20 0;0 90 90 0;0 50 50 2]},{[27;30;55],[10;10;10],[10;10;20]},'angles',[-0.9 0 1;0.5 0 0;-0.9 0 0.5 ],'first_single','torsion');
 %% FOUR ARM TEST
 % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);
 % CPL2 = PLtrans(PLkidney(4,14,pi/6.5),[-9 0]);
@@ -54,19 +58,19 @@ axis equal; hold on;
 % CPL2 =  PLroundcorners(PLsquare(10,14),[1,2,3,4],[2,7,7,2]);
 % 
 % 
-CPL = PLroundcorners(PLsquare(9.5,15),[1,2,3,4],[2,7,7,2]);
+% CPL = PLroundcorners(PLsquare(9.5,15),[1,2,3,4],[2,7,7,2]);
 % CPL = PLsquare(9.5,15);
-CPL2 =  PLroundcorners(PLsquare(9.5,15),[1,2,3,4],[2,7,7,2]);
+% CPL2 =  PLroundcorners(PLsquare(9.5,15),[1,2,3,4],[2,7,7,2]);
 
 % CPL2 =  PLsquare(9.5,15);
 % % CPL = [CPL;NaN NaN;PL_led];
 % % CPL2 = [CPL2;NaN NaN;PL_led];
 % 
 % PL_led = [PLtrans(PLcircle(0.6),[-4 -3]);NaN NaN;PLtrans(PLcircle(0.6),[4 -3])];
-CPL_camera =  PLroundcorners(PLsquare(11,9),[1,2,3,4],[2,2,5,5]);
+% CPL_camera =  PLroundcorners(PLsquare(11,9),[1,2,3,4],[2,2,5,5]);
 % % CPL_camera = [CPL_camera;NaN NaN;PL_led];
 % 
-[SGm,SGc,ranges,fc,phi] = SGmanipulatorS({{CPL;CPL2},{CPL;CPL2},{CPL_camera}},[5;5;4],{[90 40 40 1;0 80 70 0;90 160 160 0],[90 40 40 1;0 45 45 0;90 160 160 0],[0 90 45 -1;0 250 250 2]},{[27 4 1.2 3 0.5;30 4 1.0 0 0.5;55 2 0.8 4 0.5],[27 4 1.2 3 0.5;30 4 1.0 0 0.5;55 2 0.6 4 0.5],[30 2 1 2 0.5;40 2 0.6 1 0.5]},'angles',[-0.6 0 0.2;-0.6 0 0.2;0 -0 0],'first_single','hole_radius',0.75,'length',14);
+% [SGm,SGc,ranges,fc,phi] = SGmanipulatorS({{CPL;CPL2},{CPL;CPL2},{CPL_camera}},[5;5;4],{[90 40 40 1;0 80 70 0;90 160 160 0],[90 40 40 1;0 45 45 0;90 160 160 0],[0 90 45 -1;0 250 250 2]},{[27 4 1.2 3 0.5;30 4 1.0 0 0.5;55 2 0.8 4 0.5],[27 4 1.2 3 0.5;30 4 1.0 0 0.5;55 2 0.6 4 0.5],[30 2 1 2 0.5;40 2 0.6 1 0.5]},'angles',[-0.6 0 0.2;-0.6 0 0.2;0 -0 0],'first_single','hole_radius',0.75,'length',8);
 % [SGm,SGc,ranges] = SGmanipulator({{CPL;CPL2},{CPL;CPL2},{PLcircle(4)}},[6;6;1.5],{[90 60 60 1;0 70 70 0;90 120 120 0],[90 60 60 1;0 70 70 0;90 120 120 0],[0 120 45 -1;0 150 150 2]},{[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[27 4 1.2 1 0.5;30 4 1.0 1 0.5;55 2 0.8 2 0.5],[25 2 1 1 0.5;40 2 1 0.25 0.5]},'optic_mid','angles',[-0.3 0 0;-0.3 0 0;0 0 0],'first_single','hole_radius',0.75,'optic_radius',2.2);
 % 
 % SGwriteSTL(SGc{1},"150mm",'','y')

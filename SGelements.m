@@ -41,8 +41,9 @@ if length_p(3) ~= 0
     dis_out_lef = pdist2(cp(1,:),[0 0]);
     dis_out_rig = pdist2(cp(2,:),[0 0]);
     SG_hinge =  SGtransR(SG_hinge,rotz(-angle_p(1)));
+    [distance_whole,~,~,~,~,~] = sizeVL(SG_hinge);
     if torsion
-        distance_whole = dis_out_lef+dis_out_rig;
+%         distance_whole = dis_out_lef+dis_out_rig;
         SG_hinge_l = SGcutend(SG_hinge,'right',distance_whole-length_p(3));
         SG_hinge_r =  SGcutend(SG_hinge,'left',distance_whole-length_p(3));
         SG_hinge = SGcat(SG_hinge_l,SG_hinge_r);

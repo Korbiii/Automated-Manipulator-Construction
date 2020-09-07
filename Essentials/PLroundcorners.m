@@ -13,7 +13,9 @@ try
 catch
     PL_save =[];
 end
+
 PL = CPLselectinout(PL,0);
+
 corners = {};
 for i=1:size(corner_numbers,2)
     if corner_numbers(i) == 1
