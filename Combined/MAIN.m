@@ -12,7 +12,10 @@ axis equal; hold on;
 
 CPL = PLcircle(5);
 % SGmanipulator({CPL},[2],[90 60 60 2],[20 2 0.8 2 0.5],'tip');
-SGmanipulator({{CPL},{CPL},{CPL}},[2;2;2],{[90 60 60 2],[90 60 60 2],[90 60 60 2]},{[20 2 0.8 2 0.5],[20 2 0.8 2 0.5],[20 2 0.8 2 0.5]},'tip','radial');
+% SGmanipulator({{CPL},{CPL},{CPL}},[2;2;2],{[90 60 60 2;90 60 60 1],[90 60 60 2],[90 60 60 2]},{[20 2 0.8;20 2 0.8],[20 2 0.8],[20 2 0.8]},'tip','radial');
+
+[SGm]= SGmanipulator({{CPL},{CPL}},[5;2],{[90 60 60 2;90 60 60 1],[90 60 60 2]},{[20 2 0.8;20 2 0.8],[20 2 0.8]},'tip','radial','w_thickness',[0.5,0.2]);
+SGwriteSTL(SGm);
 
 %% Kidneys
 % CPL = PLtrans(PLkidney(7,17,pi/6.5),[-12 0]);

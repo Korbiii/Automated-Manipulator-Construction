@@ -20,40 +20,42 @@
 %   'symmetric'         Creates symmetric two armed manipulator based on one arm definition
 %   'radial'            Radial placement of arms
 %   'sensor_channel':   Creates a sesor channel for EMT
-%   'side_stabi':       Creating side stabilizing elements
 %   'tip':              Creates only arms with minimal base
 %   'flex'              Creates a flexbile base
+%   'textoutput'        Generates txt file with instructions
+%   'w_thickness'       Specifying minimimum thickness of walls. Default 0.7 out 0.5 in
 %	=== OUTPUT RESULTS =====
 %	SG:                 SG of Manipulator
 %   SGc:                SGTchain of Manipulator
 function [SG,SGc,ranges,framechain,phis] = SGmanipulator(CPL_out,tool_d,angle_p,length_p,varargin) 
-base_length = 7;optic_radius = 2.2;hole_r = 0.7; num_arms = 2;
+%Sanitizing Inputs
+if ~iscell(CPL_out),     CPL_out = {CPL_out};    end
+if ~iscell(angle_p),     angle_p = {angle_p};    end
+if ~iscell(length_p),    length_p = {length_p};  end
+
+%% Initializing variables
+[single,flex,flex_angle,sensor_channel,optic,seal,symmetric,torsion,bottom_up,radial,textoutput] = deal(0);
+[c_inputs,CPLs,CPL_in,arms,SG_elements,CPL_combis,CPLs_holes,offsets,positions,SG_conns,ele_num,angles_sections,phis] = deal({});
+[angles,num_sections,ranges,ele_num_sections] = deal([]);
+
+%Defaults
+base_length = 7;
+optic_radius = 2.2;
+hole_r = 0.7;
+tool_r = tool_d/2; 
 angle_defaults = [90 90 0];
 length_defaults = [2 1 0 0.5];
-angles = []; c_inputs = {}; CPLs = {};
-if ~iscell(CPL_out)
-    CPL_out = {CPL_out};
-end
-if ~iscell(angle_p)
-    angle_p = {angle_p};
-end
-if ~iscell(length_p)
-    length_p = {length_p};
-end
+w_th_o = 0.7;
+w_th_i = 0.5;
 
-[single,side_stabi,flex,flex_angle,sensor_channel,optic,seal,symmetric,torsion,bottom_up,radial] = deal(0);
 for f=1:size(varargin,2)
 if ~ischar(varargin{f}), continue; end
       switch varargin{f}
           case 'single'
               c_inputs{end+1} = 'single';
               single = 1;
-              crimp = 0;
-          case 'side_stabi'
-              side_stabi = 1;
           case 'first_single'
               single = 2;
-              crimp = 1;
               c_inputs{end+1} = 'crimp';
           case 'tip'
               base_length = 1;
@@ -75,6 +77,11 @@ if ~ischar(varargin{f}), continue; end
               angles = varargin{f+1};
           case 'hole_radius'
               hole_r = varargin{f+1};
+          case 'textoutput'
+              textoutput = 1;
+          case 'w_thickness'
+              w_th_o =  varargin{f+1}(1);              
+              w_th_i =  varargin{f+1}(2);
           case 'symmetric'
               symmetric = 1;
               num_arms = 2;
@@ -84,106 +91,125 @@ if ~ischar(varargin{f}), continue; end
               flex = 1;
               flex_angle = varargin{f+1};
           otherwise
-              error(varargin{f} + " isn't a valid flag!!!!");            
+              error(varargin{f} + " isn't a valid flag!");            
       end   
 end
 
-%% Setting up variables
-
+%% Adjusting Input
 if symmetric
     angle_p = {angle_p{1},angle_p{1}};
     length_p = {length_p{1},length_p{1}};
     CPL_out = {CPL_out(1),CPL_out(1)};
-    tool_d = [tool_d;tool_d];
 end
 
-num_sections = [];
-tool_r = tool_d/2;
+%% Counting Number of arms and number of section based on inputs
 num_arms = size(angle_p,2);
 for i=1:num_arms
     num_sections = [num_sections size(angle_p{i},1)];
 end
 
-
+%% Filling up missing inputs with default values. Cell list is converted into array and later back to cell list.
 angle_p = cell2mat(angle_p');
 length_p = cell2mat(length_p');
 angle_p = [angle_p repelem(angle_defaults(1,size(angle_p,2):end),size(angle_p,1),1)];
 length_p = [length_p repelem(length_defaults(1,size(length_p,2):end),size(length_p,1),1)];
 
+% Checking if inputs make sense. 
+for i=1:size(length_p,1)
+    if abs(angle_p(i,4)) == 1 && length_p(i,4) == 0
+        length_p(i,4) = 2;
+        warning("Length of flexure hinge needs to be specified, when hinge should be optimized. Minimal hinge length set to 2");
+    end
+end
+
+% Filling up CPL list according to number of section. Last specified CPL is
+% used for remaining sections per arm.
 if num_arms == 1
     CPL_out = {[CPL_out;repmat(CPL_out(end),size(angle_p,1)-size(CPL_out,1),1)]};
     CPL_in = {PLcircle(tool_r,tool_r*20)};
-    if num_arms == 2
-        CPL_out{end+1} = CPL_out{end};
-        CPL_in{end+1} = CPL_in{end};
-        length_p = [length_p;length_p];
-        angle_p = [angle_p;angle_p];
-        tool_r = [tool_r;tool_r];
-    end
 else
-    CPL_in = {};
     for i = 1:num_arms
         CPL_out{i} = [CPL_out{i};repmat(CPL_out{1,i}(end),num_sections(i)-size(CPL_out{1,i},1),1)];
         CPL_in{end+1} =  PLcircle(tool_r(i),tool_r(i)*20);
     end
 end
+
+% Combing of outer contour and channel for tool into a cell array.
 for i=1:num_arms  
     CPLs_temp = {};
     for j=1:size(CPL_out{1,i},1)
         CPLs_temp{end+1,1} = CPLbool('-',CPL_out{1,i}{j},CPL_in{i});
     end
-    CPLs{end+1} = CPLs_temp;
-end                         
-%% Initializing arrays and variables
+    CPLs{end+1} = CPLs_temp; clearvars CPLs_temp;
+end   
+
+% Converting array back into cell list.
 length_p_temp = length_p;
 angle_p_temp = angle_p; 
-[arms,SG_elements,CPL_combis,CPLs_holes,offsets,positions,SG_conns,angle_p,length_p] = deal({});
-start =1; ende = num_sections(1);
+[angle_p,length_p] = deal({});
+start = 1; 
+stop = num_sections(1);
 for i=1:num_arms          
-    length_p{end+1} = length_p_temp(start:ende,:);    
-    angle_p{end+1} = angle_p_temp(start:ende,:);
-    start = ende+1;
-    if i < num_arms ende = ende+num_sections(i+1); end
+    length_p{end+1} = length_p_temp(start:stop,:);    
+    angle_p{end+1} = angle_p_temp(start:stop,:);
+    start = stop+1;
+    if i < num_arms, stop = stop + num_sections(i+1); end
 end
+clearvars length_p_temp angle_p_temp;
+
 %% Finding Positions of holes and creating CPLs
 for i=1:num_arms
-    [CPLs_holes{end+1},positions_temp] = PLholeFinder(CPL_out{i},tool_r(i),angle_p{i}(:,[1,4]),length_p{i}(:,3:5),hole_r,single,torsion,bottom_up); 
-    positions{end+1} = positions_temp;
-end
+    [CPLs_holes{end+1} , positions{end+1}] = PLholeFinder(CPL_out{i},tool_r(i),angle_p{i}(:,[1,4]),length_p{i}(:,3:5),hole_r,single,torsion,bottom_up,w_th_o,w_th_i); 
+end 
 % disp("Bowden cable channels created");
-%%  Creating elements and connectors
+%%  Creating elements for arms
 for k=1:num_arms
-    SG_elements_temp = {}; 
-    offsets_temp = [];
+    SG_elements_temp = {}; offsets_temp = [];
+    
+    % Creating connecting element between shaft and arm.
     SG_bottom = SGelements(CPLbool('-',CPLs{k}{1},CPLs_holes{k}{1}),angle_p{k}(1,[1,4]),length_p{k}(1,2:5),'bottom_element');
     SG_bottom.hole_positions = positions{k}{1};
-    SG_bottom.angle = angle_p{k}(1,1);
+    SG_bottom.angle = angle_p{k}(1,1);    
     SG_conns_temp = {SG_bottom};
+    
     for i=1:num_sections(k)
         CPL_combined = CPLbool('-',CPLs{k}{i},CPLs_holes{k}{i});
-        if i==1 CPL_combis{end+1} = CPL_combined; end
-         if angle_p{k}(i,4)==2
-             angle_p{k}(i,1) = angle_p{k}(i,1)+90;
-         end
-        if i == num_sections(k)   %% Top of arms
+        % Saving first combined CPL of every arm for later use.
+        if i==1
+            CPL_combis{end+1} = CPL_combined; 
+        end
+        % Adding 90 degrees to angle of alternating sections. This is done
+        % because alternating sections need the following connector element
+        % to have a hinge rotated 90 degrees to the one before the section.
+        if angle_p{k}(i,4) == 2
+            angle_p{k}(i,1) = angle_p{k}(i,1)+90;
+        end
+        
+        %Generating connector Elements
+        if i == num_sections(k)   % Generating cap at top of arms instead of connector to next section.
             if single == 1
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap','single'});
             else
                 SG_conn_temp = SGconnector(CPLs{k}(num_sections(k)),CPLs_holes{k}(end),positions{k}(end),[angle_p{k}(end,[1,4]);angle_p{k}(end,[1,4])],length_p{k}(i,3:5),hole_r,tool_r(k),{'end_cap'});
             end
-%             SG_conn_temp.hole_positions = positions{end,:}{1};   
+%           SG_conn_temp.hole_positions = positions{end,:}{1};   
             SG_conn_temp.angle = angle_p{k}(i,1);
         else
             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),length_p{k}(i:i+1,3:5),hole_r,tool_r(k),c_inputs);
-%             SG_conn_temp = SGconnector(CPLs{k}(i:i+1),CPLs_holes{k}(i:i+1),positions{k}(i:i+1),angle_p{k}(i:i+1,[1,4]),hole_r,tool_r(k),length_p{k}(i,3),length_p{k}(i+1,3),length_p{k}(i,4),length_p{k}(i,5),length_p{k}(i+1,5),c_inputs);
-%             SG_conn_temp.hole_positions = positions{k}{i:i+1}{1};
+%           SG_conn_temp.hole_positions = positions{k}{i:i+1}{1};
             SG_conn_temp.angle = [angle_p{k}(i,1);angle_p{k}(i+1,1)];
         end
-        if angle_p{k}(i,4)==2
+        
+        % Removing the 90 degress for alternating sections again for
+        % creation of elements.
+        if angle_p{k}(i,4) == 2
             angle_p{k}(i,1) = angle_p{k}(i,1)-90;
         end
         
+        %Creating section elements.
         [SG_ele_temp, offset] = SGelements(CPL_combined,angle_p{k}(i,[1,4]),length_p{k}(i,2:5));
+        % Adding extra information based onnormal sections or alternating
+        % sectons.
         if size(SG_ele_temp,2) == 1
             if i == num_sections(k)
                 SG_ele_temp.hole_positions = positions{k}{end};
@@ -198,76 +224,63 @@ for k=1:num_arms
             SG_ele_temp{1}.angle = angle_p{k}(i,1);
             SG_ele_temp{2}.angle = angle_p{k}(i,1)-90;
         end
-        if ~isempty(SG_conn_temp) SG_conns_temp{end+1} = SG_conn_temp;   SG_conn_temp = []; end
+        if ~isempty(SG_conn_temp) 
+            SG_conns_temp{end+1} = SG_conn_temp;   
+            SG_conn_temp = []; 
+        end
         SG_elements_temp{end+1} = SG_ele_temp;
         offsets_temp = [offsets_temp offset];
-%         disp("Element "+ i + " and Connector " + i + " for arm "+k+" created!");
+%       disp("Element "+ i + " and Connector " + i + " for arm "+k+" created!");
     end
     SG_elements{end+1} = SG_elements_temp;
     SG_conns{end+1} = SG_conns_temp;
     offsets{end+1} = offsets_temp;
 end
-
+clearvars offsets_temp SG_elements_temp SG_conns_temp SG_ele_temp offset;
 
 %% Calculating number of elements && adding stops
-[ele_num,angles_sections] = deal({});
-ranges = [];
+% Adding padding to array to make it easier to iterate through it.
 for k = 1:num_arms
     length_p{k} = [0 0 0 0 0;length_p{k};0 0 0 0 0];
     angle_p{k} = [0 0 0 0;angle_p{k};0 0 0 0];
 end
+
 for k = 1:num_arms
-    ele_num_temp = [];
-    angles_sections_temp = [];
+    [ele_num_temp,angles_sections_temp] = deal([]);
     for i=2:num_sections(k)+1
+        % Adding an additional element to alternating sections to have an
+        % equal amount of hinges in both directions.
         extra_element = 0;
         if angle_p{k}(i,4) == 2
-            extra_element =1;
+            extra_element = 1;
         end
-        ele_num_temp = [ele_num_temp extra_element + floor(length_p{k}(i,1)/(length_p{k}(i,2)+(2*length_p{k}(i,5))))];
-        max_dim = max(sizeVL(CPL_out{k}{i-1}))+1;
-        middle_axis = PLtransR(PLtrans([-max_dim 0;max_dim 0],[0 offsets{k}(i-1)]),rot(-deg2rad(angle_p{k}(i,1))));
         
+        % Calculating the number of elements needed per section based on 
+        % the specified length value. Length of connecting elements isn't
+        % taken into consideration.
+        ele_num_temp = [ele_num_temp extra_element + floor(length_p{k}(i,1)/(length_p{k}(i,2)+(2*length_p{k}(i,5))))];
+        
+        % Calculating angle per element in section.        
         phi_left = max(1,(angle_p{k}(i,2)/ele_num_temp(i-1)-1)/2);
         phi_right = max(1,(angle_p{k}(i,3)/ele_num_temp(i-1)-1)/2);
+        
+        % Generating of element stops. Alternating sections need to be
+        % dealt differently.
         if angle_p{k}(i,4) == 2
             SG_el = SGstops(flip(SG_elements{k}{i-1}),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
             SG_el = SGstops(flip(SG_el'),CPL_out{k}{i-1},-angle_p{k}(i,1)+90,offsets{k}(i-1),phi_left,phi_right,repelem(length_p{k}(i,[3,5]),3,1));
-            SG_elements{k}{i-1} = SG_el;          
-            
+            SG_elements{k}{i-1} = SG_el;
             [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]),2);
-      
         else
             SG_el = SGstops(SG_elements{k}{i-1},CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i,[3,5]));
             SG_elements{k}{i-1} = SG_el;
-             [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
-      
+            [SG_con] = SGstops(SG_conns{k}(i-1:i),CPL_out{k}{i-1},-angle_p{k}(i,1),offsets{k}(i-1),phi_left,phi_right,length_p{k}(i-1:i+1,[3,5]));
         end
         SG_conns{k}{i-1} = SG_con{1};
         SG_conns{k}{i} = SG_con{2};
-        if angle_p{k}(i,4) == 2            
-            %ranges = [ranges; []]
-            dis_axis_pos_1 = distPointLine(middle_axis,positions{k}{i-1}(1,:));
-            dis_axis_pos_2 = distPointLine(middle_axis*rot(pi/2),positions{k}{i-1}(2,:));
-            height_1 = 2*(tand(phi_right)*dis_axis_pos_1);
-            height_2 = 2*(tand(phi_left)*dis_axis_pos_2);
-            
-            ranges = [ranges;max(0,height_1*ele_num_temp(i-1)),max(0,height_1*ele_num_temp(i-1));max(0,height_2*ele_num_temp(i-1)),max(0,height_2*ele_num_temp(i-1))];
-            SG_elements{k}{i-1}{1}.phi =  [phi_left*2,phi_right*2];
-             SG_elements{k}{i-1}{2}.phi =  [phi_left*2,phi_right*2];            
-        else
-            dis_axis_pos = distPointLine(middle_axis,positions{k}{i-1}(1,:));
-            height_l = 2*(tand(phi_right)*dis_axis_pos);
-            height_r = 2*(tand(phi_left)*dis_axis_pos);
-            
-            ranges = [ranges;max(0,height_l*ele_num_temp(i-1)),max(0,height_r*ele_num_temp(i-1))];
-            SG_elements{k}{i-1}.phi =  [phi_left*2,phi_right*2];
-        end        
-            SG_conns{k}{i-1}.phi_t = [phi_left*2,phi_right*2];
-            SG_conns{k}{i}.phi_b = [phi_left*2,phi_right*2];
-            angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];        
+        angles_sections_temp = [angles_sections_temp;phi_left*2,phi_right*2];        
     end
-%     disp("Added Stops to arm " + k);
+%   disp("Added Stops to arm " + k);
     angles_sections{end+1} = angles_sections_temp;
     ele_num{end+1} = ele_num_temp;
 end
@@ -275,21 +288,20 @@ end
 for k=1:num_arms
     arm_temp = [];
     for j=1:num_sections(k)
+        % Adding elements. Here the extra SG is added for alternating
+        % sections.
         if angle_p{k}(j+1,4) == 2
             arm_temp = [arm_temp repmat(SG_elements{k}{j}',1,floor(ele_num{k}(j)/2))];
             arm_temp = [arm_temp SG_elements{k}{j}(1)];
         else
             arm_temp = [arm_temp repelem(SG_elements{k}(j),ele_num{k}(j))];
         end
+        % Adding connector element after section elements.
         arm_temp = [arm_temp  SG_conns{k}(j+1)];
     end    
     arms{end+1} = [SG_conns{k}(1) arm_temp];
 end
-%% Adding base to arms in a cell list
-first_positions = [];
-% for i=1:num_arms
-%     first_positions = [first_positions;positions{i}{1}];
-% end
+%% Generating shaft based on input parameters
 SG_base = SGmanipulatorbase(CPL_combis,optic_radius,positions,sensor_channel,optic,single,base_length,seal,radial,flex,flex_angle);
 SG_base.numArms = num_arms;
 SG_base.numSections =  num_sections;
@@ -298,7 +310,9 @@ SGs = [{SG_base} arms{:}];
 num = size(SGs,2);
 % disp("Created Base");
 %% Generating full manipulator with framechain
-phis = {};
+
+% Filling cell list of angles for SGTchain based on input. Default is no
+% angle.
 if isempty(angles)
     for i=1:num_arms
         phis{end+1} = zeros(1,size(arms{i},2));
@@ -320,81 +334,89 @@ else
     end
 end
 
-
-ele_num_sections = [];
+% Adding up number of SGs per arm. 
 for k=1:num_arms
     ele_num_sections = [ele_num_sections sum(ele_num{k})+num_sections(k)];
 end
+
+% Generating framechain for SGTchain. SGTframeChain2 generates a tree like
+% framechain. Maybe possible with existing framechain.
 if num_arms > 1
     framechain = SGTframeChain2(num,ele_num_sections(1:end-1)+1);
 else
     framechain = SGTframeChain(num);
 end
 
+% Converting cell array to matrix for SGTchain.
 phis = deg2rad(cell2mat(phis));
 SGc = SGTchain(SGs,[0 phis],'',framechain);
 % disp("Created SGTchain");
 SG = SGc;
 
-[~, userdir] = system('echo %USERPROFILE%');
-userdir(end) = [];
-path = strsplit(userdir, '\');
-path{end+1} = 'Desktop\Manipulator.txt';
-path = strjoin(path,'\'); 
-fileID = fopen(path,'w');
-
-fprintf(fileID,'\n');
-fprintf(fileID,'IDs der Servomotoren mit folgendem Code durch Matlab ersetzen\n');
-fprintf(fileID,'\n');
-fprintf(fileID,'Bus = FTBus("COMXX",BAUDRATE); \t// BAUDRATE = 115200 standardmäßig/ COM-Port aus Gerätemanager  \n');
-fprintf(fileID,'Servo = SM[C/B]LServo(Bus,CURRENT_ID); \t//Je nach Servotyp C oder B einfügen \n');
-fprintf(fileID,'Servo.cfgID = NEW_ID; \n');
-fprintf(fileID,'Servo.Output(); \n');
-fprintf(fileID,'\n\n');
-
-fprintf(fileID,'Arduino Code mit folgendem Initialisierungscode ersetzen:\n\n');
-
-id_start = 1;
-fprintf(fileID,'int rotor_radius = 25;\n');
-fprintf(fileID,'double ranges_mm[][2] = {');
-for k=1:size(ranges,1)
-    fprintf(fileID,'{%.2f,%.2f}',ranges(k,1),ranges(k,1));
+if textoutput
+    [~, userdir] = system('echo %USERPROFILE%');
+    userdir(end) = [];
+    path = strsplit(userdir, '\');
+    path{end+1} = 'Desktop\Manipulator.txt';
+    path = strjoin(path,'\');
+    fileID = fopen(path,'w');
+    
+    fprintf(fileID,'\n');
+    fprintf(fileID,'IDs der Servomotoren mit folgendem Code durch Matlab ersetzen\n');
+    fprintf(fileID,'\n');
+    fprintf(fileID,'Bus = FTBus("COMXX",BAUDRATE); \t// BAUDRATE = 115200 standardmäßig/ COM-Port aus Gerätemanager  \n');
+    fprintf(fileID,'Servo = SM[C/B]LServo(Bus,CURRENT_ID); \t//Je nach Servotyp C oder B einfügen \n');
+    fprintf(fileID,'Servo.cfgID = NEW_ID; \n');
+    fprintf(fileID,'Servo.Output(); \n');
+    fprintf(fileID,'\n\n');
+    
+    fprintf(fileID,'Arduino Code mit folgendem Initialisierungscode ersetzen:\n\n');
+    
+    id_start = 1;
+    fprintf(fileID,'int rotor_radius = 25;\n');
+    fprintf(fileID,'double ranges_mm[][2] = {');
+    for k=1:size(ranges,1)
+        fprintf(fileID,'{%.2f,%.2f}',ranges(k,1),ranges(k,1));
+    end
+    fprintf(fileID,'};\n');
+    fprintf(fileID,'int ids[] = {');
+    for k=1:size(ranges,1)
+        if k >1 fprintf(fileID,','); end
+        fprintf(fileID,'%i',id_start+k);
+    end
+    fprintf(fileID,'};\n');
+    
+    fprintf(fileID,'int fixed[] = {');
+    for k=1:size(ranges,1)
+        if k >1 fprintf(fileID,','); end
+        fprintf(fileID,'%i',0);
+    end
+    fprintf(fileID,'};\n');
+    fprintf(fileID,'int ord[] = {1,2,3,4,5,6};\n');
+    fprintf(fileID,'int servo_speed = 2000;\n');
+    fprintf(fileID,'\n\n');
+    
+    fprintf(fileID,'\n');
+    fprintf(fileID,'Befehl zur Ansteuerung per MATLAB:\n');
+    fprintf(fileID,'\n');
+    fprintf(fileID,'SMControl([');
+    for k=1:size(ranges,1)
+        if k >1 fprintf(fileID,';'); end
+        fprintf(fileID,'[%.2f,%.2f 0]',ranges(k,1),ranges(k,1));
+    end
+    fprintf(fileID,'],[');
+    id_start = 1;
+    for k=1:size(ranges,1)
+        if k >1 fprintf(fileID,','); end
+        fprintf(fileID,'%i',id_start+k);
+    end
+    
+    fprintf(fileID,'],25,1,[1,2,3,4,5,6],1)\n');
+    fclose(fileID);
 end
-fprintf(fileID,'};\n');
-fprintf(fileID,'int ids[] = {');
-for k=1:size(ranges,1)
-    if k >1 fprintf(fileID,','); end
-    fprintf(fileID,'%i',id_start+k);
-end
-fprintf(fileID,'};\n');
 
-fprintf(fileID,'int fixed[] = {');
-for k=1:size(ranges,1)
-    if k >1 fprintf(fileID,','); end
-    fprintf(fileID,'%i',0);
-end
-fprintf(fileID,'};\n');
-fprintf(fileID,'int ord[] = {1,2,3,4,5,6};\n');
-fprintf(fileID,'int servo_speed = 2000;\n');
-fprintf(fileID,'\n\n');
 
-fprintf(fileID,'\n');
-fprintf(fileID,'Befehl zur Ansteuerung per MATLAB:\n');
-fprintf(fileID,'\n');
-fprintf(fileID,'SMControl([');
-for k=1:size(ranges,1)    
-    if k >1 fprintf(fileID,';'); end
-    fprintf(fileID,'[%.2f,%.2f 0]',ranges(k,1),ranges(k,1));
-end
-fprintf(fileID,'],[');
-id_start = 1;
-for k=1:size(ranges,1)
-    if k >1 fprintf(fileID,','); end
-    fprintf(fileID,'%i',id_start+k);
-end
-
-fprintf(fileID,'],25,1,[1,2,3,4,5,6],1)\n');
-fclose(fileID);
+%% Generating plot if no output is specified.
 if nargout == 0
     SGplot(SG);
     VLFLplotlight;
@@ -428,24 +450,23 @@ end
 %	CPLs:         SG of Manipulator
 %	positions:    2xn vector of positions of holes
 function [CPLs,positions] = PLholeFinder(CPL_out,tool_r,angle_p,length_p,hole_r,varargin)
-single = 0; if nargin>=6 && ~isempty(varargin{1}); single=varargin{1}; end
-torsion = 0; if nargin>=7 && ~isempty(varargin{2}); torsion=varargin{2}; end
-bottom_up = 0; if nargin>=8 && ~isempty(varargin{3}); bottom_up=varargin{3}; end
-%% Initializing
+single = 0;         if nargin>=6    && ~isempty(varargin{1}); single=varargin{1};      end
+torsion = 0;        if nargin>=7    && ~isempty(varargin{2}); torsion=varargin{2};     end
+bottom_up = 0;      if nargin>=8    && ~isempty(varargin{3}); bottom_up=varargin{3};   end
+wall_thick_o = 0.7; if nargin>=9    && ~isempty(varargin{4}); wall_thick_o=varargin{4};   end
+wall_thick_i = 0.5; if nargin>=10   && ~isempty(varargin{5}); wall_thick_i=varargin{5};   end
+
+%% Setting up variables and initializing
 hinge_w = length_p(:,1)+(2*length_p(:,3));
-min_len= length_p(:,2);
-CPL_no_go_area = [];
-CPLs = {};
-CPL_holes = [];
-CPL_holes_2 = [];
-positions = {};
-CPL_small_holes = {};
-CPL_big_holes = {};
+min_len = length_p(:,2);
+[CPL_no_go_area,CPL_holes,CPL_holes_2] = deal([]);
+[CPLs,positions,CPL_small_holes] = deal({});
 CPL_in = PLcircle(tool_r);
 CPL_no_go_areas = {};
-PL_hole = PLcircle(hole_r,40);
-PL_hole_small = PLcircle(0.4);
-if single PL_hole = PL_hole_small; end
+
+PL_hole_ot = PLcircle(hole_r,40);
+PL_hole_wire = PLcircle(0.4);
+if single, PL_hole_ot = PL_hole_wire; end
 %% Generating CPL of area where no holes can go based on axis constraints
 for i=2:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
@@ -494,7 +515,8 @@ end
 
 max_dim = 2*max(sizeVL(CPL_out{size(angle_p,1)}));
 
-%%Looping over each section
+% Search for channel holes can either be done from bottom to top or from
+% top to bottom.
 if bottom_up     
     CPL_no_go_areas{end+1} = [];
     start_value = 1;
@@ -508,12 +530,12 @@ else
 end
 
 for i=start_value:step:end_value
-    first_section = (i==1);
-    %% calculating general values
+    first_section = (i==1); % Determining if currently in first section.
     CPL_opti_area = [];
     curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(angle_p(i,1))));
     curr_mid_point = [0 0];
-    %% Generating CPL half for hinge optimization
+    % Generating half of CPL that needs to be searched for optimized
+    % hinges.
     if abs(angle_p(i,2)) == 1
         CPL_opti_area = [max_dim 0;-max_dim 0;-max_dim max_dim;max_dim max_dim];
         CPL_opti_area = PLtransC(CPL_opti_area,[0 0],rot(deg2rad(angle_p(i,1))));
@@ -521,32 +543,33 @@ for i=start_value:step:end_value
             CPL_opti_area = PLtransC(CPL_opti_area,[0 0],pi);
         end
     end
-    %% Generating CPL of points where holes currently can go
+    
+    % This step is done to smooth out complex contours to make them easier
+    % to search.
     CPL_hull = flip(CPLconvexhull(CPL_out{i}));
     CPL_hull_stamp = CPLgrow(CPL_hull,-0.2);
     CPL_inner_CPLs = CPLbool('-',CPL_hull_stamp,CPL_out{i});
-    CPL_o_in = CPLgrow(CPL_hull,-0.7-hole_r);
+    
+    
+    CPL_o_in = CPLgrow(CPL_hull,-wall_thick_o-hole_r);
     CPL_all_in = [CPL_in;NaN NaN;flip(CPL_inner_CPLs)];
-%     [~,pos]=separateNaN(CPL_all_in);
-%     if size(pos,1) > 2
-%         CPL_1 = CPLgrow(CPL_all_in(1:pos(2)-1,:),-0.5-hole_r);
-%         CPL_2 = CPLgrow(CPL_all_in(pos(2)+1:end,:),+0.5+hole_r);
-%         CPL_i_out = CPLbool('+',CPL_1,CPL_2);
-%     else
-%         CPL_i_out = CPLgrow(CPL_all_in,+0.3+hole_r);
-%     end
     CPL_limit = CPL_o_in;
     CPL_limit = CPLbool('-',CPL_limit,CPL_no_go_areas{i});
     CPL_limit = CPLbool('-',CPL_limit,CPL_opti_area);
+    
+     CPL_in_out = [];
      for u=1:separateNaN(CPL_all_in)
-            CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_all_in,u),+0.5+hole_r));
+            CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_all_in,u),+wall_thick_i+hole_r));            
+            CPL_in_out = CPLbool('+',CPL_in_out,CPLgrow(separateNaN(CPL_all_in,u),+wall_thick_i+hole_r));  
      end
      if ~isempty(CPL_holes)
          for u=1:separateNaN(CPL_holes)
-             CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+0.5+hole_r));
+             CPL_limit = CPLbool('-',CPL_limit,CPLgrow(separateNaN(CPL_holes,u),+wall_thick_i+hole_r));
+             CPL_in_out = CPLbool('+',CPL_in_out,CPLgrow(separateNaN(CPL_holes,u),+wall_thick_i+hole_r));
          end
     end
-    %% Searching point with furthest distant to axis that still can be mirrored to the other side
+    % Searching point with furthest distant to axis that still can be mirrored to the other side. Has to be run two
+    % times for alternating sections.
     if angle_p(i,2) == 2 
         num_iterations = 2; 
     else
@@ -564,6 +587,15 @@ for i=start_value:step:end_value
         ordered_limit_points = sortrows(ordered_limit_points,3,'descend');
         hole_position = [];
         CPL_limit_tol = CPLgrow(CPL_limit,-0.1);
+        
+        if isempty(CPL_limit)             
+            CPLplot(CPL_o_in,'m');            
+            CPLplot(CPL_in_out,'r');
+            CPLplot([CPL_out{i};NaN NaN;CPL_in],'b');            
+            legend('Outer contour shrinked','Inner contour grown','Original contour');
+            error("CPL für Sektion " + i + " zu klein"); 
+        end
+        
         while isempty(hole_position) && size(CPL_limit,2) > 0            
             if ~isnan(ordered_limit_points(1,1))
                 if single == 1 || (single == 2 && first_section)
@@ -579,13 +611,11 @@ for i=start_value:step:end_value
         end
         
         
-        if isempty(hole_position) error("CPL für Sektion " + i + " zu klein"); end
         
         %% Adding Points
         if single == 1 || (single == 2 && first_section)
             if angle_p(i,2) == 2
                 hole_positions = [hole_position;PLtransC(hole_position,curr_mid_point,pi)];
-%                 hole_positions = hole_position;
             else                
                 hole_positions = hole_position;
             end
@@ -595,40 +625,39 @@ for i=start_value:step:end_value
         
         if isempty(CPL_holes)
             if single == 1 || (single == 2 && first_section)
-                CPL_holes = PLtrans(PL_hole,hole_positions(1,:));                
-                CPL_holes_2 = PLtrans(PL_hole_small,hole_positions(1,:));
+                CPL_holes = PLtrans(PL_hole_ot,hole_positions(1,:));                
+                CPL_holes_2 = PLtrans(PL_hole_wire,hole_positions(1,:));
             else
-                CPL_holes = [PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];                
-                CPL_holes_2 = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];                
+                CPL_holes = [PLtrans(PL_hole_ot,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_ot,hole_positions(2,:))];                
+                CPL_holes_2 = [PLtrans(PL_hole_wire,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_wire,hole_positions(2,:))];                
             end  
             if bottom_up
                 CPL_small_holes{end+1} = CPL_holes_2;
             end
         else
             if single == 1 || (single == 2 && first_section) 
-                PL_hole_small_temp = PLtrans(PL_hole_small,hole_positions(1,:));
+                PL_hole_small_temp = PLtrans(PL_hole_wire,hole_positions(1,:));
                 if k>1
                     CPL_holes_2 = [CPL_holes_2;NaN NaN;PL_hole_small_temp];
                 else
                     CPL_holes_2 = [CPL_holes;NaN NaN;PL_hole_small_temp];
                 end
-                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:))];           
+                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole_ot,hole_positions(1,:))];           
             else
-                PL_hole_small_temp = [PLtrans(PL_hole_small,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_small,hole_positions(2,:))];
+                PL_hole_small_temp = [PLtrans(PL_hole_wire,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_wire,hole_positions(2,:))];
                 if k>1
                     CPL_holes_2 = [CPL_holes_2;NaN NaN;PL_hole_small_temp];
                 else
                     CPL_holes_2 = [CPL_holes;NaN NaN;PL_hole_small_temp];
                 end
-                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole,hole_positions(1,:));NaN NaN;PLtrans(PL_hole,hole_positions(2,:))];
+                CPL_holes = [CPL_holes;NaN NaN;PLtrans(PL_hole_ot,hole_positions(1,:));NaN NaN;PLtrans(PL_hole_ot,hole_positions(2,:))];
             end
             if bottom_up
                  CPL_small_holes{end+1} = PL_hole_small_temp;
             end
         end
           if angle_p(i,2) == 2          
-              CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions([1,2],:)];              
-%               CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
+              CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions([1,2],:)];        
           else              
               CPL_hole_positions_temp = [CPL_hole_positions_temp;hole_positions(1,:)];
           end
@@ -668,7 +697,6 @@ for f=1:size(varargin,2)
        case 'bottom_element'
            bottom_ele = 1;     
            if angle_p(2) == 2, angle_p(2) = 0; end
-%            length_p(1) = 5;
        case 'non_torsion'
            torsion = 0;
    end
@@ -695,7 +723,6 @@ if length_p(3) ~= 0
     SG_hinge =  SGtransR(SG_hinge,rotz(-angle_p(1)));
     [distance_whole,~,~,~,~,~] = sizeVL(SG_hinge);
     if torsion
-%         distance_whole = dis_out_lef+dis_out_rig;
         SG_hinge_l = SGcutend(SG_hinge,'right',distance_whole-length_p(3));
         SG_hinge_r =  SGcutend(SG_hinge,'left',distance_whole-length_p(3));
         SG_hinge = SGcat(SG_hinge_l,SG_hinge_r);
@@ -707,8 +734,6 @@ if length_p(3) ~= 0
     end
     SG_hinge =  SGtransR(SG_hinge,rotz(angle_p(1)));
 end
-
-
 
 SG_hinge_top = SGontop(SG_hinge,SG);
 SG_hinge_bottom = SGmirror(SG_hinge_top,'xy');
@@ -961,7 +986,7 @@ offset_t =0;
 if ~end_cap
     SG_hinge_t = SGhingeround(length_p(1,2),length_p(2,1),length_p(2,3));
     SG_hinge_t = SGtransR(SG_hinge_t,rotz(angle_p(2,1)));
-    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,angle_p(2,1),angle_p(2,2),length_p(2,1),length_p(1,2),length_p(2,3));
+    [SG_hinge_t,offset_t] = SGcreateHinge(CPL_f,SG_hinge_t,angle_p(2,1),angle_p(2,2),length_p(2,1),length_p(2,2),length_p(2,3));
     
     if length_p(2,2) ~= 0
         cp = PLcrossCPLLine2(PLtransC([-500 0;500 0],[0 0],deg2rad(angle_p(2,1))),CPL{1});
@@ -1013,17 +1038,16 @@ end
 %	=== OUTPUT RESULTS ======
 %	SG:             SG of Manipulatorbase
 function [SG] = SGmanipulatorbase(CPL,varargin)
-optic_radius=3.25;      if nargin>=2 && ~isempty(varargin{1});  optic_radius=varargin{1};       end
-channel_positions=[];     if nargin>=3 && ~isempty(varargin{2});  channel_positions=varargin{2};    end
-sensor_channel=0;       if nargin>=4 && ~isempty(varargin{3});  sensor_channel=varargin{3};     end
-optic_channel = 0;      if nargin>=5 && ~isempty(varargin{4});  optic_channel=varargin{4};      end
-single = 0;             if nargin>=6 && ~isempty(varargin{5});  single=varargin{5};             end
-length = 50;            if nargin>=7 && ~isempty(varargin{6});  length=varargin{6};             end
-seal = 0;               if nargin>=8 && ~isempty(varargin{7});  seal=varargin{7};               end
-radial = 0;             if nargin>=9 && ~isempty(varargin{8});  radial=varargin{8};             end
-flex = 0;             if nargin>=10 && ~isempty(varargin{9});  flex=varargin{9};             end
-flexangle = 0;             if nargin>=11 && ~isempty(varargin{10});  flexangle=varargin{10};             end
-%%Generate base CPL based on CPL of bottom element
+optic_radius=3.25;      if nargin>=2 && ~isempty(varargin{1});  optic_radius=varargin{1};           end
+channel_positions=[];   if nargin>=3 && ~isempty(varargin{2});  channel_positions=varargin{2};      end
+sensor_channel=0;       if nargin>=4 && ~isempty(varargin{3});  sensor_channel=varargin{3};         end
+optic_channel = 0;      if nargin>=5 && ~isempty(varargin{4});  optic_channel=varargin{4};          end
+single = 0;             if nargin>=6 && ~isempty(varargin{5});  single=varargin{5};                 end
+length = 50;            if nargin>=7 && ~isempty(varargin{6});  length=varargin{6};                 end
+seal = 0;               if nargin>=8 && ~isempty(varargin{7});  seal=varargin{7};                   end
+radial = 0;             if nargin>=9 && ~isempty(varargin{8});  radial=varargin{8};                 end
+flex = 0;               if nargin>=10 && ~isempty(varargin{9});  flex=varargin{9};                  end
+flexangle = 0;          if nargin>=11 && ~isempty(varargin{10});  flexangle=varargin{10};           end
 
 offset = [0 0];
 mid_points = [];
@@ -1068,7 +1092,6 @@ if ~radial
         CPL{3} = PLtransR(CPL{3},rot(0));
         [~,y3,~,~,~,~] = sizeVL(CPL{3});
         mid_points = [mid_points;0 max(y1/2,y2/2)+y3/2+0.3];
-        %         mid_points = [mid_points;0 max(y1/2,y2/2)];
         CPL{3} = PLtrans(CPL{3},mid_points(3,:));
         if optic_channel == 2
             CPL{3} = PLtrans(CPL{3},[0 +offset(2)+0.5+max(y1/2,y2/2)]);
@@ -1151,15 +1174,15 @@ CPLs_wiree_connector = CPL;
 CPL_out_aux = CPLaddauxpoints(CPL_out,0.1);
 
 
-for k =1:num_arms
-    temp_pos = cat(1,channel_positions{k}{:});
-    if single || size(channel_positions{k}{1},1) == 4
-        end_to = size(temp_pos,1);
+for k =1:num_arms    
+    if single 
+        temp_pos = cat(1,channel_positions{k}{:});
+    elseif size(channel_positions{k}{1},1) == 4 
+        temp_pos = channel_positions{k}{1};
     else
         temp_pos = [temp_pos(1,:);temp_pos(1,:)*rot(pi)];
-        end_to = size(temp_pos,1);
     end
-    for i=1:end_to        
+    for i=1:size(temp_pos,1)      
         if radial
             curr_temp_pos = mid_points(1,:)-temp_pos(i,:);
             curr_temp_pos = curr_temp_pos*rot((k-1)*(2*pi)/size(edges,1));
@@ -1373,10 +1396,8 @@ if ~already_existing
     middle_axis = PLtransR([-max_dim 0;max_dim 0],rot(deg2rad(hinge_dir)));
     e_dir = [sind(hinge_dir) -cosd(hinge_dir)];
     PL_offsetline = middle_axis;
-    middle_axis = PLtransR(middle_axis,rot(pi/2));
-    pos_plane = [flip(middle_axis);PLtrans(middle_axis,e_dir*rot(-pi/2)*max_dim*2)]; % Plane for finding points in positive area
+    middle_axis = PLtransR(middle_axis,rot(pi/2));   
     hinge_width = hinge_width+(2*h_height);
-%     hinge_width = hinge_width+1;
     
     %% Calculating best offset
     if abs(hinge_opti) == 1
