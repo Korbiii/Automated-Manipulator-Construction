@@ -100,6 +100,7 @@ if symmetric
     angle_p = {angle_p{1},angle_p{1}};
     length_p = {length_p{1},length_p{1}};
     CPL_out = {CPL_out(1),CPL_out(1)};
+    tool_r = [tool_r,tool_r];
 end
 
 %% Counting Number of arms and number of section based on inputs
@@ -418,6 +419,7 @@ end
 
 %% Generating plot if no output is specified.
 if nargout == 0
+    clf;
     SGplot(SG);
     VLFLplotlight;
     phis_plot = {};
@@ -425,17 +427,16 @@ if nargout == 0
         phis_plot{end+1} = 0;
         for i=1:num_sections(k)            
             if angle_p{k}(i+1,4) == 2
-                phis_plot{end+1} = repmat([angles_sections{k}(i,2)*0.2,angles_sections{k}(i,2)*0.2*-1],1,floor((ele_num{k}(i)/2)+1));
+                phis_plot{end+1} = repmat([angles_sections{k}(i,2)*0.4,angles_sections{k}(i,2)*0.4*-1],1,floor((ele_num{k}(i)/2)+1));
             else
-                phis_plot{end+1} = repmat(angles_sections{k}(i,1)*-0.2,1,ele_num{k}(i)+1);
+                phis_plot{end+1} = repmat(angles_sections{k}(i,1)*-0.4,1,ele_num{k}(i)+1);
             end
         end
      end
-    phis_plot = deg2rad(cell2mat(phis_plot));
-    f2 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
-    VLFLplotlight(1,0.3,f2)
+%     phis_plot = deg2rad(cell2mat(phis_plot));
+%     f2 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+%     VLFLplotlight(1,0.3,f2)
     view(3);  
-    grid off;
 end
 end
 
@@ -459,6 +460,7 @@ wall_thick_i = 0.5; if nargin>=10   && ~isempty(varargin{5}); wall_thick_i=varar
 %% Setting up variables and initializing
 hinge_w = length_p(:,1)+(2*length_p(:,3));
 min_len = length_p(:,2);
+% min_len(min_len == 0) = 2;
 [CPL_no_go_area,CPL_holes,CPL_holes_2] = deal([]);
 [CPLs,positions,CPL_small_holes] = deal({});
 CPL_in = PLcircle(tool_r);
@@ -471,7 +473,7 @@ if single, PL_hole_ot = PL_hole_wire; end
 for i=2:size(angle_p,1)
     if abs(angle_p(i,2)) ~= 1
         if torsion == 0
-            CPL_axis_constraint = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r-min_len(i) hinge_w(i)/2];
+            CPL_axis_constraint = [tool_r+min(2,min_len(i)) hinge_w(i)/2;tool_r+min(2,min_len(i)) -hinge_w(i)/2;-tool_r-min(2,min_len(i)) -hinge_w(i)/2;-tool_r-min(2,min_len(i)) hinge_w(i)/2];
             CPL_axis_constraint = PLtransR(CPL_axis_constraint,rot(deg2rad(angle_p(i,1))));
             CPL_only_out = CPLselectinout(CPL_out{i},0);
             inside = inside2C(CPL_only_out,CPL_axis_constraint);
@@ -481,9 +483,9 @@ for i=2:size(angle_p,1)
         else
             curr_axis = PLtransR([-100 0;+100 0],rot(deg2rad(angle_p(i,1))));
             e_dir = curr_axis/norm(curr_axis);
-            CPL_axis_constraint_n = [tool_r+min_len(i) hinge_w(i)/2;tool_r+min_len(i) -hinge_w(i)/2;tool_r -hinge_w(i)/2;tool_r hinge_w(i)/2];
+            CPL_axis_constraint_n = [tool_r+min(2,min_len(i)) hinge_w(i)/2;tool_r+min(2,min_len(i)) -hinge_w(i)/2;tool_r -hinge_w(i)/2;tool_r hinge_w(i)/2];
             CPL_axis_constraint_n = PLtransR(CPL_axis_constraint_n,rot(deg2rad(angle_p(i,1))));
-            CPL_axis_constraint_p = [-tool_r-min_len(i) hinge_w(i)/2;-tool_r-min_len(i) -hinge_w(i)/2;-tool_r -hinge_w(i)/2;-tool_r hinge_w(i)/2];
+            CPL_axis_constraint_p = [-tool_r-min(2,min_len(i)) hinge_w(i)/2;-tool_r-min(2,min_len(i)) -hinge_w(i)/2;-tool_r -hinge_w(i)/2;-tool_r hinge_w(i)/2];
             CPL_axis_constraint_p = PLtransR(CPL_axis_constraint_p,rot(deg2rad(angle_p(i,1))));            
             hit = 0;
             while ~hit
@@ -1180,7 +1182,7 @@ for k =1:num_arms
     elseif size(channel_positions{k}{1},1) == 4 
         temp_pos = channel_positions{k}{1};
     else
-        temp_pos = [temp_pos(1,:);temp_pos(1,:)*rot(pi)];
+        temp_pos = [channel_positions{k}{1};channel_positions{k}{1}*rot(pi)];
     end
     for i=1:size(temp_pos,1)      
         if radial
@@ -1243,8 +1245,7 @@ if flex
     SG = SGstackn(SG,1,0);
 else    
     SG = SGstackn(SG,length,0);
-    
-%     SG = rmfield(SG,'FC');
+    try SG = rmfield(SG,'FC'); catch end
 end
 SG = SGstack('z',SG,SG_crimp_connector);
 
