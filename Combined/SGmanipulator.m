@@ -262,8 +262,8 @@ for k = 1:num_arms
         ele_num_temp = [ele_num_temp extra_element + floor(length_p{k}(i,1)/(length_p{k}(i,2)+(2*length_p{k}(i,5))))];
         
         % Calculating angle per element in section.        
-        phi_left = max(1,(angle_p{k}(i,2)/ele_num_temp(i-1)-1)/2);
-        phi_right = max(1,(angle_p{k}(i,3)/ele_num_temp(i-1)-1)/2);
+        phi_left = max(1,(angle_p{k}(i,2)/(ele_num_temp(i-1)+1))/2);
+        phi_right = max(1,(angle_p{k}(i,3)/(ele_num_temp(i-1)+1))/2);
         
         % Generating of element stops. Alternating sections need to be
         % dealt differently.
@@ -427,16 +427,62 @@ if nargout == 0
         phis_plot{end+1} = 0;
         for i=1:num_sections(k)            
             if angle_p{k}(i+1,4) == 2
-                phis_plot{end+1} = repmat([angles_sections{k}(i,2)*0.4,angles_sections{k}(i,2)*0.4*-1],1,floor((ele_num{k}(i)/2)+1));
+                phis_plot{end+1} = repmat([angles_sections{k}(i,2),angles_sections{k}(i,2)*-1],1,floor((ele_num{k}(i)/2)+1));
             else
-                phis_plot{end+1} = repmat(angles_sections{k}(i,1)*-0.4,1,ele_num{k}(i)+1);
+                phis_plot{end+1} = repmat(angles_sections{k}(i,1)*1,1,ele_num{k}(i)+1);
             end
         end
      end
-%     phis_plot = deg2rad(cell2mat(phis_plot));
-%     f2 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
-%     VLFLplotlight(1,0.3,f2)
-    view(3);  
+    phis_plot = deg2rad(cell2mat(phis_plot));
+    f2 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+    VLFLplotlight(1,0.3,f2)
+    
+    
+     phis_plot = {};
+     for k=1:num_arms
+        phis_plot{end+1} = 0;
+        for i=1:num_sections(k)            
+            if angle_p{k}(i+1,4) == 2
+                phis_plot{end+1} = repmat([angles_sections{k}(i,2),angles_sections{k}(i,1)*1],1,floor((ele_num{k}(i)/2)+1));
+            else
+                phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+            end
+        end
+     end
+     phis_plot = deg2rad(cell2mat(phis_plot));
+    f3 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+    VLFLplotlight(1,0.3,f3)
+    
+      phis_plot = {};
+     for k=1:num_arms
+        phis_plot{end+1} = 0;
+        for i=1:num_sections(k)            
+            if angle_p{k}(i+1,4) == 2
+                phis_plot{end+1} = repmat([-angles_sections{k}(i,2),angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
+            else
+                phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+            end
+        end
+     end
+     phis_plot = deg2rad(cell2mat(phis_plot));
+    f4 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+    VLFLplotlight(1,0.3,f4)
+    
+          phis_plot = {};
+     for k=1:num_arms
+        phis_plot{end+1} = 0;
+        for i=1:num_sections(k)            
+            if angle_p{k}(i+1,4) == 2
+                phis_plot{end+1} = repmat([-angles_sections{k}(i,2),-angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
+            else
+                phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+            end
+        end
+     end
+     phis_plot = deg2rad(cell2mat(phis_plot));
+    f5 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+    VLFLplotlight(1,0.3,f5)
+    
 end
 end
 
@@ -1239,8 +1285,11 @@ end
 SG_cutless = SGofCPLz(CPL,2);
 SG_w_cuts_x = SGofCPLz(CPL_w_cuts_x,2);
 SG_w_cuts_y = SGofCPLz(CPL_w_cuts_y,2);
-
-SG = SGstack('z',SG_cutless,SG_w_cuts_x,SG_cutless,SG_w_cuts_y,SG_cutless);
+if length > 1
+    SG = SGstack('z',SG_cutless,SG_w_cuts_x,SG_cutless,SG_w_cuts_y,SG_cutless);
+else
+    SG = SG_cutless;
+end
 if flex    
     SG = SGstackn(SG,1,0);
 else    
@@ -1305,13 +1354,13 @@ end
 
 if flex
     SG_flex = SGfitToPrinterWorkspace(CPL,length,flexangle);
-    SG_flex = SGcat(SG_flex);
+    SG_flex = SGcat(flip(SG_flex));
 end
 
 
 %% Add Frames
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
-H_b_b = [rotx(-90) [0;0;-2]; 0 0 0 1];
+H_b_b = [roty(180)*rotz(-90) [0;0;2.5]; 0 0 0 1];
 SG = SGTset(SG,'B',H_b_b);
 H_f_b = [rotx(90)*roty(180) [mid_points(1,:)';height_SG]; 0 0 0 1];
 SG = SGTset(SG,'F',H_f_b);
@@ -1381,7 +1430,7 @@ function [SG,offset] = SGcreateHinge(CPL,SG_hinge,hinge_dir,hinge_opti,hinge_wid
 global hinges;
 already_existing = 0;
 for i=1:size(hinges,2)
-    if isequalwithequalnans(hinges{i}{3},CPL) && isequal(hinges{i}{4},[hinge_dir,hinge_opti,hinge_width,min_len])
+    if isequalwithequalnans(hinges{i}{3},CPL) && isequal(hinges{i}{4},[hinge_dir,hinge_opti,hinge_width,min_len,h_height])
         SG =  hinges{i}{1};
         offset = hinges{i}{2};
         already_existing = 1;
@@ -1572,7 +1621,7 @@ if ~already_existing
         SG = SGcat(SG,SG_hinge_new);
     end
     offset = offset*hinge_opti;
-    hinges{end+1} = {SG;offset;CPL;[hinge_dir,hinge_opti,hinge_width-1,min_len]};
+    hinges{end+1} = {SG;offset;CPL;[hinge_dir,hinge_opti,hinge_width-1,min_len,h_height]};
     
 end
 end
@@ -1907,6 +1956,13 @@ jointThickness=0.75;
 jointWidth=0.65;
 jointRadius=1;
 rigidThickness=1.4;
+offset = 0;
+Outside = CPLselectinout(CPL,0);
+if insideCPL(Outside,[0 0]) == -1
+    tmp = CPL(1,:);
+    CPL = PLtrans0(CPL);
+    offset = tmp-CPL(1,:);
+end
 
 SG1 = SGovertubSection(CPL,jointAngle,jointThickness, jointWidth, jointRadius,rigidThickness);
 
@@ -1921,7 +1977,8 @@ SG2 = SGtransT(SG2,[cos(-pi/2) -sin(-pi/2) 0 0;...
                     sin(-pi/2) cos(-pi/2) 0  0;...
                     0  0  1  1e-03;...
                        0 0 0 1]);
-SG2 = SGmirror(SG2,'xy');                
+SG2 = SGmirror(SG2,'xy');      
+% SG2 = SGmirror(SG2,'xz'); 
 z1 = max(SG1.VL(:,3))-jointWidth/2;           
 z2 = min(SG2.VL(:,3))+jointWidth/2;
 
@@ -1937,14 +1994,18 @@ n = max(size(alpha));
 SGel = cell(n,1);
 % first element
 % SGel{1} = SGcat(SGtrans(SG1,rot(0,0,pi/2)),SGstart);
-SGel{1} = SGtrans(SGmirror(SG1,'xz'),rot(0,0,pi/2));
+
+% SGel{1} = SGtrans(SGmirror(SG1,'xz'),rot(0,0,pi/2));
+SGel{1} = SGtrans(SG1,rot(0,0,pi/2));
+
 % i-th element
 % combine upper and lower part and move lower axis to origin
 SGel_1 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(0,0,pi/2)),[0;0;abs(z2)]);
 SGel_2 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(pi,0,0)),[0;0;z1]);
 
 % SGel_2 = SGmirror(SGel_2,'yz'); 
-SGel_1 = SGmirror(SGel_1,'xz');  
+
+% SGel_1 = SGmirror(SGel_1,'xz');  
 for i = 2:n-1
     % save in cell
     if mod(i,2)==1
@@ -2002,7 +2063,9 @@ FG = FGaddFrames( FG );
 
 %% SGTchain
 SGres = SGTchain( FG.SGel', FG.FJalpha' );
-
+if sum(offset) ~= 0
+     SGres{end}.T{2}(1:2,4) = offset([2,1]);
+end
 
 %% plot
 % VLFLplotlight(1,0.5);
