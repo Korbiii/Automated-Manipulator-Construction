@@ -109,6 +109,11 @@ for i=1:num_arms
     num_sections = [num_sections size(angle_p{i},1)];
 end
 
+if num_arms > 4 && ~radial
+    radial = 1;
+    warning('Arms will be generated in radial configuration, because more than 4 arms!');
+end
+
 %% Filling up missing inputs with default values. Cell list is converted into array and later back to cell list.
 angle_p = cell2mat(angle_p');
 length_p = cell2mat(length_p');
@@ -1182,7 +1187,7 @@ CPL_out = CPLconvexhull(CPL_base);
 CPL = CPLbool('-',CPL_out,CPL_holes);
 
 
-SG_crimp_conn_top = SGofCPLz(CPL,2);
+SG_crimp_conn_top = SGofCPLz(CPL,0.1);
 for i=1:num_arms   
     if size(channel_positions{i}{1},1) == 4
          PL_crimp_holes = PLtrans(PLcircle(0.7),-channel_positions{i}{1}(1,:));         
@@ -2001,24 +2006,26 @@ SGel{1} = SGtrans(SG1,rot(0,0,pi/2));
 % i-th element
 % combine upper and lower part and move lower axis to origin
 SGel_1 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(0,0,pi/2)),[0;0;abs(z2)]);
-SGel_2 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(pi,0,0)),[0;0;z1]);
+SGel_2 = SGmirror(SGel_1,'xy');
+SGel_2 = SGtrans(SGel_2,[0;0;2*z1]);
+% SGel_2 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(pi,0,0)),[0;0;z1]);
 
 % SGel_2 = SGmirror(SGel_2,'yz'); 
 
-% SGel_1 = SGmirror(SGel_1,'xz');  
+% SGel_2 = SGmirror(SGel_1,'xz');  
 for i = 2:n-1
     % save in cell
     if mod(i,2)==1
         SGel{i} = SGel_1;
     else
-        SGel{i} = SGtrans(SGel_2,rot(0,0,pi));
+        SGel{i} = SGtrans(SGel_2,rot(0,0,pi/2));
+%         SGel{i} = SGel_2;
     end
 end
 % last element
 if mod(n,2)==1
-    SGel{n} = SGtrans(SGtrans(  SGmirror(SG2,'xz'),rot(0,0,pi/2)),[0;0;abs(z2)]);
+    SGel{n} = SGtrans(SGtrans(SG2,rot(0,0,pi/2)),[0;0;abs(z2)]);
 %     SGel{n} = SGcat(SGel{n},SGtrans(SGtrans(SGtip,[0,0,abs(z2)-1e-3]),rot(0,0,pi/2)));
-
 %      SGel{n} = SGcat(SGel{n},SGtrans(SGtrans(SGbox([4,4,4]),[0,0,abs(z2)-1e-3]),rot(0,0,pi/2)));
 else
     SGel{n} = SGtrans(SGtrans(SGtrans(SG1,rot(pi,0,0)),[0;0;z1]),rot(0,0,pi));
@@ -2062,10 +2069,11 @@ FG = FGcreate( ...
 FG = FGaddFrames( FG );
 
 %% SGTchain
-SGres = SGTchain( FG.SGel', FG.FJalpha' );
 if sum(offset) ~= 0
-     SGres{end}.T{2}(1:2,4) = offset([2,1]);
+     FG.SGel{end}.T{2}(1:2,4) = offset([2,1]);
 end
+SGres = SGTchain( FG.SGel', FG.FJalpha' );
+
 
 %% plot
 % VLFLplotlight(1,0.5);
