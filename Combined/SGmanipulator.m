@@ -44,7 +44,7 @@ optic_radius = 2.2;
 hole_r = 0.7;
 tool_r = tool_d/2; 
 angle_defaults = [90 90 0];
-length_defaults = [2 1 0 0.5];
+length_defaults = [2 0.6 0 0.5];
 w_th_o = 0.7;
 w_th_i = 0.5;
 
@@ -328,12 +328,12 @@ else
         phis{end+1} = 0;
         for i=1:num_sections(k)
             if angles(1,i)>=0                
-                phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);                
+                phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);                
             else
                 if angle_p{k}(i+1,4) == 2
                     phis{end+1} = repmat([angles_sections{k}(i,2)*angles(k,i),angles_sections{k}(i,2)*angles(k,i)*-1],1,(ele_num{k}(i)/2)+1);
                 else
-                    phis{end+1} = repmat(angles_sections{k}(i,1)*angles(k,i),1,ele_num{k}(i)+1);
+                    phis{end+1} = repmat(angles_sections{k}(i,2)*angles(k,i),1,ele_num{k}(i)+1);
                 end
             end
         end
@@ -424,6 +424,7 @@ end
 
 %% Generating plot if no output is specified.
 if nargout == 0
+    is_alternating = 0;
     clf;
     SGplot(SG);
     VLFLplotlight;
@@ -432,6 +433,7 @@ if nargout == 0
         phis_plot{end+1} = 0;
         for i=1:num_sections(k)            
             if angle_p{k}(i+1,4) == 2
+                is_alternating = 1;
                 phis_plot{end+1} = repmat([angles_sections{k}(i,2),angles_sections{k}(i,2)*-1],1,floor((ele_num{k}(i)/2)+1));
             else
                 phis_plot{end+1} = repmat(angles_sections{k}(i,1)*1,1,ele_num{k}(i)+1);
@@ -457,36 +459,37 @@ if nargout == 0
      phis_plot = deg2rad(cell2mat(phis_plot));
     f3 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
     VLFLplotlight(1,0.3,f3)
-    
-      phis_plot = {};
-     for k=1:num_arms
-        phis_plot{end+1} = 0;
-        for i=1:num_sections(k)            
-            if angle_p{k}(i+1,4) == 2
-                phis_plot{end+1} = repmat([-angles_sections{k}(i,2),angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
-            else
-                phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+    if is_alternating
+        phis_plot = {};
+        for k=1:num_arms
+            phis_plot{end+1} = 0;
+            for i=1:num_sections(k)
+                if angle_p{k}(i+1,4) == 2
+                    phis_plot{end+1} = repmat([-angles_sections{k}(i,2),angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
+                else
+                    phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+                end
             end
         end
-     end
-     phis_plot = deg2rad(cell2mat(phis_plot));
-    f4 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
-    VLFLplotlight(1,0.3,f4)
-    
-          phis_plot = {};
-     for k=1:num_arms
-        phis_plot{end+1} = 0;
-        for i=1:num_sections(k)            
-            if angle_p{k}(i+1,4) == 2
-                phis_plot{end+1} = repmat([-angles_sections{k}(i,2),-angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
-            else
-                phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+        phis_plot = deg2rad(cell2mat(phis_plot));
+        f4 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+        VLFLplotlight(1,0.3,f4)
+        
+        phis_plot = {};
+        for k=1:num_arms
+            phis_plot{end+1} = 0;
+            for i=1:num_sections(k)
+                if angle_p{k}(i+1,4) == 2
+                    phis_plot{end+1} = repmat([-angles_sections{k}(i,2),-angles_sections{k}(i,1)],1,floor((ele_num{k}(i)/2)+1));
+                else
+                    phis_plot{end+1} = repmat(angles_sections{k}(i,2)*-1,1,ele_num{k}(i)+1);
+                end
             end
         end
-     end
-     phis_plot = deg2rad(cell2mat(phis_plot));
-    f5 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
-    VLFLplotlight(1,0.3,f5)
+        phis_plot = deg2rad(cell2mat(phis_plot));
+        f5 = SGplot(SGcat(SGTchain(SGs,[0 phis_plot],'',framechain)));
+        VLFLplotlight(1,0.3,f5)
+    end
     
 end
 end
@@ -998,7 +1001,9 @@ else
     CPL_b_wirechannels = CPLbool('+',CPL_b_wirechannels,PL_tool_guard);
     SG_wire_layer = SGofCPLz(CPL_b_wirechannels,0.6);
     SG_top_connector = SGof2CPLsz(CPL_b_wireescape,CPL_f_wireescape,2,'','miny');
-    SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);
+%     SG_top_layer = SGofCPLz(CPLbool('-',CPL_f,CPL_holes_f),1);
+    SG_top_layer= SGofCPLzdelaunayGrid(CPLbool('-',CPL_f,CPL_holes_f), 1,0.5,0.5);
+  
     SG = SGstack('z',SG_bottom,SG_wire_layer,SG_top_connector,SG_top_layer);    
 end
 height_SG = max(SG.VL(:,3))-min(SG.VL(:,3));
@@ -1290,15 +1295,20 @@ end
 SG_cutless = SGofCPLz(CPL,2);
 SG_w_cuts_x = SGofCPLz(CPL_w_cuts_x,2);
 SG_w_cuts_y = SGofCPLz(CPL_w_cuts_y,2);
-if length > 1
+number_repeats = 0;
+if length > max(SG_crimp_connector.VL(:,3))
+    height_cc = max(SG_crimp_connector.VL(:,3));
+    number_repeats = floor((length-height_cc)/7);
+    cutless_thickness = mod(length-height_cc,number_repeats)/3;
+    SG_cutless = SGofCPLz(CPL,cutless_thickness);
     SG = SGstack('z',SG_cutless,SG_w_cuts_x,SG_cutless,SG_w_cuts_y,SG_cutless);
 else
     SG = SG_cutless;
 end
 if flex    
     SG = SGstackn(SG,1,0);
-else    
-    SG = SGstackn(SG,length,0);
+else 
+    SG = SGstackn(SG,number_repeats,0);
     try SG = rmfield(SG,'FC'); catch end
 end
 SG = SGstack('z',SG,SG_crimp_connector);
@@ -1365,7 +1375,7 @@ end
 
 %% Add Frames
 height_SG = abs(max(SG.VL(:,3))-min(SG.VL(:,3)));
-H_b_b = [roty(180)*rotz(-90) [0;0;2.5]; 0 0 0 1];
+H_b_b = [roty(180)*rotz(-90) [0;0;0]; 0 0 0 1];
 SG = SGTset(SG,'B',H_b_b);
 H_f_b = [rotx(90)*roty(180) [mid_points(1,:)';height_SG]; 0 0 0 1];
 SG = SGTset(SG,'F',H_f_b);
@@ -1950,10 +1960,7 @@ function [ SGres ] = SGfitToPrinterWorkspace(CPL, length,angle )
 %
 
 %% geometries
-alpha = [NaN];
-for i=1:length
-    alpha = [alpha;angle;0];
-end
+
 
 % CPL=CPLnew;
 jointAngle=20;
@@ -1990,6 +1997,11 @@ z2 = min(SG2.VL(:,3))+jointWidth/2;
 
 
 %% get flexible geometry
+number_of_elements = floor(length/(abs(z1)+abs(z2)));
+alpha = [NaN];
+for i=1:number_of_elements
+    alpha = [alpha;angle;0];
+end
 
 % number of elements
 n = max(size(alpha));
@@ -2007,7 +2019,7 @@ SGel{1} = SGtrans(SG1,rot(0,0,pi/2));
 % combine upper and lower part and move lower axis to origin
 SGel_1 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(0,0,pi/2)),[0;0;abs(z2)]);
 SGel_2 = SGmirror(SGel_1,'xy');
-SGel_2 = SGtrans(SGel_2,[0;0;2*z1]);
+SGel_2 = SGtrans(SGel_2,[0;0;abs(z1)+abs(z2)]);
 % SGel_2 = SGtrans(SGtrans(SGcat(SG1,SG2),rot(pi,0,0)),[0;0;z1]);
 
 % SGel_2 = SGmirror(SGel_2,'yz'); 
@@ -2067,6 +2079,7 @@ FG = FGcreate( ...
 
 %% add frames
 FG = FGaddFrames( FG );
+FG.SGel{end}.T{2}(3,4) = FG.SGel{end}.T{2}(3,4)-z1;
 
 %% SGTchain
 if sum(offset) ~= 0
