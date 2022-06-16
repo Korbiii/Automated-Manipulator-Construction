@@ -4,4 +4,4 @@ This program was developed during my semester thesis. It serves to construct a m
 
 ## Manipulator Examples
 
-![Full Manipulator](/images/image039.png)
+[Full Dual Manipulator](https://imgur.com/pl9fNwf)
