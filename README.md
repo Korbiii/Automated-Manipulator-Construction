@@ -5,3 +5,4 @@ This program was developed during my semester thesis. It serves to construct a m
 ## Manipulator Examples
 
 [Full Dual Manipulator](https://imgur.com/pl9fNwf)
+![Full Dual Manipulator](https://imgur.com/pl9fNwf)
